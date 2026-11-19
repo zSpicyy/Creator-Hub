@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StreamPilot</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/kit/tokens.css">
+<style>
+:root{--warn:#e0b43a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",system-ui,sans-serif;display:grid;grid-template-columns:212px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "nav main";overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button,.btn,a,select,input,textarea{transition:background-color .12s ease,border-color .12s ease,color .12s ease,opacity .12s ease}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+[hidden]{display:none!important}
+#kitOverlay{display:none!important}
+#kitToast{position:fixed;bottom:20px;left:50%;translate:-50% 0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 16px;z-index:60;display:none}#kitToast.show{display:block}
+
+/* Kopfleiste */
+.top{grid-area:top;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);min-height:57px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:.2px;min-width:180px}
+.brand img{width:30px;height:30px}
+.brand small{font-weight:400;color:var(--muted);font-size:12px}
+.sp{flex:1}
+.status{display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--bg);font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.status.live{color:var(--text)}.status.live .dot{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
+.status.wait .dot{background:var(--warn)}
+
+/* Navigation */
+nav{grid-area:nav;padding:14px 10px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:3px;overflow:auto}
+nav .ch-item{display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:8px;padding:9px 11px;text-align:left;color:var(--muted);width:100%}
+nav .ch-item:hover{background:var(--panel2);color:var(--text)}
+nav .ch-item.on{background:var(--panel2);color:var(--text);font-weight:600}
+nav .ch-item.on svg{color:var(--accent)}
+nav .grp{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:14px 11px 4px;font-weight:600}
+nav .beta{margin-left:auto;font-size:10.5px;border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted);font-weight:400}
+
+main{grid-area:main;overflow:auto;padding:22px 28px 60px;min-width:0}
+.head{display:flex;align-items:center;gap:12px;margin:0 0 18px;flex-wrap:wrap}
+.head h1{font-size:21px;margin:0;font-weight:700}
+.head p{margin:2px 0 0;color:var(--muted)}
+.head .sp{flex:1}
+
+/* Bausteine */
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 13px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn.danger{color:var(--danger)}
+.btn.ghost{background:none;border-color:transparent;color:var(--muted)}.btn.ghost:hover{color:var(--text);background:var(--panel2)}
+.btn.sm{padding:4px 10px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default}
+.icon{width:32px;height:32px;padding:0;justify-content:center}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=range]{padding:0;accent-color:var(--accent);background:none;border:0}
+input[type=number]{width:90px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:var(--pad);min-width:0}
+.card h3{margin:0 0 4px;font-size:15px}
+.card>.sub{color:var(--muted);margin:0 0 14px;font-size:13px}
+.cards{display:grid;gap:16px}
+.c2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.c3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.line{display:flex;align-items:center;gap:14px;padding:11px 0;border-top:1px solid var(--line)}
+.line:first-of-type{border-top:0}
+.line>div:first-child{flex:1;min-width:0}
+.line small{display:block;color:var(--muted);font-size:12.5px}
+.muted{color:var(--muted)}
+.ok{color:var(--ok)}.bad{color:var(--danger)}.warn{color:var(--warn)}
+.switch{width:40px;height:22px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);position:relative;flex:none;padding:0}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:left .15s ease}
+.switch.on{background:var(--accent);border-color:var(--accent)}.switch.on::after{left:20px;background:var(--accent-ink)}
+.seg{display:inline-flex}.seg .btn{border-radius:0}.seg .btn:first-child{border-radius:8px 0 0 8px}.seg .btn:last-child{border-radius:0 8px 8px 0}.seg .btn+.btn{border-left:0}.seg .on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.reset{width:30px;height:30px;padding:0;border:0;background:none;color:var(--danger);font-size:17px;font-weight:700;border-radius:8px;display:grid;place-items:center}
+.reset:hover:not(:disabled){background:color-mix(in srgb,var(--danger) 14%,transparent)}
+.reset:disabled{color:var(--line);cursor:default}
+.tag{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 9px;color:var(--muted);white-space:nowrap}
+.kbd{font:12.5px Consolas,ui-monospace,monospace;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin:1px 4px 1px 0;display:inline-block}
+code{font:12.5px Consolas,ui-monospace,monospace;background:var(--panel2);border-radius:6px;padding:2px 7px;user-select:all}
+
+/* Tabellen-Zeilen */
+.rows{display:flex;flex-direction:column}
+.r{display:grid;align-items:center;gap:12px;padding:9px 6px;border-top:1px solid var(--line)}
+.r:first-child{border-top:0}
+.r.h{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;padding-bottom:6px}
+.r.off .nm,.r.off .who{opacity:.45}
+.cmdr{grid-template-columns:46px minmax(170px,1.2fr) minmax(170px,1.3fr) 130px 34px 34px}
+.srcr{grid-template-columns:46px minmax(160px,1fr) 130px 70px minmax(170px,1fr) 34px}
+.alr{grid-template-columns:46px minmax(150px,.8fr) minmax(200px,1.4fr) 90px minmax(160px,1fr) 34px 34px}
+.nm b{display:block;font-weight:600}.nm small{color:var(--muted);font-size:12.5px}
+
+/* Live-Ansicht */
+.now{display:flex;gap:16px;align-items:center}
+.cover{width:84px;height:84px;border-radius:10px;background:var(--panel2) center/cover;flex:none;display:grid;place-items:center;color:var(--muted)}
+.now b{font-size:17px;display:block}
+.bar{height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--accent);transition:width .9s linear}
+.q{display:flex;align-items:center;gap:11px;padding:8px 0;border-top:1px solid var(--line)}
+.q:first-child{border-top:0}
+.q .cv{width:38px;height:38px;border-radius:6px;background:var(--panel2) center/cover;flex:none}
+.q div{flex:1;min-width:0}.q b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.q small{color:var(--muted)}
+.feed{font:12.5px/1.5 Consolas,ui-monospace,monospace;max-height:380px;overflow:auto;display:flex;flex-direction:column-reverse}
+.feed div{padding:3px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);display:flex;gap:10px}
+.feed span{color:var(--muted);flex:none;width:52px}
+.feed .k-ok{color:var(--ok)}.feed .k-warn{color:var(--warn)}.feed .k-alert{color:var(--accent)}.feed .k-bot{color:var(--muted)}
+.stat{display:flex;flex-direction:column;gap:2px}.stat b{font-size:22px}.stat span{color:var(--muted);font-size:12.5px}
+
+/* Hinweise & Schritte */
+.note{border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));background:color-mix(in srgb,var(--accent) 7%,transparent);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.note b{display:block;margin-bottom:2px}
+.steps{margin:6px 0 0;padding-left:20px;display:grid;gap:8px}
+.code-box{font:600 26px Consolas,ui-monospace,monospace;letter-spacing:4px;text-align:center;background:var(--bg);border:1px dashed var(--accent);border-radius:10px;padding:14px;margin:10px 0}
+.acc{display:flex;gap:14px;align-items:center}
+.acc .av{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-weight:700;flex:none}
+.acc .av svg{width:22px;height:22px}
+
+.themes{display:flex;gap:10px;flex-wrap:wrap}
+.theme{width:104px;border:2px solid var(--line);border-radius:10px;background:none;padding:6px;text-align:center;font-size:12.5px}
+.theme.on{border-color:var(--accent)}.theme i{display:block;height:40px;border-radius:6px;margin-bottom:5px;border:1px solid #8884}
+.sw{display:flex;gap:8px;flex-wrap:wrap}.sw button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0}.sw button.on{border-color:var(--text)}
+
+.modal{position:fixed;inset:0;background:#0009;z-index:40;display:none;place-items:center}.modal.show{display:grid}
+.modal>div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;width:min(640px,94vw);max-height:88vh;overflow:auto}
+.modal h3{margin:0 0 4px}.modal .mh{display:flex;align-items:center;gap:10px;margin-bottom:12px}.modal .mh p{color:var(--muted);margin:2px 0 0}
+.toast{position:fixed;bottom:22px;left:50%;translate:-50% 0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 16px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.upd{display:flex;align-items:center;gap:14px;border:1px solid var(--accent);border-radius:12px;padding:12px 16px;margin-bottom:16px;background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
+.upd div{flex:1}.upd small{display:block;color:var(--muted)}
+.wl{display:grid;grid-template-columns:46px 1fr 34px;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.empty{color:var(--muted);padding:14px 0}
+.pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;max-height:300px;overflow:auto}
+.pl label{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer}
+.pl label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.pl small{margin-left:auto;color:var(--muted)}
+table.st{width:100%;border-collapse:collapse}table.st td,table.st th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}table.st th{color:var(--muted);font-size:12px;font-weight:600}
+</style>
+<link rel="stylesheet" href="/kit/polish.css">
+</head>
+<body>
+<header class="top ch-top">
+ <div class="brand ch-brand"><img src="/logo.svg" alt=""><span>StreamPilot</span></div>
+ <span class="sp"></span>
+ <div class="status" id="pill"><span class="dot"></span><span id="pillTxt">…</span></div>
+ <button class="btn" id="botBtn"></button>
+</header>
+<nav id="nav" class="ch-nav"></nav>
+<main id="app"></main>
+<div class="modal" id="modal"><div id="modalIn"></div></div>
+<div class="toast" id="toast"></div>
+<audio id="au"></audio>
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ICON={
+ live:'<path d="M2 12h3l3-8 4 16 3-8h7"/>',
+ music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+ cmd:'<path d="M4 17l6-6-6-6"/><path d="M12 19h8"/>',
+ tts:'<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+ alert:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3h0a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8v0a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+ sort:'<path d="M3 6h18M6 12h12M10 18h4"/>',
+ play:'<path d="M6 4l14 8-14 8z"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',
+ skip:'<path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/>', edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+ trash:'<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/>', x:'<path d="M18 6L6 18M6 6l12 12"/>',
+ spotify:'<circle cx="12" cy="12" r="10"/><path d="M7 9.5c3.5-1 7.5-.6 10.5 1.1M7.5 12.6c3-.8 6.2-.4 8.7 1M8 15.6c2.4-.6 4.8-.3 6.8.8"/>',
+ twitch:'<path d="M4 3h16v11l-5 5h-4l-3 3H6v-3H4z"/><path d="M11 8v4M16 8v4"/>',
+ ext:'<path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v7H3V3h7"/>'
+};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24">${ICON[n]||''}</svg>`;
+
+/* ---------------------------------------------------------------- Sprache */
+const L={
+en:{
+ nav_live:'Live',nav_sr:'Song requests',nav_cmd:'Commands',nav_tts:'Text to speech',nav_alerts:'Alerts',nav_acc:'Accounts',nav_set:'Settings',nav_sort:'Playlist sorter',grp_stream:'Stream',grp_setup:'Setup',grp_extra:'Extras',beta:'Beta',
+ bot_live:'Live in #{c}',bot_conn:'Connecting …',bot_off:'Bot offline',bot_start:'Start bot',bot_stop:'Stop bot',
+ live_t:'Live',live_s:'Everything that happens on your stream right now.',now:'Now playing',nothing:'Nothing is playing on Spotify.',req_by:'Requested by {u}',skip:'Skip',
+ queue:'Request queue',queue_empty:'No open requests. Viewers can request songs with {c}.',activity:'Activity',activity_empty:'Nothing happened yet.',
+ st_reqs:'Open requests',st_votes:'Skip votes',st_tts:'TTS queue',st_chat:'Chat',st_alerts:'Alerts',connected:'Connected',not_connected:'Not connected',
+ s_waiting:'waiting',s_playing:'playing',s_done:'played',s_skip:'skipped',
+ setup_t:'Finish the setup',setup_s:'Connect Spotify and Twitch so the bot can start.',go_acc:'Open accounts',
+ sr_t:'Song requests',sr_s:'Viewers add songs to your Spotify queue – by name or link.',sr_on:'Song requests enabled',sr_on_s:'Mods can still request when this is off.',
+ sr_limit:'Songs per viewer',sr_limit_s:'How many open requests one viewer may have.',sr_mods:'No limit for mods',sr_vote:'Votes needed to skip',sr_vote_s:'Used by the vote skip command.',
+ sr_max:'Maximum song length',sr_max_s:'Minutes. 0 = no limit.',links_t:'Supported links',links_s:'Spotify, YouTube, YouTube Music, SoundCloud, Deezer and Apple Music links are matched to the song on Spotify.',
+ blocked_t:'Blocked viewers',blocked_s:'These viewers can\'t request songs.',blocked_none:'Nobody is blocked.',add:'Add',name:'Name',
+ cmd_t:'Commands',cmd_s:'Turn commands on or off, rename them and choose who may use them.',prefix:'Command prefix',prefix_s:'Character in front of every command. Several characters = each one works (e.g. “!/”). Twitch blocks unknown /commands in the browser chat, so “!/” is safer than “/”.',
+ c_on:'On',c_cmd:'Command',c_what:'What it does',c_who:'Who',g_music:'Music',g_tts:'Text to speech',g_mod:'Moderation',
+ replies:'Bot replies',replies_s:'Change what the bot writes in chat.',reset_all:'Reset everything',reset_q:'Reset all commands and bot replies to default?',
+ chat_lang:'Language of bot replies',same_app:'Same as app',
+ lv0:'Everyone',lv1:'Followers',lv2:'Subscribers',lv3:'VIPs',lv4:'Mods',lv5:'Streamer only',plus:'+',
+ edit_cmd:'Edit command',names:'Names',names_s:'Without prefix, separated by commas (e.g. song, np).',own_prefix:'Own prefix',own_prefix_s:'Empty = use the global prefix.',who:'Who may use it',save:'Save',cancel:'Cancel',reset:'Reset to default',
+ d_sr:'Request a song (name or link)',d_song:'Shows the current song',d_queue:'Shows the queue and who requested',d_wrongsong:'Removes your last request',d_voteskip:'Vote to skip the current song',d_skip:'Skips the current song',d_lastsong:'Shows the previous song',d_mysongs:'Shows your own requests',d_srhelp:'Lists all commands',d_sron:'Turns song requests on',d_sroff:'Turns song requests off',d_volume:'Sets the Spotify volume',d_srblock:'Blocks a viewer from requesting',d_srunblock:'Unblocks a viewer',d_clearqueue:'Skips all open requests',d_tts:'Reads a message aloud',d_ttsskip:'Stops the current TTS message',d_ttsclear:'Clears the TTS queue',d_ttson:'Turns TTS on',d_ttsoff:'Turns TTS off',
+ tts_t:'Text to speech',tts_s:'Reads chat messages, channel point redemptions and !tts aloud.',tts_on:'TTS enabled',tts_queue:'{n} in queue',
+ voice:'Voice',voice_s:'Natural voices sound human and need internet. Windows voices work offline.',v_nat:'Natural voices (Microsoft, online)',v_win:'Windows voices (offline)',v_def:'Default voice',
+ rate:'Speed',pitch:'Pitch',volume:'Volume',test:'Test',test_txt:'Hello chat, this is a quick test!',play:'Play',stop_tts:'Skip',clear:'Clear queue',
+ sources:'What is read aloud',sources_s:'Each source has its own permissions and voice.',src_chat:'All chat messages',src_command:'!tts command',src_points:'Channel point reward (with text)',read_name:'Name',
+ reward:'Reward name',reward_s:'Name of the channel point reward. Empty = every reward that asks for text.',name_fmt:'Name format',name_fmt_s:'{user} = viewer, {text} = message.',
+ ignore_cmds:'Don\'t read commands',ignore_cmds_s:'Chat messages starting with ! or / are skipped.',ignored:'Never read these users',ignored_s:'Comma separated, e.g. bots.',
+ cooldown:'Cooldown per viewer',cooldown_s:'Seconds between two messages of the same viewer (not for mods).',maxq:'Maximum queue',pause:'Pause between messages',pause_s:'Milliseconds.',
+ filters:'Filters',maxc:'Maximum characters',links:'Read links as “link”',links_s:'Otherwise links are removed.',emotes:'Remove emotes',spam:'Shorten spam',spam_s:'“hahahahaha” becomes “hahaha”, repeated words are cut.',
+ words:'Blocked words',words_s:'Filter swear words and slurs.',words_on:'Word filter enabled',w_piep:'Replace word with “piep”',w_skip:'Don\'t read the message',words_n:'{a} of {b} words active',words_edit:'Edit list',
+ repl:'Pronunciation',repl_s:'word=how to say it, separated by commas.',reset_tts:'Reset TTS',reset_tts_q:'Reset all TTS settings (sources and word list included)?',
+ w_add_ph:'Add words (comma separated)',w_list:'Word list',w_list_s:'Checked words are filtered. Parts of words count too.',
+ al_t:'Alerts',al_s:'Reads what viewers write with their bits, subscriptions and redemptions – not “XY donated”.',al_on:'Read alerts aloud',
+ al_text:'Text',al_min:'Minimum',a_bits:'Bits',a_sub:'New subscription',a_resub:'Resubscription',a_points:'Other channel points',a_follow:'New follower',a_subgift:'Gifted subscription',a_giftbomb:'Gift bomb',a_raid:'Raid',
+ al_note:'Placeholders: {v}. With {message} only the viewer\'s own text is read – nothing is read if they wrote nothing.',no_msg:'no viewer text',reset_al:'Reset alerts',
+ acc_t:'Accounts',acc_s:'Logins are stored on this PC and survive every update.',
+ sp_t:'Spotify',sp_s:'Needed for song requests. Requires Spotify Premium.',sp_steps:['Open the Spotify developer dashboard and create an app (any name, choose “Web API”).','Add this redirect URI to the app:','Copy the Client ID and paste it here:'],
+ tw_app:'Twitch app',tw_app_s:'One-time setup so StreamPilot can talk to Twitch.',tw_steps:['Open the Twitch developer console and register an application.','OAuth redirect URL: http://localhost – Category: Chat Bot – Client type: Public','Copy the Client ID and paste it here:'],
+ streamer:'Streamer account',streamer_s:'Your channel. Needed for alerts, channel points and the follower check.',bot_acc:'Bot account (optional)',bot_acc_s:'A second account the bot writes with. Without it, the bot writes as you.',
+ connect:'Connect',reconnect:'Reconnect',disconnect:'Disconnect',open_dash:'Open dashboard',open_console:'Open console',client_id:'Client ID',copy:'Copy',copied:'Copied',
+ as:'Connected as {n}',needs_re:'Reconnect once to allow alerts, channel points and the follower check.',playback_re:'Reconnect once so StreamPilot may control playback.',
+ code_t:'Confirm on Twitch',code_s:'Twitch opened in your browser. Log in with the {w} and enter this code:',code_bot:'bot account',code_streamer:'streamer account',code_tip:'Tip: use a private window for the bot account so you stay logged in on your main account.',waiting:'Waiting for confirmation …',open_again:'Open Twitch again',
+ sp_wait:'Spotify opened in your browser – confirm there.',channel:'Channel',channel_s:'Defaults to the streamer account.',
+ set_t:'Settings',set_s:'How StreamPilot behaves.',look_t:'Look, language & updates',look_solo:'Use the gear at the bottom right – the same settings as in Creator Hub.',look_hub:'Taken from Creator Hub. Change them there under Settings.',lang:'Language',theme:'Theme',accent:'Accent color',density:'Density',d_norm:'Normal',d_comp:'Compact',
+ th_black:'Black',th_dark:'Dark',th_light:'Light',th_mocha:'Mocha',th_macchiato:'Macchiato',th_system:'System',
+ autostart:'Start the bot automatically',autostart_s:'As soon as StreamPilot opens.',updates:'Updates',autoupd:'Check for updates automatically',version:'Version {v}',check:'Check now',
+ upd_none:'You\'re up to date.',upd_av:'Version {v} is available.',upd_inst:'Install & restart',upd_dl:'Installing …',upd_err:'Update failed: {e}',upd_check:'Checking …',
+ data_t:'Your data',data_s:'Settings and logins are stored separately from the program – updates never log you out.',
+ sort_t:'Playlist sorter',sort_s:'Sorts your playlists by genre and mood with a local AI (Ollama) and creates matching playlists.',
+ sort_pl:'Your playlists',sort_model:'AI model',sort_no_ollama:'Ollama not found. Install it from ollama.com and run “ollama pull qwen2.5:7b”.',sort_run:'Sort songs',sort_apply:'Create / extend playlists',
+ sort_split:'Split genres by mood',sort_chill:'Extra “Chill Mix” playlist',sort_min:'Songs for a new playlist',sort_prefix:'Name prefix',sort_forget:'Forget created playlists',
+ st_load:'Loading songs …',st_genres:'Reading artist genres …',st_ai:'AI is sorting …',st_done:'Done – check the result and create the playlists.',sort_song:'Song',sort_genre:'Genre',sort_mood:'Mood',
+ m_Chill:'Chill',m_Medium:'Medium',m_Upbeat:'Upbeat',sort_need_sp:'Connect Spotify first.',sort_done:'{n} songs sorted into {p} playlists.',
+ e_twitch_missing:'Connect Twitch first (Accounts).',saved:'Saved',err:'Error: {e}',reply_ph:'Default',
+},
+de:{
+ nav_live:'Live',nav_sr:'Songwünsche',nav_cmd:'Befehle',nav_tts:'Vorlesen (TTS)',nav_alerts:'Alerts',nav_acc:'Konten',nav_set:'Einstellungen',nav_sort:'Sortierer',grp_stream:'Stream',grp_setup:'Einrichtung',grp_extra:'Extras',beta:'Beta',
+ bot_live:'Live in #{c}',bot_conn:'Verbinde …',bot_off:'Bot offline',bot_start:'Bot starten',bot_stop:'Bot beenden',
+ live_t:'Live',live_s:'Alles, was gerade in deinem Stream passiert.',now:'Läuft gerade',nothing:'Auf Spotify läuft gerade nichts.',req_by:'Gewünscht von {u}',skip:'Überspringen',
+ queue:'Wunsch-Warteschlange',queue_empty:'Keine offenen Wünsche. Zuschauer wünschen sich Songs mit {c}.',activity:'Aktivität',activity_empty:'Noch nichts passiert.',
+ st_reqs:'Offene Wünsche',st_votes:'Skip-Stimmen',st_tts:'TTS-Warteschlange',st_chat:'Chat',st_alerts:'Alerts',connected:'Verbunden',not_connected:'Nicht verbunden',
+ s_waiting:'wartet',s_playing:'läuft',s_done:'gespielt',s_skip:'übersprungen',
+ setup_t:'Einrichtung abschließen',setup_s:'Verbinde Spotify und Twitch, damit der Bot starten kann.',go_acc:'Zu den Konten',
+ sr_t:'Songwünsche',sr_s:'Zuschauer packen Songs in deine Spotify-Warteschlange – per Name oder Link.',sr_on:'Songwünsche aktiv',sr_on_s:'Mods dürfen auch wünschen, wenn es aus ist.',
+ sr_limit:'Songs pro Zuschauer',sr_limit_s:'So viele offene Wünsche darf ein Zuschauer haben.',sr_mods:'Kein Limit für Mods',sr_vote:'Stimmen zum Überspringen',sr_vote_s:'Für den VoteSkip-Befehl.',
+ sr_max:'Maximale Songlänge',sr_max_s:'Minuten. 0 = egal.',links_t:'Unterstützte Links',links_s:'Spotify-, YouTube-, YouTube-Music-, SoundCloud-, Deezer- und Apple-Music-Links werden dem Song auf Spotify zugeordnet.',
+ blocked_t:'Gesperrte Zuschauer',blocked_s:'Diese Zuschauer dürfen keine Songs wünschen.',blocked_none:'Niemand ist gesperrt.',add:'Hinzufügen',name:'Name',
+ cmd_t:'Befehle',cmd_s:'Befehle an- oder ausschalten, umbenennen und festlegen, wer sie benutzen darf.',prefix:'Zeichen vor Befehlen',prefix_s:'Steht vor jedem Befehl. Mehrere Zeichen = jedes geht (z. B. „!/“). Twitch blockiert im Browser-Chat unbekannte /Befehle, darum ist „!/“ sicherer als „/“.',
+ c_on:'An',c_cmd:'Befehl',c_what:'Funktion',c_who:'Wer',g_music:'Musik',g_tts:'Vorlesen',g_mod:'Moderation',
+ replies:'Bot-Antworten',replies_s:'Ändere, was der Bot in den Chat schreibt.',reset_all:'Alles zurücksetzen',reset_q:'Alle Befehle und Bot-Antworten auf Standard setzen?',
+ chat_lang:'Sprache der Bot-Antworten',same_app:'Wie die App',
+ lv0:'Alle',lv1:'Follower',lv2:'Abonnenten',lv3:'VIPs',lv4:'Mods',lv5:'Nur Streamer',plus:'+',
+ edit_cmd:'Befehl bearbeiten',names:'Namen',names_s:'Ohne Zeichen, mit Komma getrennt (z. B. song, np).',own_prefix:'Eigenes Zeichen',own_prefix_s:'Leer = Zeichen von oben.',who:'Wer darf ihn benutzen',save:'Speichern',cancel:'Abbrechen',reset:'Auf Standard',
+ d_sr:'Song wünschen (Name oder Link)',d_song:'Zeigt den aktuellen Song',d_queue:'Zeigt die Warteschlange und von wem',d_wrongsong:'Nimmt den eigenen letzten Wunsch zurück',d_voteskip:'Für Überspringen stimmen',d_skip:'Überspringt den aktuellen Song',d_lastsong:'Zeigt den vorherigen Song',d_mysongs:'Zeigt die eigenen Wünsche',d_srhelp:'Listet alle Befehle',d_sron:'Songwünsche einschalten',d_sroff:'Songwünsche ausschalten',d_volume:'Spotify-Lautstärke setzen',d_srblock:'Zuschauer für Wünsche sperren',d_srunblock:'Zuschauer wieder freigeben',d_clearqueue:'Alle offenen Wünsche überspringen',d_tts:'Liest eine Nachricht vor',d_ttsskip:'Bricht die aktuelle TTS-Nachricht ab',d_ttsclear:'Leert die TTS-Warteschlange',d_ttson:'TTS einschalten',d_ttsoff:'TTS ausschalten',
+ tts_t:'Vorlesen (TTS)',tts_s:'Liest Chat-Nachrichten, Kanalpunkte und !tts vor.',tts_on:'TTS aktiv',tts_queue:'{n} in der Warteschlange',
+ voice:'Stimme',voice_s:'Natürliche Stimmen klingen menschlich und brauchen Internet. Windows-Stimmen gehen offline.',v_nat:'Natürliche Stimmen (Microsoft, online)',v_win:'Windows-Stimmen (offline)',v_def:'Standardstimme',
+ rate:'Tempo',pitch:'Tonhöhe',volume:'Lautstärke',test:'Testen',test_txt:'Hallo Chat, das ist ein kurzer Test!',play:'Vorlesen',stop_tts:'Überspringen',clear:'Leeren',
+ sources:'Was wird vorgelesen',sources_s:'Jede Quelle hat eigene Rechte und eine eigene Stimme.',src_chat:'Alle Chat-Nachrichten',src_command:'!tts-Befehl',src_points:'Kanalpunkte-Belohnung (mit Text)',read_name:'Name',
+ reward:'Name der Belohnung',reward_s:'Name der Kanalpunkte-Belohnung. Leer = jede Belohnung mit Text.',name_fmt:'Namensformat',name_fmt_s:'{user} = Zuschauer, {text} = Nachricht.',
+ ignore_cmds:'Befehle nicht vorlesen',ignore_cmds_s:'Chat-Nachrichten mit ! oder / am Anfang werden übersprungen.',ignored:'Diese Nutzer nie vorlesen',ignored_s:'Mit Komma getrennt, z. B. Bots.',
+ cooldown:'Cooldown pro Zuschauer',cooldown_s:'Sekunden zwischen zwei Nachrichten derselben Person (nicht für Mods).',maxq:'Maximale Warteschlange',pause:'Pause zwischen Nachrichten',pause_s:'Millisekunden.',
+ filters:'Filter',maxc:'Maximale Zeichen',links:'Links als „Link“ vorlesen',links_s:'Sonst werden Links weggelassen.',emotes:'Emotes entfernen',spam:'Spam kürzen',spam_s:'„hahahahaha“ wird „hahaha“, Wortwiederholungen werden gekürzt.',
+ words:'Verbotene Wörter',words_s:'Filtert Beleidigungen und Schimpfwörter.',words_on:'Wortfilter aktiv',w_piep:'Wort durch „piep“ ersetzen',w_skip:'Nachricht nicht vorlesen',words_n:'{a} von {b} Wörtern aktiv',words_edit:'Liste bearbeiten',
+ repl:'Aussprache',repl_s:'wort=so sprechen, mit Komma getrennt.',reset_tts:'TTS zurücksetzen',reset_tts_q:'Alle TTS-Einstellungen (inkl. Quellen und Wortliste) auf Standard setzen?',
+ w_add_ph:'Wörter hinzufügen (mit Komma getrennt)',w_list:'Wortliste',w_list_s:'Angehakte Wörter werden gefiltert. Teilwörter zählen mit.',
+ al_t:'Alerts',al_s:'Liest vor, was Zuschauer zu Bits, Abos und Kanalpunkten schreiben – nicht „XY hat gespendet“.',al_on:'Alerts vorlesen',
+ al_text:'Text',al_min:'Minimum',a_bits:'Bits',a_sub:'Neues Abo',a_resub:'Abo verlängert',a_points:'Andere Kanalpunkte',a_follow:'Neuer Follower',a_subgift:'Abo verschenkt',a_giftbomb:'Abo-Bombe',a_raid:'Raid',
+ al_note:'Platzhalter: {v}. Mit {message} wird nur der eigene Text des Zuschauers gelesen – hat er nichts geschrieben, wird nichts gelesen.',no_msg:'ohne Zuschauer-Text',reset_al:'Alerts zurücksetzen',
+ acc_t:'Konten',acc_s:'Logins werden auf diesem PC gespeichert und bleiben bei jedem Update erhalten.',
+ sp_t:'Spotify',sp_s:'Für Songwünsche. Spotify Premium nötig.',sp_steps:['Öffne das Spotify-Developer-Dashboard und erstelle eine App (Name egal, „Web API“ wählen).','Trag in der App diese Redirect-URI ein:','Kopiere die Client-ID und füge sie hier ein:'],
+ tw_app:'Twitch-App',tw_app_s:'Einmalige Einrichtung, damit StreamPilot mit Twitch sprechen darf.',tw_steps:['Öffne die Twitch-Developer-Konsole und registriere eine Anwendung.','OAuth-Redirect-URL: http://localhost – Kategorie: Chat Bot – Client-Typ: Öffentlich','Kopiere die Client-ID und füge sie hier ein:'],
+ streamer:'Streamer-Konto',streamer_s:'Dein Kanal. Für Alerts, Kanalpunkte und den Follower-Check.',bot_acc:'Bot-Konto (optional)',bot_acc_s:'Ein zweites Konto, mit dem der Bot schreibt. Ohne schreibt der Bot als du.',
+ connect:'Verbinden',reconnect:'Neu verbinden',disconnect:'Trennen',open_dash:'Dashboard öffnen',open_console:'Konsole öffnen',client_id:'Client-ID',copy:'Kopieren',copied:'Kopiert',
+ as:'Verbunden als {n}',needs_re:'Einmal neu verbinden, damit Alerts, Kanalpunkte und der Follower-Check funktionieren.',playback_re:'Einmal neu verbinden, damit StreamPilot die Wiedergabe steuern darf.',
+ code_t:'Auf Twitch bestätigen',code_s:'Twitch hat sich im Browser geöffnet. Melde dich mit dem {w} an und gib diesen Code ein:',code_bot:'Bot-Konto',code_streamer:'Streamer-Konto',code_tip:'Tipp: Für das Bot-Konto ein privates Fenster nutzen, dann bleibst du im Hauptkonto eingeloggt.',waiting:'Warte auf Bestätigung …',open_again:'Twitch erneut öffnen',
+ sp_wait:'Spotify hat sich im Browser geöffnet – bestätige dort.',channel:'Kanal',channel_s:'Standard ist das Streamer-Konto.',
+ set_t:'Einstellungen',set_s:'So verhält sich StreamPilot.',look_t:'Aussehen, Sprache & Updates',look_solo:'Über das Zahnrad unten rechts – dieselben Einstellungen wie im Creator Hub.',look_hub:'Kommen aus dem Creator Hub. Ändere sie dort unter Einstellungen.',lang:'Sprache',theme:'Design',accent:'Akzentfarbe',density:'Dichte',d_norm:'Normal',d_comp:'Kompakt',
+ th_black:'Schwarz',th_dark:'Dunkel',th_light:'Hell',th_mocha:'Mocha',th_macchiato:'Macchiato',th_system:'System',
+ autostart:'Bot automatisch starten',autostart_s:'Sobald StreamPilot geöffnet wird.',updates:'Updates',autoupd:'Automatisch nach Updates suchen',version:'Version {v}',check:'Jetzt prüfen',
+ upd_none:'Du hast die neueste Version.',upd_av:'Version {v} ist verfügbar.',upd_inst:'Installieren & neu starten',upd_dl:'Wird installiert …',upd_err:'Update fehlgeschlagen: {e}',upd_check:'Prüfe …',
+ data_t:'Deine Daten',data_s:'Einstellungen und Logins liegen getrennt vom Programm – Updates loggen dich nie aus.',
+ sort_t:'Playlist-Sortierer',sort_s:'Sortiert deine Playlists mit lokaler KI (Ollama) nach Genre und Stimmung und legt passende Playlists an.',
+ sort_pl:'Deine Playlists',sort_model:'KI-Modell',sort_no_ollama:'Ollama nicht gefunden. Installiere es von ollama.com und führe „ollama pull qwen2.5:7b“ aus.',sort_run:'Songs sortieren',sort_apply:'Playlists erstellen / ergänzen',
+ sort_split:'Genres nach Stimmung aufteilen',sort_chill:'Extra-Playlist „Chill Mix“',sort_min:'Songs für neue Playlist',sort_prefix:'Namens-Vorsilbe',sort_forget:'Erstellte Playlists vergessen',
+ st_load:'Lade Songs …',st_genres:'Lese Künstler-Genres …',st_ai:'KI sortiert …',st_done:'Fertig – prüfe das Ergebnis und erstelle die Playlists.',sort_song:'Song',sort_genre:'Genre',sort_mood:'Stimmung',
+ m_Chill:'Chill',m_Medium:'Mittel',m_Upbeat:'Flott',sort_need_sp:'Verbinde zuerst Spotify.',sort_done:'{n} Songs in {p} Playlists einsortiert.',
+ e_twitch_missing:'Verbinde zuerst Twitch (Konten).',saved:'Gespeichert',err:'Fehler: {e}',reply_ph:'Standard',
+}};
+let S=null,page=(location.hash.slice(1)||'live'),lang='en';
+const t=(k,v={})=>{let s=(L[lang]&&L[lang][k])??L.en[k]??k;if(typeof s==='string')s=s.replace(/\{(\w+)\}/g,(m,x)=>v[x]??m);return s};
+
+/* ---------------------------------------------------------------- Helfer */
+async function api(u,b){const r=await fetch(u,b===undefined?{cache:'no-store'}:{method:'POST',body:JSON.stringify(b)});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||r.status);return j}
+let tt;function toast(m){const x=$('#toast');x.textContent=m;x.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>x.classList.remove('show'),3500)}
+const errMsg=e=>{const k='e_'+e.message;return L.en[k]?t(k):t('err',{e:e.message})};
+const sw=(on,act,extra='')=>`<button class="switch ${on?'on':''}" data-act="${act}" ${extra} aria-pressed="${!!on}"></button>`;
+const lvOpts=(cur,max=5)=>Array.from({length:max+1},(_,i)=>`<option value="${i}" ${+cur===i?'selected':''}>${t('lv'+i)}${i>0&&i<5?' '+t('plus'):''}</option>`).join('');
+const resetBtn=(changed,act,extra='')=>`<button class="reset" data-act="${act}" ${extra} ${changed?'':'disabled'} title="${t('reset')}">↺</button>`;
+function modal(html){$('#modalIn').innerHTML=html;$('#modal').classList.add('show')}
+function closeModal(){$('#modal').classList.remove('show')}
+$('#modal').addEventListener('mousedown',e=>{if(e.target.id==='modal')closeModal()});
+const ACCENTS=['#9146ff','#7c6cff','#4c8dff','#25b8c9','#3fbf7f','#e0b43a','#f08a3c','#e5584f','#e5629f'];
+
+function applyTheme(){lang=(window.Kit&&Kit.lang==='de')?'de':'en';document.documentElement.lang=lang}
+document.addEventListener('kit-theme',e=>{const l=e.detail&&e.detail.lang==='de'?'de':'en';if(l!==lang&&S){lang=l;render()}});
+/* ---------------------------------------------------------------- Rahmen */
+const NAV=[['grp','grp_stream'],['live','live'],['sr','music'],['cmd','cmd'],['tts','tts'],['alerts','alert'],['grp','grp_setup'],['acc','user'],['set','gear'],['grp','grp_extra'],['sort','sort']];
+function renderNav(){$('#nav').innerHTML=NAV.map(([k,i])=>k==='grp'?`<div class="grp">${t(i)}</div>`:`<button data-page="${k}" class="ch-item ${page===k?'on':''}">${ic(i)}${t('nav_'+k)}${k==='sort'?`<span class="beta">${t('beta')}</span>`:''}</button>`).join('')}
+function renderTop(){const b=S.bot||{};const p=$('#pill');p.className='status '+(b.running?(b.joined?'live':'wait'):'');
+ $('#pillTxt').textContent=b.running?(b.joined?t('bot_live',{c:b.channel}):t('bot_conn')):t('bot_off');
+ const bb=$('#botBtn');bb.className='btn '+(b.running?'':'primary');bb.innerHTML=b.running?ic('stop')+t('bot_stop'):ic('play')+t('bot_start');bb.dataset.act=b.running?'botStop':'botStart'}
+function render(){applyTheme();renderNav();renderTop();const f=PAGES[page]||PAGES.live;$('#app').innerHTML=f();after[page]&&after[page]()}
+const after={};
+
+/* ---------------------------------------------------------------- Live */
+function setupNeeded(){const a=S.accounts;return !S.settings.twitchClientId||!(a.streamer.connected||a.bot.connected)||!a.spotify.connected}
+function updBanner(){return'';const u=S.update;if(!u||u.state!=='available'||!u.available)return'';const de=lang==='de';
+ return`<div class="upd"><div><b>${t('upd_av',{v:esc(u.available.version)})}</b><small>${esc(de?(u.available.notesDe||u.available.notes):u.available.notes)}</small></div><button class="btn primary" data-act="updInstall">${t('upd_inst')}</button></div>`}
+const PAGES={};
+PAGES.live=()=>{const b=S.bot||{},cur=b.current,reqs=(b.requests||[]).filter(r=>r.status!=='done'||r.skip===false);
+ const open=reqs.filter(r=>(r.status==='waiting'||r.status==='playing')&&!r.skip);
+ const pct=cur&&cur.duration?Math.min(100,cur.progress/cur.duration*100):0;
+ return`<div class="head"><div><h1>${t('live_t')}</h1><p>${t('live_s')}</p></div></div>${updBanner()}
+ ${setupNeeded()?`<div class="note"><b>${t('setup_t')}</b>${t('setup_s')} <button class="btn sm primary" data-page="acc" style="margin-left:8px">${t('go_acc')}</button></div>`:''}
+ <div class="cards c3" style="margin-bottom:16px">
+  <div class="card stat"><span>${t('st_chat')}</span><b class="${b.joined?'ok':'muted'}">${b.joined?t('connected'):t('not_connected')}</b><span>${b.as?esc(b.as):''}</span></div>
+  <div class="card stat"><span>${t('st_reqs')}</span><b>${open.filter(r=>r.status==='waiting').length}</b><span>${t('st_votes')}: ${b.votes||0}/${S.settings.voteNeeded}</span></div>
+  <div class="card stat"><span>${t('st_tts')}</span><b id="ttsN">${S.ttsQueue||0}</b><span><button class="btn sm" data-act="ttsSkip">${ic('skip')}${t('stop_tts')}</button> <button class="btn sm" data-act="ttsClear">${t('clear')}</button></span></div>
+ </div>
+ <div class="cards c2">
+  <div class="cards" style="align-content:start">
+   <div class="card"><h3>${t('now')}</h3><p class="sub">${b.requestedBy?t('req_by',{u:esc(b.requestedBy)}):'&nbsp;'}</p>
+    ${cur?`<div class="now"><div class="cover" style="background-image:url('${esc(cur.image)}')"></div><div style="flex:1;min-width:0"><b>${esc(cur.name)}</b><span class="muted">${esc((cur.artists||[]).join(', '))}</span><div class="bar"><i style="width:${pct}%"></i></div></div><button class="btn" data-act="spSkip">${ic('skip')}${t('skip')}</button></div>`:`<div class="empty">${t('nothing')}</div>`}
+   </div>
+   <div class="card"><h3>${t('queue')}</h3><p class="sub">${open.length?'':''}</p><div>${open.length?open.map(r=>`<div class="q"><div class="cv" style="background-image:url('${esc(r.image)}')"></div><div><b>${esc(r.song)}</b><small>${esc(r.artist)} · ${esc(r.user)}</small></div><span class="tag">${t('s_'+r.status)}</span></div>`).join(''):`<div class="empty">${t('queue_empty',{c:esc(cmdName('sr'))})}</div>`}</div></div>
+  </div>
+  <div class="card"><h3>${t('activity')}</h3><p class="sub">&nbsp;</p><div class="feed" id="feed">${feedHTML()}</div></div>
+ </div>`};
+let feed=[],evSince=0;
+function feedHTML(){if(!feed.length)return`<div class="empty" style="border:0">${t('activity_empty')}</div>`;return feed.slice().reverse().map(e=>`<div class="k-${e.kind}"><span>${e.time}</span>${esc(e.text)}</div>`).join('')}
+const cmdName=k=>{const c=(S.commands||[]).find(x=>x.key===k);return c&&c.full[0]||'!'+k};
+
+/* ---------------------------------------------------------------- Songwünsche */
+PAGES.sr=()=>{const s=S.settings;const bl=s.blocked||[];
+ return`<div class="head"><div><h1>${t('sr_t')}</h1><p>${t('sr_s')}</p></div></div>
+ <div class="cards c2">
+ <div class="card">
+  <div class="line"><div>${t('sr_on')}<small>${t('sr_on_s')}</small></div>${sw(s.srOn,'set',`data-k="srOn"`)}</div>
+  <div class="line"><div>${t('sr_limit')}<small>${t('sr_limit_s')}</small></div><input type="number" min="1" max="50" value="${s.srLimit}" data-set="srLimit"></div>
+  <div class="line"><div>${t('sr_mods')}</div>${sw(s.modsUnlimited,'set',`data-k="modsUnlimited"`)}</div>
+  <div class="line"><div>${t('sr_vote')}<small>${t('sr_vote_s')}</small></div><input type="number" min="1" max="100" value="${s.voteNeeded}" data-set="voteNeeded"></div>
+  <div class="line"><div>${t('sr_max')}<small>${t('sr_max_s')}</small></div><input type="number" min="0" max="60" value="${s.maxMinutes}" data-set="maxMinutes"></div>
+ </div>
+ <div class="cards" style="align-content:start">
+ <div class="card"><h3>${t('blocked_t')}</h3><p class="sub">${t('blocked_s')}</p>
+  <div style="display:flex;gap:8px;margin-bottom:10px"><input id="blkIn" placeholder="${t('name')}" style="flex:1"><button class="btn" data-act="blkAdd">${t('add')}</button></div>
+  ${bl.length?bl.map(n=>`<div class="q"><div><b>${esc(n)}</b></div><button class="btn ghost icon" data-act="blkRm" data-n="${esc(n)}">${ic('x')}</button></div>`).join(''):`<div class="empty">${t('blocked_none')}</div>`}
+ </div>
+ <div class="card"><h3>${t('links_t')}</h3><p class="sub" style="margin:0">${t('links_s')}</p></div>
+ </div></div>`};
+
+/* ---------------------------------------------------------------- Befehle */
+PAGES.cmd=()=>{const s=S.settings;const groups=['music','tts','mod'];
+ const row=c=>`<div class="r cmdr ${c.on?'':'off'}">${sw(c.on,'cmdToggle',`data-k="${c.key}"`)}<div class="nm">${c.full.slice(0,4).map(f=>`<span class="kbd">${esc(f)}</span>`).join('')}${c.full.length>4?`<span class="muted">+${c.full.length-4}</span>`:''}</div><div class="nm"><small>${t('d_'+c.key)}</small></div>
+  <select data-act="cmdLevel" data-k="${c.key}">${lvOpts(c.level)}</select><button class="btn ghost icon" data-act="cmdEdit" data-k="${c.key}" title="${t('edit_cmd')}">${ic('edit')}</button>${resetBtn(c.changed,'cmdReset',`data-k="${c.key}"`)}</div>`;
+ return`<div class="head"><div><h1>${t('cmd_t')}</h1><p>${t('cmd_s')}</p></div><span class="sp"></span><button class="btn" data-act="replies">${t('replies')}</button><button class="btn danger" data-act="cmdResetAll">↺ ${t('reset_all')}</button></div>
+ <div class="card" style="margin-bottom:16px"><div class="line"><div>${t('prefix')}<small>${t('prefix_s')}</small></div><div class="seg">${['!','/','!/'].map(p=>`<button class="btn ${s.cmdPrefix===p?'on':''}" data-act="prefix" data-p="${p}">${p}</button>`).join('')}</div><input value="${esc(s.cmdPrefix)}" data-set="cmdPrefix" style="width:70px"></div>
+ <div class="line"><div>${t('chat_lang')}</div><select data-set="chatLang"><option value="" ${!s.chatLang?'selected':''}>${t('same_app')}</option><option value="en" ${s.chatLang==='en'?'selected':''}>English</option><option value="de" ${s.chatLang==='de'?'selected':''}>Deutsch</option></select></div></div>
+ ${groups.map(g=>`<div class="card" style="margin-bottom:16px"><h3>${t('g_'+g)}</h3><div class="rows" style="margin-top:8px"><div class="r cmdr h"><span>${t('c_on')}</span><span>${t('c_cmd')}</span><span>${t('c_what')}</span><span>${t('c_who')}</span><span></span><span></span></div>${S.commands.filter(c=>c.group===g).map(row).join('')}</div></div>`).join('')}`};
+
+function editCmd(k){const c=S.commands.find(x=>x.key===k);
+ modal(`<div class="mh"><div style="flex:1"><h3>${t('edit_cmd')}</h3><p>${t('d_'+k)}</p></div><button class="btn ghost icon" data-act="close">${ic('x')}</button></div>
+ <div class="line"><div>${t('names')}<small>${t('names_s')}</small></div><input id="eN" value="${esc(c.names)}" style="width:240px"></div>
+ <div class="line"><div>${t('own_prefix')}<small>${t('own_prefix_s')}</small></div><input id="eP" value="${esc(c.prefix)}" style="width:70px"></div>
+ <div class="line"><div>${t('who')}</div><select id="eL">${lvOpts(c.level)}</select></div>
+ <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn danger" data-act="cmdReset" data-k="${k}" data-close="1">↺ ${t('reset')}</button><span class="sp"></span><button class="btn" data-act="close">${t('cancel')}</button><button class="btn primary" data-act="cmdSave" data-k="${k}">${t('save')}</button></div>`)}
+
+function editReplies(){const lg=S.settings.chatLang||S.lang;const def=lg==='de'?S.defaults.repliesDE:S.defaults.repliesEN;const cur=S.replies||{};
+ modal(`<div class="mh"><div style="flex:1"><h3>${t('replies')}</h3><p>${t('replies_s')}</p></div><button class="btn ghost icon" data-act="close">${ic('x')}</button></div>
+ <div class="rows">${Object.keys(def).map(k=>`<div class="r" style="grid-template-columns:150px 1fr 34px"><span class="muted" style="font:12px Consolas,monospace">${k}</span><input data-reply="${k}" value="${esc(cur[k]||'')}" placeholder="${esc(def[k])}">${resetBtn(!!cur[k],'replyReset',`data-k="${k}"`)}</div>`).join('')}</div>
+ <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" data-act="close">${t('cancel')}</button><button class="btn primary" data-act="repliesSave">${t('save')}</button></div>`)}
+
+/* ---------------------------------------------------------------- TTS */
+let winVoices=[];
+function loadVoices(){try{winVoices=speechSynthesis.getVoices().map(v=>v.name)}catch(e){}}
+loadVoices();try{speechSynthesis.onvoiceschanged=()=>{loadVoices();if(page==='tts'||page==='alerts')render()}}catch(e){}
+function voiceOpts(cur,withDefault){const nat=S.defaults.edgeVoices;
+ return(withDefault?`<option value="" ${!cur?'selected':''}>${t('v_def')}</option>`:'')+`<optgroup label="${t('v_nat')}">${nat.map(v=>{const p=v.split('-');const n=p.slice(2).join('-').replace('MultilingualNeural',' (multilingual)').replace('Neural','');return`<option value="${v}" ${cur===v?'selected':''}>${n} · ${p[0]}-${p[1]}</option>`}).join('')}</optgroup>`+
+ (winVoices.length?`<optgroup label="${t('v_win')}">${winVoices.map(v=>`<option value="${esc(v)}" ${cur===v?'selected':''}>${esc(v)}</option>`).join('')}</optgroup>`:'')}
+PAGES.tts=()=>{const c=S.tts;const words=c.words||[];const on=words.filter(w=>w.on!==false).length;
+ return`<div class="head"><div><h1>${t('tts_t')}</h1><p>${t('tts_s')}</p></div><span class="sp"></span><span class="muted" id="ttsQ">${t('tts_queue',{n:S.ttsQueue||0})}</span><button class="btn danger" data-act="ttsReset">↺ ${t('reset_tts')}</button></div>
+ <div class="card" style="margin-bottom:16px"><div class="line"><div><b>${t('tts_on')}</b></div>${sw(c.enabled,'tts',`data-k="enabled"`)}</div></div>
+ <div class="cards c2" style="margin-bottom:16px">
+ <div class="card"><h3>${t('voice')}</h3><p class="sub">${t('voice_s')}</p>
+  <div class="line"><div>${t('v_def')}</div><select data-tts="voice" style="max-width:300px">${voiceOpts(c.voice,false)}</select></div>
+  <div class="line"><div>${t('rate')}</div><input type="range" min="-10" max="10" value="${c.rate}" data-tts="rate"></div>
+  <div class="line"><div>${t('pitch')}</div><input type="range" min="-10" max="10" value="${c.pitch}" data-tts="pitch"></div>
+  <div class="line"><div>${t('volume')}</div><input type="range" min="0" max="100" value="${c.volume}" data-tts="volume"></div>
+  <div class="line"><div style="flex:1"><input id="ttsTest" value="${esc(t('test_txt'))}" style="width:100%"></div><button class="btn primary" data-act="ttsTest">${ic('play')}${t('play')}</button><button class="btn" data-act="ttsSkip">${ic('skip')}</button></div>
+ </div>
+ <div class="card"><h3>${t('filters')}</h3><p class="sub">&nbsp;</p>
+  <div class="line"><div>${t('maxc')}</div><input type="number" min="10" max="500" value="${c.maxChars}" data-tts="maxChars"></div>
+  <div class="line"><div>${t('links')}<small>${t('links_s')}</small></div>${sw(c.links,'tts',`data-k="links"`)}</div>
+  <div class="line"><div>${t('emotes')}</div>${sw(c.emotes,'tts',`data-k="emotes"`)}</div>
+  <div class="line"><div>${t('spam')}<small>${t('spam_s')}</small></div>${sw(c.collapse,'tts',`data-k="collapse"`)}</div>
+  <div class="line"><div>${t('repl')}<small>${t('repl_s')}</small></div></div><input data-tts="replacements" value="${esc(c.replacements)}" style="width:100%">
+ </div></div>
+ <div class="card" style="margin-bottom:16px"><h3>${t('sources')}</h3><p class="sub">${t('sources_s')}</p>
+  <div class="rows"><div class="r srcr h"><span>${t('c_on')}</span><span></span><span>${t('c_who')}</span><span>${t('read_name')}</span><span>${t('voice')}</span><span></span></div>
+  ${S.sources.map(s=>`<div class="r srcr ${s.on?'':'off'}">${sw(s.on,'src',`data-k="${s.key}" data-f="on"`)}<div class="nm"><b>${t('src_'+s.key)}</b></div><select data-src="${s.key}" data-f="level">${lvOpts(s.level)}</select>${sw(s.readName,'src',`data-k="${s.key}" data-f="readName"`)}<select data-src="${s.key}" data-f="voice">${voiceOpts(s.voice,true)}</select>${resetBtn(s.changed,'srcReset',`data-k="${s.key}"`)}</div>`).join('')}</div>
+  <div class="line" style="border-top:1px solid var(--line);margin-top:6px"><div>${t('reward')}<small>${t('reward_s')}</small></div><input data-tts="rewardName" value="${esc(c.rewardName)}" style="width:240px"></div>
+  <div class="line"><div>${t('name_fmt')}<small>${t('name_fmt_s')}</small></div><input data-tts="nameFormat" value="${esc(c.nameFormat)}" style="width:240px"></div>
+  <div class="line"><div>${t('ignore_cmds')}<small>${t('ignore_cmds_s')}</small></div>${sw(c.ignoreCommands,'tts',`data-k="ignoreCommands"`)}</div>
+  <div class="line"><div>${t('cooldown')}<small>${t('cooldown_s')}</small></div><input type="number" min="0" max="3600" value="${c.cooldown}" data-tts="cooldown"></div>
+  <div class="line"><div>${t('maxq')}</div><input type="number" min="1" max="200" value="${c.maxQueue}" data-tts="maxQueue"></div>
+  <div class="line"><div>${t('pause')}<small>${t('pause_s')}</small></div><input type="number" min="0" max="10000" step="100" value="${c.pauseMs}" data-tts="pauseMs"></div>
+  <div class="line"><div>${t('ignored')}<small>${t('ignored_s')}</small></div></div><input data-tts="ignoredUsers" value="${esc(c.ignoredUsers)}" style="width:100%">
+ </div>
+ <div class="card"><h3>${t('words')}</h3><p class="sub">${t('words_s')}</p>
+  <div class="line"><div>${t('words_on')}<small>${t('words_n',{a:on,b:words.length})}</small></div>${sw(c.filterOn,'tts',`data-k="filterOn"`)}</div>
+  <div class="line"><div><div class="seg"><button class="btn ${!c.blockWhole?'on':''}" data-act="block" data-v="0">${t('w_piep')}</button><button class="btn ${c.blockWhole?'on':''}" data-act="block" data-v="1">${t('w_skip')}</button></div></div><button class="btn" data-act="words">${ic('edit')}${t('words_edit')}</button></div>
+ </div>`};
+
+function editWords(){const words=(S.tts.words||[]).map(w=>({w:w.w,on:w.on!==false}));
+ const draw=()=>{$('#wl').innerHTML=words.map((w,i)=>`<div class="wl">${sw(w.on,'wToggle',`data-i="${i}"`)}<span style="${w.on?'':'opacity:.45'}">${esc(w.w)}</span><button class="btn ghost icon" data-act="wDel" data-i="${i}">${ic('trash')}</button></div>`).join('')};
+ modal(`<div class="mh"><div style="flex:1"><h3>${t('w_list')}</h3><p>${t('w_list_s')}</p></div>${resetBtn(S.tts.wordsChanged,'wReset')}<button class="btn ghost icon" data-act="close">${ic('x')}</button></div>
+ <div style="display:flex;gap:8px;margin-bottom:10px"><input id="wIn" placeholder="${t('w_add_ph')}" style="flex:1"><button class="btn primary" data-act="wAdd">${t('add')}</button></div><div id="wl"></div>`);
+ draw();
+ const save=async()=>{S=await api('/api/tts',{words});};
+ $('#modalIn').onclick=async e=>{const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+  if(a==='wToggle'){words[+b.dataset.i].on=!words[+b.dataset.i].on;draw();await save()}
+  if(a==='wDel'){words.splice(+b.dataset.i,1);draw();await save()}
+  if(a==='wAdd'){$('#wIn').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).forEach(w=>{if(!words.some(x=>x.w===w))words.unshift({w,on:true})});$('#wIn').value='';draw();await save()}
+  if(a==='wReset'){S=await api('/api/tts/reset',{what:'words'});closeModal();render();editWords()}
+  if(a==='close'){closeModal();render()}};
+ $('#wIn').onkeydown=e=>{if(e.key==='Enter')$('[data-act=wAdd]').click()}}
+
+/* ---------------------------------------------------------------- Alerts */
+PAGES.alerts=()=>`<div class="head"><div><h1>${t('al_t')}</h1><p>${t('al_s')}</p></div><span class="sp"></span><button class="btn danger" data-act="alReset">↺ ${t('reset_al')}</button></div>
+ <div class="card" style="margin-bottom:16px"><div class="line"><div><b>${t('al_on')}</b></div>${sw(S.alertsOn,'alOn')}</div></div>
+ <div class="card"><div class="rows"><div class="r alr h"><span>${t('c_on')}</span><span></span><span>${t('al_text')}</span><span>${t('al_min')}</span><span>${t('voice')}</span><span></span><span></span></div>
+ ${S.alerts.map(a=>`<div class="r alr ${a.on?'':'off'}">${sw(a.on,'al',`data-k="${a.key}" data-f="on"`)}<div class="nm"><b>${t('a_'+a.key)}</b>${a.hasMsg?'':`<small>${t('no_msg')}</small>`}</div>
+ <input data-al="${a.key}" data-f="text" value="${esc(a.text)}" title="${esc(a.vars)}">${a.hasMin?`<input type="number" min="0" data-al="${a.key}" data-f="min" value="${a.min}" style="width:80px">`:'<span class="muted">–</span>'}
+ <select data-al="${a.key}" data-f="voice">${voiceOpts(a.voice,true)}</select><button class="btn ghost icon" data-act="alTest" data-k="${a.key}">${ic('play')}</button>${resetBtn(a.changed,'alResetOne',`data-k="${a.key}"`)}</div>`).join('')}
+ </div><p class="muted" style="margin:12px 0 0;font-size:12.5px">${t('al_note',{v:'{user} {message} {bits} {months} {target} {count} {viewers} {reward}'})}</p></div>`;
+
+/* ---------------------------------------------------------------- Konten */
+let loginBox={};
+PAGES.acc=()=>{const a=S.accounts,s=S.settings;
+ const acc=(icon,color,title,sub,body)=>`<div class="card"><div class="acc" style="margin-bottom:12px"><div class="av" style="background:${color}22;color:${color}">${ic(icon)}</div><div style="flex:1"><h3>${title}</h3><span class="muted" style="font-size:13px">${sub}</span></div></div>${body}</div>`;
+ const spBody=a.spotify.connected?`<div class="line"><div class="ok">${t('as',{n:esc(a.spotify.name||'Spotify')})}${a.spotify.playback?'':`<small class="warn">${t('playback_re')}</small>`}</div><button class="btn" data-act="spLogin">${t('reconnect')}</button><button class="btn ghost danger" data-act="spLogout">${t('disconnect')}</button></div>`:
+  `<ol class="steps"><li>${t('sp_steps')[0]} <button class="btn sm" data-act="open" data-u="https://developer.spotify.com/dashboard">${ic('ext')}${t('open_dash')}</button></li><li>${t('sp_steps')[1]}<div style="margin-top:4px"><code>${esc(a.spotify.redirect)}</code> <button class="btn sm" data-act="copy" data-v="${esc(a.spotify.redirect)}">${t('copy')}</button></div></li><li>${t('sp_steps')[2]}<div style="display:flex;gap:8px;margin-top:4px"><input data-set="spotifyClientId" value="${esc(s.spotifyClientId)}" placeholder="${t('client_id')}" style="flex:1"></div></li></ol>
+  <div style="margin-top:14px"><button class="btn primary" data-act="spLogin" ${s.spotifyClientId?'':'disabled'}>${ic('spotify')}${t('connect')}</button> <span class="muted" id="spWait"></span></div>`;
+ const twApp=`${s.twitchClientId?`<div class="line"><div>${t('client_id')}<small>${esc(s.twitchClientId.slice(0,6))}…</small></div><button class="btn sm" data-act="twEditApp">${ic('edit')}</button></div>`:''}
+  <div id="twApp" ${s.twitchClientId?'hidden':''}><ol class="steps"><li>${t('tw_steps')[0]} <button class="btn sm" data-act="open" data-u="https://dev.twitch.tv/console/apps/create">${ic('ext')}${t('open_console')}</button></li><li>${t('tw_steps')[1]}</li><li>${t('tw_steps')[2]}<div style="margin-top:4px"><input data-set="twitchClientId" value="${esc(s.twitchClientId)}" placeholder="${t('client_id')}" style="width:100%"></div></li></ol></div>`;
+ const twAcc=(which,info)=>info.connected?`<div class="line"><div class="ok">${t('as',{n:esc(info.login)})}${which==='streamer'&&!info.full?`<small class="warn">${t('needs_re')}</small>`:''}</div><button class="btn" data-act="twLogin" data-w="${which}">${t('reconnect')}</button><button class="btn ghost danger" data-act="twLogout" data-w="${which}">${t('disconnect')}</button></div>`:
+  `<button class="btn ${which==='streamer'?'primary':''}" data-act="twLogin" data-w="${which}" ${s.twitchClientId?'':'disabled'}>${ic('twitch')}${t('connect')}</button>`;
+ return`<div class="head"><div><h1>${t('acc_t')}</h1><p>${t('acc_s')}</p></div></div>
+ <div class="cards c2">
+  ${acc('twitch','#9146ff',t('tw_app'),t('tw_app_s'),twApp)}
+  ${acc('spotify','#1db954',t('sp_t'),t('sp_s'),spBody)}
+  ${acc('user','#9146ff',t('streamer'),t('streamer_s'),twAcc('streamer',a.streamer)+`<div class="line" style="border-top:1px solid var(--line);margin-top:10px"><div>${t('channel')}<small>${t('channel_s')}</small></div><input data-set="channel" value="${esc(s.channel)}" placeholder="${esc(a.streamer.login||'')}" style="width:200px"></div>`)}
+  ${acc('cmd','#98a0ad',t('bot_acc'),t('bot_acc_s'),twAcc('bot',a.bot))}
+ </div>`};
+function showCode(which,code,uri){modal(`<div class="mh"><div style="flex:1"><h3>${t('code_t')}</h3></div><button class="btn ghost icon" data-act="close">${ic('x')}</button></div>
+ <p class="muted">${t('code_s',{w:t(which==='bot'?'code_bot':'code_streamer')})}</p><div class="code-box">${esc(code)}</div>${which==='bot'?`<p class="muted" style="font-size:13px">${t('code_tip')}</p>`:''}
+ <div style="display:flex;gap:8px;align-items:center"><span class="muted" style="flex:1">${t('waiting')}</span><button class="btn" data-act="open" data-u="${esc(uri)}">${ic('ext')}${t('open_again')}</button></div>`);loginBox={which}}
+
+/* ---------------------------------------------------------------- Einstellungen */
+PAGES.set=()=>{const s=S.settings;
+ return`<div class="head"><div><h1>${t('set_t')}</h1><p>${t('set_s')}</p></div></div>
+ <div class="cards c2">
+ <div class="card">
+  <div class="line"><div>${t('autostart')}<small>${t('autostart_s')}</small></div>${sw(s.autoStart,'set',`data-k="autoStart"`)}</div>
+  <div class="line"><div>${t('chat_lang')}</div><select data-set="chatLang"><option value="" ${!s.chatLang?'selected':''}>${t('same_app')}</option><option value="en" ${s.chatLang==='en'?'selected':''}>English</option><option value="de" ${s.chatLang==='de'?'selected':''}>Deutsch</option></select></div>
+  <div class="line"><div>${t('look_t')}<small>${t(S.solo?'look_solo':'look_hub')}</small></div></div>
+ </div>
+ <div class="cards" style="align-content:start">
+ <div class="card"><h3>${t('data_t')}</h3><p class="sub" style="margin:0">${t('data_s')}</p><p class="muted" style="margin:8px 0 0;font-size:12.5px">${t('version',{v:esc(S.version)})}</p></div>
+ </div></div>`};
+
+/* ---------------------------------------------------------------- Playlist-Sortierer */
+let SO=null,sortSel=new Set(),sortOpt={splitMood:true,chillMix:true,minSongs:3,prefix:''};
+PAGES.sort=()=>{if(!S.accounts.spotify.connected)return`<div class="head"><div><h1>${t('sort_t')}</h1><p>${t('sort_s')}</p></div></div><div class="note">${t('sort_need_sp')} <button class="btn sm primary" data-page="acc">${t('go_acc')}</button></div>`;
+ if(!SO)return`<div class="head"><div><h1>${t('sort_t')}</h1><p>${t('sort_s')}</p></div></div><div class="empty">…</div>`;
+ const j=SO.job||{};const songs=j.songs||[];const models=SO.models||[];
+ const step=j.running?({load:t('st_load'),genres:t('st_genres'),ai:t('st_ai')}[j.step]||'…'):(songs.length?t('st_done'):'');
+ const pct=j.total?Math.round(j.done/j.total*100):0;
+ return`<div class="head"><div><h1>${t('sort_t')} <span class="tag">${t('beta')}</span></h1><p>${t('sort_s')}</p></div><span class="sp"></span>${SO.created?`<button class="btn ghost" data-act="sortForget">${t('sort_forget')}</button>`:''}</div>
+ ${models.length?'':`<div class="note">${t('sort_no_ollama')}</div>`}
+ <div class="cards c2" style="margin-bottom:16px">
+ <div class="card"><h3>${t('sort_pl')}</h3><p class="sub">&nbsp;</p><div class="pl">${(SO.playlists||[]).map(p=>`<label><input type="checkbox" data-pl="${p.id}" ${sortSel.has(p.id)?'checked':''}>${esc(p.name)}<small>${p.count||''}</small></label>`).join('')}</div></div>
+ <div class="card"><div class="line"><div>${t('sort_model')}</div><select id="sortModel">${models.map(m=>`<option>${esc(m)}</option>`).join('')}</select></div>
+  <div class="line"><div>${t('sort_split')}</div>${sw(sortOpt.splitMood,'sortOpt',`data-k="splitMood"`)}</div>
+  <div class="line"><div>${t('sort_chill')}</div>${sw(sortOpt.chillMix,'sortOpt',`data-k="chillMix"`)}</div>
+  <div class="line"><div>${t('sort_min')}</div><input type="number" min="1" value="${sortOpt.minSongs}" id="sortMin"></div>
+  <div class="line"><div>${t('sort_prefix')}</div><input id="sortPrefix" value="${esc(sortOpt.prefix)}" style="width:120px"></div>
+  <div class="line"><button class="btn primary" data-act="sortRun" ${j.running||!models.length?'disabled':''}>${t('sort_run')}</button><button class="btn" data-act="sortApply" ${j.running||!songs.length?'disabled':''}>${t('sort_apply')}</button><span class="muted">${step}</span></div>
+  ${j.running?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}${j.error?`<p class="bad">${esc(j.error)}</p>`:''}
+ </div></div>
+ ${songs.length?`<div class="card"><table class="st"><tr><th>${t('sort_song')}</th><th>${t('sort_genre')}</th><th>${t('sort_mood')}</th></tr>${songs.map((s,i)=>`<tr><td><b>${esc(s.name)}</b> <span class="muted">${esc((s.artists||[]).join(', '))}</span></td><td><input value="${esc(s.genre)}" data-sg="${i}" style="width:160px"></td><td><select data-sm="${i}">${['Chill','Medium','Upbeat'].map(m=>`<option value="${m}" ${s.mood===m?'selected':''}>${t('m_'+m)}</option>`).join('')}</select></td></tr>`).join('')}</table></div>`:''}`};
+after.sort=()=>{if(!SO&&S.accounts.spotify.connected)loadSort()};
+async function loadSort(){try{SO=await api('/api/sort/info')}catch(e){SO={models:[],playlists:[],job:{}}}if(page==='sort')render()}
+let sortT=null;function watchSort(){clearInterval(sortT);sortT=setInterval(async()=>{const j=await api('/api/sort/job');if(SO)SO.job=j;if(page==='sort')render();if(!j.running)clearInterval(sortT)},1200)}
+
+/* ---------------------------------------------------------------- Ereignisse */
+async function setSetting(k,v){S=await api('/api/settings',{[k]:v});if(k==='lang'||k==='theme'||k==='accent'||k==='density')render();else{renderTop()}}
+document.addEventListener('click',async e=>{
+ const pg=e.target.closest('[data-page]');if(pg){page=pg.dataset.page;render();$('#app').scrollTop=0;return}
+ const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act,k=b.dataset.k;
+ try{
+ switch(a){
+  case 'botStart':await api('/api/bot/start',{});await refresh();break;
+  case 'botStop':await api('/api/bot/stop',{});await refresh();break;
+  case 'spSkip':await api('/api/spotify/skip',{});break;
+  case 'set':S=await api('/api/settings',{[k]:!b.classList.contains('on')});render();break;
+  case 'setv':await setSetting(k,b.dataset.v);break;
+  case 'prefix':S=await api('/api/settings',{cmdPrefix:b.dataset.p});render();break;
+  case 'blkAdd':{const n=$('#blkIn').value.trim().toLowerCase().replace(/^@/,'');if(!n)break;const l=[...(S.settings.blocked||[]).filter(x=>x!==n),n];S=await api('/api/settings',{blocked:l});render();break}
+  case 'blkRm':S=await api('/api/settings',{blocked:(S.settings.blocked||[]).filter(x=>x!==b.dataset.n)});render();break;
+  case 'cmdToggle':S=await api('/api/command',{key:k,on:!b.classList.contains('on')});render();break;
+  case 'cmdEdit':editCmd(k);break;
+  case 'cmdSave':S=await api('/api/command',{key:k,names:$('#eN').value,prefix:$('#eP').value.replace(/[^!\/.?#$%&*+\-~]/g,''),level:+$('#eL').value});closeModal();render();toast(t('saved'));break;
+  case 'cmdReset':S=await api('/api/command/reset',{key:k});if(b.dataset.close)closeModal();render();break;
+  case 'cmdResetAll':if(confirm(t('reset_q'))){S=await api('/api/command/reset',{key:'*'});S=await api('/api/replies',{});render()}break;
+  case 'replies':editReplies();break;
+  case 'replyReset':{const i=$(`[data-reply="${k}"]`);i.value='';b.disabled=true;break}
+  case 'repliesSave':{const r={};document.querySelectorAll('[data-reply]').forEach(i=>{if(i.value.trim())r[i.dataset.reply]=i.value});S=await api('/api/replies',r);closeModal();toast(t('saved'));break}
+  case 'tts':S=await api('/api/tts',{[k]:!b.classList.contains('on')});render();break;
+  case 'block':S=await api('/api/tts',{blockWhole:b.dataset.v==='1'});render();break;
+  case 'words':editWords();break;
+  case 'ttsTest':await api('/api/tts/test',{text:$('#ttsTest').value});break;
+  case 'ttsSkip':await api('/api/tts/skip',{});stopSpeaking();break;
+  case 'ttsClear':await api('/api/tts/clear',{});stopSpeaking();break;
+  case 'ttsReset':if(confirm(t('reset_tts_q'))){S=await api('/api/tts/reset',{});render()}break;
+  case 'src':S=await api('/api/tts/source',{key:k,field:b.dataset.f,value:!b.classList.contains('on')});render();break;
+  case 'srcReset':S=await api('/api/tts/source',{key:k,reset:true});render();break;
+  case 'alOn':S=await api('/api/alerts',{enabled:!b.classList.contains('on')});render();break;
+  case 'al':S=await api('/api/alerts',{key:k,field:b.dataset.f,value:!b.classList.contains('on')});render();break;
+  case 'alResetOne':S=await api('/api/alerts',{key:k,reset:true});render();break;
+  case 'alReset':S=await api('/api/alerts',{resetAll:true});render();break;
+  case 'alTest':await api('/api/alerts/test',{key:k});break;
+  case 'open':api('/api/open',{url:b.dataset.u});break;
+  case 'copy':navigator.clipboard.writeText(b.dataset.v).then(()=>toast(t('copied')));break;
+  case 'spLogin':await api('/api/spotify/login',{});toast(t('sp_wait'));break;
+  case 'spLogout':S=await api('/api/spotify/logout',{});render();break;
+  case 'twLogin':{const r=await api('/api/twitch/login',{which:b.dataset.w});showCode(b.dataset.w,r.code,r.uri);api('/api/open',{url:r.uri});break}
+  case 'twLogout':S=await api('/api/twitch/logout',{which:b.dataset.w});render();break;
+  case 'twEditApp':$('#twApp').hidden=false;b.closest('.line').hidden=true;break;
+  case 'close':closeModal();break;
+  case 'sortOpt':sortOpt[k]=!sortOpt[k];render();break;
+  case 'sortRun':await api('/api/sort/run',{ids:[...sortSel],model:$('#sortModel').value});SO.job={running:true};render();watchSort();break;
+  case 'sortApply':{sortOpt.minSongs=+$('#sortMin').value||3;sortOpt.prefix=$('#sortPrefix').value;const r=await api('/api/sort/apply',sortOpt);toast(t('sort_done',{n:r.added,p:r.playlists}));SO=null;loadSort();break}
+  case 'sortForget':await api('/api/sort/forget',{});SO=null;loadSort();break;
+ }}catch(x){toast(errMsg(x))}});
+document.addEventListener('change',async e=>{const el=e.target;
+ try{
+ if(el.dataset.set){let v=el.type==='number'?+el.value:el.value;S=await api('/api/settings',{[el.dataset.set]:v});if(el.dataset.set==='accent')render();else if(['spotifyClientId','twitchClientId'].includes(el.dataset.set))render();toast(t('saved'))}
+ else if(el.dataset.tts){const k=el.dataset.tts;let v=el.type==='number'||el.type==='range'?+el.value:el.value;S=await api('/api/tts',{[k]:v});toast(t('saved'))}
+ else if(el.dataset.src){S=await api('/api/tts/source',{key:el.dataset.src,field:el.dataset.f,value:el.dataset.f==='level'?+el.value:el.value});render()}
+ else if(el.dataset.al){const f=el.dataset.f;S=await api('/api/alerts',{key:el.dataset.al,field:f,value:f==='min'?+el.value:el.value});render()}
+ else if(el.dataset.act==='cmdLevel'){S=await api('/api/command',{key:el.dataset.k,level:+el.value});render()}
+ else if(el.dataset.pl){el.checked?sortSel.add(el.dataset.pl):sortSel.delete(el.dataset.pl)}
+ else if(el.dataset.sg!==undefined){const j=await api('/api/sort/edit',{i:+el.dataset.sg,genre:el.value});SO.job=j}
+ else if(el.dataset.sm!==undefined){const j=await api('/api/sort/edit',{i:+el.dataset.sm,mood:el.value});SO.job=j}
+ }catch(x){toast(errMsg(x))}});
+
+/* ---------------------------------------------------------------- Live-Daten */
+async function refresh(){S=await api('/api/state');render()}
+async function poll(){try{const r=await api('/api/events?since='+evSince);
+ for(const ev of r.events||[]){evSince=ev.t;const d=new Date();feed.push({...ev,time:d.toTimeString().slice(0,5)});if(feed.length>200)feed.shift()}
+ const before=JSON.stringify([S.bot&&S.bot.running,S.bot&&S.bot.joined]);S.bot=r.bot;S.ttsQueue=r.ttsQueue;renderTop();
+ const ls=r.loginState||{};for(const w of ['streamer','bot','spotify']){const st=ls[w];if(st&&(st.done||st.error)&&!handled[w+JSON.stringify(st)]){handled[w+JSON.stringify(st)]=1;if(st.error)toast(t('err',{e:st.error}));if(st.done){if(loginBox.which===w)closeModal();await refresh();return}}}
+ if(page==='live')render();else if(page==='tts'){const q=$('#ttsQ');if(q)q.textContent=t('tts_queue',{n:r.ttsQueue})}
+ }catch(e){}}
+const handled={};
+
+/* ---------------------------------------------------------------- Vorlesen im Fenster */
+let speaking=null,skipAt=0;
+function stopSpeaking(){try{speechSynthesis.cancel()}catch(e){}const au=$('#au');au.pause();au.removeAttribute('src');if(speaking)speaking()}
+function speakLocal(it){return new Promise(res=>{try{const u=new SpeechSynthesisUtterance(it.text);const vs=speechSynthesis.getVoices();
+ let v=vs.find(x=>x.name===it.voice);if(!v){const want=(it.voice||'').slice(0,2)||lang;v=vs.find(x=>x.lang&&x.lang.startsWith(want))}if(v)u.voice=v;
+ u.rate=Math.max(.5,Math.min(2,1+it.rate/10));u.pitch=Math.max(0,Math.min(2,1+it.pitch/10));u.volume=it.volume/100;
+ u.onend=u.onerror=()=>res();speaking=res;speechSynthesis.speak(u)}catch(e){res()}})}
+async function speakNatural(it){const r=await fetch('/api/tts/audio',{method:'POST',body:JSON.stringify(it)});if(!r.ok)throw new Error('tts');
+ const url=URL.createObjectURL(await r.blob());const au=$('#au');au.volume=it.volume/100;au.src=url;
+ await new Promise(res=>{speaking=res;au.onended=au.onerror=()=>res();au.play().catch(()=>res())});URL.revokeObjectURL(url)}
+async function ttsLoop(){for(;;){try{const r=await api('/api/tts/next');if(!r.item)continue;const it=r.item;skipAt=r.skip;
+ const watch=setInterval(async()=>{try{const s=await api('/api/tts/skipseq');if(s.skip!==skipAt){skipAt=s.skip;stopSpeaking()}}catch(e){}},400);
+ try{if(/Neural$/.test(it.voice||'')){try{await speakNatural(it)}catch(e){await speakLocal({...it,voice:''})}}else await speakLocal(it)}finally{clearInterval(watch);speaking=null}
+ await new Promise(r=>setTimeout(r,it.pause||0))}catch(e){await new Promise(r=>setTimeout(r,2000))}}}
+
+(async()=>{await refresh();setInterval(poll,1000);ttsLoop();
+ if(setupNeeded()&&page==='live'){/* bleibt auf Live mit Hinweis */}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+@T@ FÜR macOS (Creator Hub)
+===========================
+
+Installieren
+1. „@T@.app“ in den Ordner „Programme“ ziehen.
+2. Die App ist (noch) nicht bei Apple registriert. Darum beim ersten Start:
+   Rechtsklick auf „@T@“ > „Öffnen“ > „Öffnen“.
+   Ab macOS 15: Starten versuchen, dann Systemeinstellungen > Datenschutz & Sicherheit >
+   ganz unten „Dennoch öffnen“.
+3. Meldet macOS „ist beschädigt“: Terminal öffnen und eingeben
+      xattr -cr "/Applications/@T@.app"
+
+Was das Werkzeug zusätzlich braucht (KI-Modell oder ffmpeg), lädt es beim ersten
+Start selbst und zeigt den Fortschritt an.
+
+Das Werkzeug läuft ohne den Creator Hub und aktualisiert sich selbst.
+Updates, Design und Sprache: Zahnrad unten rechts im Fenster.
+
+
+@T@ FOR macOS (Creator Hub)
+===========================
+
+Install
+1. Drag "@T@.app" into your Applications folder.
+2. The app is not registered with Apple (yet). On first launch:
+   right-click "@T@" > "Open" > "Open".
+   On macOS 15 and later: try to open it, then System Settings > Privacy & Security >
+   "Open Anyway" at the bottom.
+3. If macOS says the app "is damaged": open Terminal and run
+      xattr -cr "/Applications/@T@.app"
+
+Anything the tool needs on top (AI model or ffmpeg) it downloads itself on first
+start and shows the progress.
+
+The tool runs without Creator Hub and updates itself.
+Updates, theme and language: gear at the bottom right of the window.

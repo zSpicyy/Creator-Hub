@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MP3 Schneider</title>
+<link rel="icon" href="/logo.svg">
+<link rel="stylesheet" href="/kit/tokens.css">
+<style>
+/* Schnittplatz: links Projekte, oben die große leuchtende Wellenform, darunter die Titelliste wie in einer Musik-App */
+:root{--ink:#0f1642;--ink2:#17205a;--ink3:#222d73;--rule:#34408f;--paper:#f6f1e4;--dim:#a9b0dc;--coral:#ff5b3a;--blue:#46c8ff;--mark:#ffd23f;--good:#7ce38b;--warn:#ffb347;
+--disp:"Segoe UI",system-ui,sans-serif;--body:"Segoe UI",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--ink);color:var(--paper);font:14px/1.45 var(--body);display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "nav main";height:100vh;overflow:hidden}main#app{grid-area:main}.ch-nav .pj small{padding:0;font-size:12px}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{background:var(--ink);border:1px solid var(--rule);border-radius:2px;padding:7px 9px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:62px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--mark);outline-offset:1px}
+button{background:none;border:1px solid var(--rule);border-radius:2px;padding:6px 11px;cursor:pointer}
+button:hover:not(:disabled){background:var(--ink3)}button:disabled{opacity:.45;cursor:default}
+.main-btn{background:var(--coral);border-color:var(--coral);color:var(--accent-ink);font:700 16px var(--disp);padding:9px 22px}.main-btn:hover:not(:disabled){background:var(--coral);filter:brightness(1.08)}
+.quiet{border:0;color:var(--dim);padding:4px 6px}.quiet:hover:not(:disabled){color:var(--paper);background:none}
+nav.ch-nav{padding:14px 10px}main{overflow:auto}
+.brand{font:700 22px/1 var(--disp);padding:0 14px 14px}
+#plist{display:flex;flex-direction:column;overflow:auto;flex:1}
+.pj{border:0;border-radius:8px;text-align:left;padding:7px 11px 7px 37px;display:block;width:100%;color:var(--muted)}.pj:hover:not(:disabled){background:var(--panel2);color:var(--text)}.ovb{font-weight:600;border-bottom:1px solid var(--line)!important}.ov{padding:22px 28px}.ovh{display:flex;align-items:baseline;gap:10px;margin-bottom:16px}.ovh h2{margin:0;font-size:19px;font-weight:700}.ovh span{color:var(--dim)}.pj small{display:block;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pj[aria-current=true]{background:var(--panel2);color:var(--text);font-weight:600}.pj[aria-current=true] small{color:var(--muted)}
+.navb{border:0;border-radius:0;text-align:left;padding:9px 14px;width:100%;color:var(--dim)}.navb[aria-current=true]{background:var(--coral);color:var(--accent-ink);font-weight:600}
+
+#nf{padding:12px 4px 0;border-top:1px solid var(--line);display:grid;gap:6px;margin-top:6px}#plist{flex:1;min-height:0}
+main{min-width:0;padding:0 0 40px}
+header.top{display:flex;gap:10px;align-items:baseline;padding:16px 24px 12px}header.top h1{font:700 30px/1.1 var(--disp);margin:0;flex:1;min-width:0}
+.setup{display:grid;grid-template-columns:120px minmax(0,1fr);gap:9px 14px;padding:0 24px 16px;align-items:start}.setup>label{padding-top:8px}
+.setup>label{color:var(--dim)}.line{display:flex;gap:6px;min-width:0}.line>:first-child{flex:1}
+.note{color:var(--dim);font-size:13px;margin:3px 0 0}.err{color:var(--danger);font-weight:600}.err:empty{display:none}
+.tl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.go{display:flex;gap:12px;align-items:center;flex-wrap:wrap;grid-column:2}
+.bar{height:6px;background:var(--ink3);margin-top:6px;grid-column:2}.bar i{display:block;height:100%;background:var(--coral);width:0}
+details summary{cursor:pointer;color:var(--dim)}.more{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:8px}
+.stage{background:var(--panel);border-block:1px solid var(--rule);position:relative}
+#wave{display:block;width:100%;height:210px;cursor:crosshair;touch-action:none}
+.tools{display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;padding:8px 24px;color:var(--dim);font-size:13px}.tools .sp{flex:1}.hint{padding:0 24px 8px;color:var(--dim);font-size:13px}.zb{width:34px;padding:3px 0;font:700 18px/1.2 var(--body)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tw{padding:0 24px;overflow-x:auto}
+th{font:600 12px var(--body);color:var(--dim);text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}tr.now td{background:var(--ink3)}
+.num{color:var(--dim);width:34px;text-align:right}.ttl{font-weight:600}.ttl small{display:block;font-weight:400;color:var(--dim)}
+.pl{width:30px;height:30px;padding:0;border:0;background:none;color:var(--blue);font-size:15px}
+.tm{white-space:nowrap}.warn{color:var(--warn)}.ok{color:var(--good)}
+.acts{white-space:nowrap;text-align:right}.acts button{padding:3px 7px;font-size:13px;border:0;color:var(--blue)}.acts .rm{color:var(--dim)}.acts .rm:hover{color:var(--paper)}.acts .alt{color:var(--warn)}
+@media(hover:hover){.acts .hov{opacity:0}tr:hover .acts .hov,tr:focus-within .acts .hov{opacity:1}}
+.saveb{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:16px 24px}
+.empty{padding:22px 28px;color:var(--dim);max-width:70ch}.empty b{display:block;font-size:19px;font-weight:700;color:var(--paper);margin-bottom:6px}
+.path{word-break:break-all}
+#plbox{border:1px solid var(--rule);background:var(--panel);margin-top:4px}#plq{border:0;border-bottom:1px solid var(--rule);border-radius:0}#pll{max-height:280px;overflow:auto}
+.plr{display:flex;justify-content:space-between;gap:12px;width:100%;border:0;border-radius:0;text-align:left;padding:7px 10px}.plr small{color:var(--dim);white-space:nowrap}
+.field{width:100%;text-align:left;background:var(--ink);display:flex;justify-content:space-between}
+.sets{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px 14px;padding:0 24px 22px;align-items:center;max-width:880px}.sets h2{grid-column:1/-1;font:700 19px var(--disp);margin:14px 0 0;padding-top:12px;border-top:1px solid var(--rule)}.sets>label{color:var(--dim)}
+.sets ol{margin:0;padding-left:20px;display:grid;gap:10px}.sets li>*{margin-top:4px}.chk{display:flex;gap:8px;align-items:center}.chk input{width:auto}
+code{font:13px Consolas,monospace;background:var(--ink3);padding:2px 6px;user-select:all;word-break:break-all}
+[hidden]{display:none!important}
+@media(max-width:720px){nav{height:auto;position:static}.sets{grid-template-columns:1fr}.sets>label{margin-bottom:-8px}body{grid-template-columns:1fr}nav{min-height:0}#plist{max-height:150px}.setup{grid-template-columns:1fr}.go,.bar{grid-column:1}.setup>label{margin-bottom:-6px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Farben und Formen kommen aus dem Hub */
+:root{--ink:var(--bg);--ink2:var(--panel);--ink3:var(--panel2);--rule:var(--line);--paper:var(--text);--dim:var(--muted);--coral:var(--accent);--disp:"Segoe UI Semibold","Segoe UI",system-ui,sans-serif}
+button,input,select,textarea{border-radius:8px}.pj,.navb{border-radius:8px;margin:1px 8px;width:auto}
+.brand{display:flex;align-items:center;gap:10px;font:700 16px "Segoe UI",system-ui,sans-serif}.brand img{width:30px;height:30px}
+#kitOverlay{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(3px);pointer-events:none}#kitOverlay div{border:3px dashed var(--accent);border-radius:18px;padding:40px 60px;background:var(--panel);font-size:18px;font-weight:600;color:var(--accent)}body.kit-dragging #kitOverlay{display:grid}
+#kitToast{position:fixed;bottom:20px;left:50%;translate:-50% 0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 16px;z-index:60;display:none}#kitToast.show{display:block}
+/* Projektkarten */.pgrid,.ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.proj{position:relative;padding:12px!important;border-radius:14px!important;display:flex!important;flex-direction:column;background:var(--panel);border:1px solid var(--line);overflow:hidden;text-align:left;cursor:pointer;color:var(--text);font:inherit}.proj:hover{border-color:var(--accent)}.proj .th{border-radius:10px;overflow:hidden;height:150px!important;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--accent) 22%,var(--panel2)),var(--panel2) 75%) center/cover}.proj .tx{padding:12px 2px 2px!important;display:flex;flex-direction:column;gap:6px;flex:1}.proj .tr{display:flex;align-items:center;gap:8px;min-width:0}.proj .tr b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.proj .tag{font-style:normal;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;white-space:nowrap;flex:none}.proj .tx>span{font-size:13px;color:var(--muted)}.proj .open{font-style:normal;align-self:flex-end;margin-top:4px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;border-radius:9px;padding:6px 14px}.proj .del{top:20px!important;right:20px!important}</style><link rel="stylesheet" href="/kit/polish.css">
+</head><body>
+<header class="ch-top chtop"><div class="ch-brand"><img src="/logo.svg" alt="">MP3 Schneider</div><span class="ch-sp"></span></header>
+<nav class="ch-nav"><button class="ch-item" id="ovb" type="button"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button><div id="plist"></div>
+<form id="nf"><input id="nn" placeholder="Name des Projekts" aria-label="Name des Projekts"><button>Neues Projekt</button><div class="err" id="ne"></div></form><button class="ch-item" id="setb" type="button" style="margin-top:6px"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Einstellungen</button></nav>
+<main id="app"></main><audio id="au" preload="none"></audio>
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s),app=$('#app'),au=$('#au');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(path,o={}){const r=await fetch('/api'+path,{headers:{'Content-Type':'application/json'},...o,body:o.body?JSON.stringify(o.body):undefined});if(r.status===204||r.status===202)return null;let d;try{d=await r.json()}catch{d={}}if(!r.ok)throw new Error(d.error||'Das hat nicht geklappt.');return d}
+const clock=s=>{s=Math.max(0,Math.round(s));const h=s/3600|0,m=(s%3600)/60|0,x=s%60;return(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0')};
+const fine=s=>clock(Math.floor(s))+','+Math.floor(s*10%10);
+const size=b=>b>=1e12?(b/1e12).toFixed(2).replace('.',',')+' TB':b>=1e9?(b/1e9).toFixed(1).replace('.',',')+' GB':(b/1e6).toFixed(1).replace('.',',')+' MB';
+let sp={},setv=null,plCache=null,kinds=[],P=null,peaks=null,view=[0,0],timer=null,list=[],undo=[];
+
+async function rail(){list=await api('/projects');$('#plist').innerHTML=list.map(p=>`<button class="pj" data-id="${p.id}" aria-current="${P&&P.id===p.id}">${esc(p.name)}<small>${p.analyzed?partsOf(p).length+' Teile · '+clock(p.dur):p.source?'bereit':'neu'}</small></button>`).join('');
+ document.querySelectorAll('#plist .pj').forEach(b=>b.onclick=()=>open_(list.find(p=>p.id===b.dataset.id)))}
+$('#nf').onsubmit=async e=>{e.preventDefault();$('#ne').textContent='';try{const p=await api('/projects',{method:'POST',body:{name:$('#nn').value}});$('#nn').value='';await open_(p)}catch(x){$('#ne').textContent=x.message}};
+function empty(){if(list&&list.length)return overview();app.innerHTML=`<div class="ch-empty" style="margin:28px;padding:56px 20px"><svg viewBox="0 0 48 48"><path d="M6 24v0M12 18v12M18 10v28M24 16v16M30 6v36M36 15v18M42 21v6"/></svg><b>Noch keine Projekte</b><p>Lege ein Projekt an und wähle danach deine lange Aufnahme aus. Sie wird automatisch in einzelne Dateien geschnitten.</p><form id="nf2" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center"><input id="nn2" placeholder="Name des Projekts" aria-label="Name des Projekts" style="width:240px"><button class="main-btn">Neues Projekt</button></form><div class="err" id="ne2"></div></div>`;$('#nf2').onsubmit=async e=>{e.preventDefault();$('#ne2').textContent='';try{const p=await api('/projects',{method:'POST',body:{name:$('#nn2').value.trim()||Kit.t('Mein Projekt')}});await open_(p)}catch(x){$('#ne2').textContent=x.message}};setTimeout(()=>$('#nn2')?.focus(),50)}
+// Projektübersicht als Karten, wie in den anderen Werkzeugen
+function overview(){P=null;clearInterval(timer);au.pause();$('#ovb').setAttribute('aria-current','true');$('#setb').setAttribute('aria-current','false');$('#plist').querySelectorAll('.pj').forEach(b=>b.setAttribute('aria-current','false'));
+ app.innerHTML=`<div class="ov"><div class="ovh"><h2>Projekte</h2><span>${list.length}</span></div><div class="ovgrid">${list.map(p=>`<button class="proj" data-ov="${p.id}"><div class="th"><img src="/logo.svg" alt="" style="width:72px;height:72px"></div><div class="tx"><div class="tr"><b>${esc(p.name)}</b><em class="tag">${p.analyzed?partsOf(p).length+' Teile':p.source?'bereit':'neu'}</em></div><span>${p.dur?clock(p.dur)+' Min. Aufnahme':'Noch keine MP3 gewählt'}</span><i class="open">Öffnen</i></div></button>`).join('')}</div></div>`;
+ app.querySelectorAll('[data-ov]').forEach(b=>b.onclick=()=>open_(list.find(x=>String(x.id)===b.dataset.ov)))}
+function partsOf(p){const c=(p.cuts||[]).filter(x=>x.accepted).map(x=>x.t).sort((a,b)=>a-b),e=[0,...c,p.dur];return c.concat(0).map((_,i)=>({a:e[i],b:e[i+1]}))}
+const kind=()=>kinds.find(k=>k.id===P.kind)||kinds[0];
+const pre=()=>(P.prefix||'').trim()||kind().prefix;
+const tracks=()=>P.tracks||[];
+const nameOf=i=>tracks()[i]?.title||`${pre()} ${i+1}`;
+async function save(b){P=await api('/projects/'+P.id,{method:'PATCH',body:b});return P}
+
+async function open_(p){$('#setb').setAttribute('aria-current','false');$('#ovb').setAttribute('aria-current','false');undo=[];clearInterval(timer);au.pause();P=p;peaks=null;await rail();render();const j=await api(`/projects/${P.id}/job`);if(j.running)watch();else if(P.analyzed)await loadWave()}
+async function settings(){clearInterval(timer);au.pause();P=null;peaks=null;await rail();$('#setb').setAttribute('aria-current','true');$('#ovb').setAttribute('aria-current','false');const d=await api('/settings');setv=d.settings;sp=await api('/spotify/status');
+ const s=setv,opt=(v,t,cur)=>`<option value="${v}" ${v===cur?'selected':''}>${t}</option>`;
+ app.innerHTML=`<header class="top"><h1>Einstellungen</h1><span class="note" id="saved2" aria-live="polite"></span></header><section class="sets">
+ <h2 style="border:0;margin-top:0;padding-top:0">Spotify</h2><div style="grid-column:1/-1">${sp.connected?`<div class="tl"><span class="ok">Verknüpft${sp.name?' mit '+esc(sp.name):''}</span><button id="spoff">Verknüpfung trennen</button></div><p class="note">In jedem Projekt kannst du jetzt unter „Titel“ deine Playlists auswählen.</p>`:
+ `<ol><li>Leg bei Spotify kostenlos eine eigene App an. Spotify verlangt dafür ein Premium-Konto. Name und Beschreibung sind frei, bei den APIs wählst du „Web API“.<div><button id="dash">Spotify-Dashboard öffnen</button></div></li>
+ <li>Trag dort diese Redirect-URI ein:<div class="tl"><code id="ruri">${esc(sp.redirect)}</code><button id="copy">Kopieren</button></div></li>
+ <li>Kopiere die Client-ID deiner App und füge sie hier ein:<div class="line"><input id="cid" placeholder="Client-ID" value="${esc(s.clientId)}" aria-label="Client-ID"></div></li>
+ </ol><div style="margin-top:12px"><button class="main-btn" id="spon">Mit Spotify verbinden</button></div>`}<div class="err" id="sperr">${esc(sp.error||'')}</div></div>
+ <h2>Neue Projekte</h2>
+ <label for="dout">Zielordner</label><div class="line"><input id="dout" value="${esc(s.defaultOutDir)}" placeholder="Bei jedem Projekt selbst wählen"><button id="dpick">Auswählen</button></div>
+ <label for="dkind">Inhalt</label><select id="dkind">${kinds.map(k=>opt(k.id,esc(k.name),s.defaultKind)).join('')}</select>
+ <h2>Dateien</h2>
+ <label for="fmt">Name mit Titelliste</label><select id="fmt">${opt('num-title','01 Titel.mp3',s.nameFormat)}${opt('title','Titel.mp3',s.nameFormat)}${opt('num-artist-title','01 Künstler - Titel.mp3',s.nameFormat)}${opt('artist-title','Künstler - Titel.mp3',s.nameFormat)}</select>
+ <label for="ovr">Datei gibt es schon</label><select id="ovr"><option value="0" ${s.overwrite?'':'selected'}>Neue Datei mit Zusatz anlegen</option><option value="1" ${s.overwrite?'selected':''}>Alte Datei ersetzen</option></select>
+ <span></span><label class="chk"><input type="checkbox" id="tags" ${s.writeTags?'checked':''}>Titel, Künstler und Nummer in die Datei schreiben</label>
+ <span></span><label class="chk"><input type="checkbox" id="sub" ${s.subfolder?'checked':''}>Für jedes Projekt einen eigenen Unterordner anlegen</label>
+ <span></span><label class="chk"><input type="checkbox" id="rold" ${s.replaceOld?'checked':''}>Beim erneuten Speichern die alten Dateien des Projekts in den Papierkorb legen</label>
+ <span></span><label class="chk"><input type="checkbox" id="oa" ${s.openAfter?'checked':''}>Ordner nach dem Speichern öffnen</label>
+ <h2>Leistung</h2>
+ <label for="cores">Prozessorkerne</label><div><select id="cores">${opt(0,'Alle ('+d.maxCores+')',s.cores)}${Array.from({length:d.maxCores-1},(_,i)=>opt(i+1,i+1,s.cores)).join('')}</select><p class="note">Weniger Kerne lassen den PC bei sehr großen Dateien flüssiger laufen, die Analyse dauert dann länger.</p></div>
+ </section>`;
+ const put=async()=>{setv=await api('/settings',{method:'PUT',body:setv});$('#saved2').textContent='Gespeichert';plCache=null};
+ const on=(id,f)=>{const e=$(id);if(e)e.onchange=()=>{f(e);put()}};
+ on('#dout',e=>setv.defaultOutDir=e.value.trim());on('#dkind',e=>setv.defaultKind=e.value);on('#fmt',e=>setv.nameFormat=e.value);on('#ovr',e=>setv.overwrite=e.value==='1');
+ on('#tags',e=>setv.writeTags=e.checked);on('#sub',e=>setv.subfolder=e.checked);on('#oa',e=>setv.openAfter=e.checked);on('#rold',e=>setv.replaceOld=e.checked);on('#cores',e=>setv.cores=+e.value);on('#cid',e=>setv.clientId=e.value.trim());
+ $('#dpick').onclick=async()=>{try{const r=await api('/pick',{method:'POST',body:{mode:'folder'}});if(r.path){$('#dout').value=r.path;setv.defaultOutDir=r.path;put()}}catch(x){$('#dout').focus()}};
+ if($('#dash'))$('#dash').onclick=()=>api('/spotify/dashboard',{method:'POST'});
+ if($('#copy'))$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(sp.redirect);$('#copy').textContent='Kopiert'}catch{getSelection().selectAllChildren($('#ruri'))}};
+ if($('#spoff'))$('#spoff').onclick=async()=>{await api('/spotify/disconnect',{method:'POST'});plCache=null;settings()};
+ if($('#spon'))$('#spon').onclick=async()=>{setv.clientId=$('#cid').value.trim();await put();$('#sperr').textContent='';try{await api('/spotify/connect',{method:'POST'});$('#spon').disabled=true;$('#spon').textContent='Anmeldung im Browser läuft …';clearInterval(timer);timer=setInterval(async()=>{const st=await api('/spotify/status');if(!st.pending){clearInterval(timer);sp=st;plCache=null;await settings()}},700)}catch(x){$('#sperr').textContent=x.message}};
+}
+$('#setb').onclick=settings;
+function sumT(){return tracks().reduce((s,t)=>s+(t.dur||0),0)}
+function render(){const i=P.info||{},k=kind(),music=['song','music'].includes(P.kind),tr=tracks();
+ const sum=sumT(),dur=P.dur||i.estimate||0;
+ app.innerHTML=`<header class="top"><h1>${esc(P.name)}</h1><button class="quiet" id="del">Projekt löschen</button></header>
+ <div class="tl" id="delc" hidden style="padding:0 24px 12px"><span>„${esc(P.name)}“ löschen? Deine MP3 und gespeicherte Teile bleiben.</span><button id="dely">Löschen</button><button id="deln">Behalten</button></div>
+ <section class="setup">
+ <label for="src">Aufnahme</label><div><div class="line"><input id="src" placeholder="Pfad zur MP3-Datei" value="${esc(P.source)}"><button id="pickf">Auswählen</button></div>
+ ${P.source?`<p class="note">${size(i.size)}, ungefähr ${clock(i.estimate)}, ${i.bitrate} kbit/s</p>`:''}<div class="err" id="se"></div></div>
+ <label for="kd">Inhalt</label><select id="kd">${kinds.map(x=>`<option value="${x.id}" ${x.id===P.kind?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+ <label for="pin">Titel</label><div>${tr.length?`<div class="tl"><span class="ok">${tr.length} Titel geladen${P.playlistName?` aus „${esc(P.playlistName)}“`:''}</span><span>${esc(tr[0].title)}, ${esc(tr[1]?.title||'')}${tr.length>2?', …':''}</span>${sum?`<span class="${dur&&Math.abs(sum-dur)>Math.max(120,dur*.05)?'warn':'note'}" style="margin:0;font-size:13px">zusammen ${clock(sum)}${dur?`, Aufnahme ${clock(dur)}`:''}${dur&&Math.abs(sum-dur)>Math.max(120,dur*.05)?'. Die Längen passen nicht, ist das die richtige Playlist?':''}</span>`:''}<button id="clr">Entfernen</button></div>`
+  :`${sp.connected?`<button class="field" id="plbtn" aria-expanded="false"><span>Playlist auswählen</span><span>▾</span></button><div id="plbox" hidden><input id="plq" placeholder="Playlist suchen" aria-label="Playlist suchen"><div id="pll"></div></div>`:''}
+  <div id="pmanual" ${sp.connected?'hidden':''}><div class="line"><textarea id="pin" rows="2" placeholder="Spotify-Link oder Titel, einer pro Zeile"></textarea><button id="pload">Laden</button></div><p class="note">Private Playlist ohne verknüpftes Konto: In Spotify alle Titel markieren (Strg+A), kopieren (Strg+C) und hier einfügen.</p></div>
+  <div class="tl">${sp.connected?`<button class="quiet" id="ptog">Link oder Titel einfügen</button>`:`<button class="quiet" id="plink">Spotify-Konto verknüpfen</button>`}</div>`}<div class="err" id="pe2"></div></div>
+ <label for="exp">Anzahl Teile</label><div class="tl"><input id="exp" type="number" min="0" style="width:90px" value="${P.expected||''}" placeholder="auto"><label for="minl" style="color:var(--dim);margin-left:10px">Kürzester Teil</label><input id="minl" type="number" min="1" style="width:90px" value="${P.minLen||''}" placeholder="${k.minLen}"><span>Sekunden</span><span class="note" style="margin:0">${tr.length?'Aus der Titelliste ausgefüllt. Du kannst beides ändern.':'Wenn du die Anzahl kennst, entstehen genau so viele Teile.'}</span></div>
+ <label for="out">Speichern in</label><div class="line"><input id="out" placeholder="Zielordner" value="${esc(P.outDir)}"><button id="pickd">Auswählen</button></div>
+ <span></span><details><summary>Weitere Einstellungen</summary><div class="more">
+  <div><label for="pre">Dateiname ohne Titelliste</label><input id="pre" value="${esc(P.prefix)}" placeholder="${esc(k.prefix)}"></div>
+  ${music?`<label class="tl" style="align-self:end"><input id="np" type="checkbox" style="width:auto" ${P.noPause?'checked':''}>Auch Übergänge ohne Pause suchen</label>`:''}</div></details>
+ <div class="go"><button class="main-btn" id="start" ${P.source?'':'disabled'}>${P.analyzed?'Neu schneiden':'Start'}</button><span class="note" id="runh" style="margin:0">${P.source?(P.analyzed?'Nutzt die fertige Analyse und dauert nur einen Moment.':''):'Wähle zuerst eine Aufnahme.'}</span>
+ <span id="pt" hidden></span><span id="pet" class="note" style="margin:0"></span><button id="stop" hidden>Pausieren</button></div>
+ <div class="bar" id="prog" hidden><i id="pb"></i></div><div class="err go" id="re"></div>
+ </section><section id="res" hidden></section>`;
+ $('#del').onclick=()=>{$('#delc').hidden=false};$('#deln').onclick=()=>{$('#delc').hidden=true};
+ $('#dely').onclick=async()=>{try{await api('/projects/'+P.id,{method:'DELETE'});P=null;await rail();empty()}catch(x){$('#re').textContent=x.message;$('#delc').hidden=true}};
+ const setSrc=async v=>{try{$('#se').textContent='';await save({source:v});peaks=null;await rail();render()}catch(x){$('#se').textContent=x.message}};
+ $('#src').onchange=e=>setSrc(e.target.value);
+ $('#pickf').onclick=async()=>{try{const r=await api('/pick',{method:'POST',body:{mode:'file'}});if(r.path)setSrc(r.path)}catch(x){$('#se').textContent=x.message}};
+ $('#pickd').onclick=async()=>{try{const r=await api('/pick',{method:'POST',body:{mode:'folder'}});if(r.path){$('#out').value=r.path;await save({outDir:r.path});renderRes()}}catch(x){$('#re').textContent=x.message}};
+ $('#out').onchange=async e=>{await save({outDir:e.target.value.trim()});renderRes()};
+ const re=async()=>{render();if(P.analyzed){if(!peaks)await loadWave();else renderRes()}};
+ $('#kd').onchange=async e=>{await save({kind:e.target.value});re()};
+ $('#pre').onchange=async e=>{await save({prefix:e.target.value});re()};
+ $('#exp').onchange=e=>save({expected:+e.target.value||0});$('#minl').onchange=e=>save({minLen:+e.target.value||0});
+ if($('#np'))$('#np').onchange=e=>save({noPause:e.target.checked});
+ const again=async()=>{await rail();render();if(P.analyzed)await run()};
+ if($('#ptog'))$('#ptog').onclick=()=>{$('#pmanual').hidden=!$('#pmanual').hidden};
+ if($('#plink'))$('#plink').onclick=settings;
+ if($('#plbtn'))$('#plbtn').onclick=async()=>{const box=$('#plbox'),open=box.hidden;box.hidden=!open;$('#plbtn').setAttribute('aria-expanded',open);if(!open)return;$('#plq').focus();
+  const show=l=>{const q=$('#plq').value.toLowerCase(),f=l.filter(x=>x.name.toLowerCase().includes(q));$('#pll').innerHTML=f.map(x=>`<button class="plr" data-id="${x.id}"><span>${esc(x.name)}</span><small>${x.total?x.total+' Titel':''}${x.mine?'':' · von '+esc(x.owner)}</small></button>`).join('')||'<p class="note" style="padding:8px 10px">Keine Playlist gefunden.</p>';
+   $('#pll').querySelectorAll('.plr').forEach(b=>b.onclick=async()=>{const x=l.find(y=>y.id===b.dataset.id);$('#pll').innerHTML='<p class="note" style="padding:8px 10px">Titel werden geladen …</p>';try{P=await api(`/projects/${P.id}/tracks`,{method:'POST',body:{playlist:x.id,name:x.name}});await again()}catch(e){$('#pe2').textContent=e.message;show(l)}})};
+  if(!plCache){$('#pll').innerHTML='<p class="note" style="padding:8px 10px">Playlists werden geladen …</p>';try{plCache=await api('/spotify/playlists')}catch(e){$('#plbox').hidden=true;$('#pe2').textContent=e.message;return}}
+  show(plCache);$('#plq').oninput=()=>show(plCache)};
+ if($('#pload'))$('#pload').onclick=async()=>{const b=$('#pload');b.disabled=true;b.textContent='Lädt …';try{P=await api(`/projects/${P.id}/tracks`,{method:'POST',body:{input:$('#pin').value}});await again()}catch(x){$('#pe2').textContent=x.message;b.disabled=false;b.textContent='Laden'}};
+ if($('#clr'))$('#clr').onclick=async()=>{P=await api(`/projects/${P.id}/tracks`,{method:'POST',body:{clear:true}});await again()};
+ $('#start').onclick=run;$('#stop').onclick=()=>api(`/projects/${P.id}/stop`,{method:'POST'});
+ if(P.analyzed&&peaks)renderRes();
+}
+async function run(){undo=[];try{$('#re').textContent='';await api(`/projects/${P.id}/analyze`,{method:'POST'});peaks=null;watch()}catch(x){$('#re').textContent=x.message}}
+function watch(){clearInterval(timer);$('#prog').hidden=false;$('#start').disabled=true;$('#stop').hidden=false;$('#pt').hidden=false;$('#runh').textContent='';const id=P.id;let t0=Date.now(),d0=null;
+ const tick=async()=>{if(!P||P.id!==id)return clearInterval(timer);const j=await api(`/projects/${id}/job`);$('#pb').style.width=(j.done*100)+'%';$('#pt').textContent=j.text;
+  if(d0===null&&j.done>0){d0=j.done;t0=Date.now()}if(d0!==null&&j.done>d0){const l=(Date.now()-t0)/(j.done-d0)*(1-j.done)/1000;$('#pet').textContent=`noch ${l<90?Math.ceil(l)+' s':clock(l)}`}
+  if(!j.running){clearInterval(timer);const k=j.kind;await rail();P=list.find(p=>p.id===id);render();if(j.err){$('#re').textContent=j.err;return}if(j.done<1){$('#runh').textContent=j.text;return}await loadWave();if(k==='export')$('#saved')?.scrollIntoView({block:'nearest'})}};
+ tick();timer=setInterval(tick,400)}
+async function loadWave(){view=[0,P.dur];await fetchWave();renderRes()}
+async function fetchWave(){const n=Math.min(4000,Math.max(800,Math.round(innerWidth*1.5)));peaks=(await api(`/projects/${P.id}/wave?n=${n}&from=${view[0]}&to=${view[1]}`)).peaks}
+let snap='[]';
+const accepted=()=>(P.cuts||[]).filter(c=>c.accepted).sort((a,b)=>a.t-b.t);
+function renderRes(){const res=$('#res');if(!res||!P.analyzed||!peaks)return;snap=JSON.stringify(P.cuts||[]);res.hidden=false;const ps=partsOf(P),ac=accepted(),tr=tracks();const flagged=ac.filter(c=>!c.manual&&(c.score<.6||c.alt)).length;
+ const mismatch=tr.length&&tr.length!==ps.length;
+ res.innerHTML=`<div class="stage"><canvas id="wave" aria-label="Wellenform der Aufnahme"></canvas></div>
+ <div class="tools"><button id="zout" class="zb" title="Rauszoomen" aria-label="Rauszoomen">−</button><button id="zin" class="zb" title="Reinzoomen" aria-label="Reinzoomen">+</button><button id="zo">Ganze Aufnahme</button><span class="sp"></span><button id="undo" ${undo.length?'':'disabled'}>Rückgängig</button><button id="halt">Stopp</button></div>
+ <div class="hint">Klicken: anhören. Doppelklicken: schneiden. Gelben Strich ziehen: verschieben. Rechtsklick auf den Strich: löschen.</div>
+ <div class="tw"><table><thead><tr><th class="num">#</th><th></th><th>${tr.length?'Titel':'Datei'}</th><th>Beginn</th><th>Länge</th>${tr.some(t=>t.dur)?'<th>Laut Liste</th>':''}<th></th></tr></thead><tbody>
+ ${ps.map((p,i)=>{const c=ac[i],t=tr[i],L=p.b-p.a,bad=t?.dur&&Math.abs(L-t.dur)>6,flag=c&&!c.manual&&(c.score<.6||c.alt);
+  return`<tr data-i="${i}"><td class="num">${i+1}</td><td style="width:34px"><button class="pl" data-a="${p.a}" data-b="${p.b}" aria-label="${esc(nameOf(i))} anhören">▶</button></td>
+  <td class="ttl">${esc(nameOf(i))}${t?.artist?`<small>${esc(t.artist)}${t.anchor?' · <span class="ok">erkannt</span>':''}</small>`:''}${flag?`<small class="warn">${c.alt?`Bei ${clock(c.alt)} ist auch Stille. Bitte das Ende anhören.`:`Unsicheres Ende (${esc(c.reason)}). Bitte anhören.`}</small>`:''}</td>
+  <td class="tm">${clock(p.a)}</td><td class="tm ${bad?'warn':''}">${clock(L)}</td>${tr.some(x=>x.dur)?`<td class="tm">${t?.dur?clock(t.dur):''}</td>`:''}
+  <td class="acts">${c?`<button class="end" data-t="${c.t}">Ende anhören</button> ${c.alt?`<button class="alt" data-t="${c.t}" data-alt="${c.alt}">Bei ${clock(c.alt)} schneiden</button> `:''}<button class="zoomc hov" data-t="${c.t}">Genau setzen</button> <button class="rm" data-t="${c.t}" aria-label="Schnitt nach ${esc(nameOf(i))} löschen">Schnitt löschen</button>`:''}</td></tr>`}).join('')}
+ </tbody></table></div>
+ <div class="saveb" id="saved"><button class="main-btn" id="exp2" ${P.outDir?'':'disabled'}>${ps.length} Dateien speichern</button><span class="path note" style="margin:0">${P.outDir?esc(P.outDir):'Wähle oben „Speichern in“.'}</span>
+ ${tr.some(t=>t.anchor)?`<span class="ok">${tr.filter(t=>t.anchor).length} von ${tr.length} Titeln in der Aufnahme erkannt.</span>`:''}
+ ${mismatch?`<span class="warn">Du hast ${tr.length} Titel, aber ${ps.length} Teile. ${ps.length>tr.length?`Die letzten ${ps.length-tr.length} Teile heißen ${esc(pre())} und eine Nummer.`:'Es fehlen Teile für die letzten Titel.'}</span>`:flagged?`<span class="warn">${flagged} ${flagged===1?'Stelle':'Stellen'} zum Anhören markiert.</span>`:''}
+ ${P.exported&&P.exported.length?`<span class="ok">${P.exported.length} Dateien gespeichert.${P.trashed?` ${P.trashed} alte im Papierkorb.`:''}</span><button id="of">Ordner öffnen</button>`:''}</div>`;
+ draw();wire($('#wave'));
+ res.querySelectorAll('.pl').forEach(b=>b.onclick=()=>play(+b.dataset.a,+b.dataset.b));
+ res.querySelectorAll('.end').forEach(b=>b.onclick=()=>play(Math.max(0,+b.dataset.t-8),+b.dataset.t+5));
+ res.querySelectorAll('.rm').forEach(b=>b.onclick=()=>setCuts(P.cuts.filter(c=>c.t!=b.dataset.t)));
+ res.querySelectorAll('.alt').forEach(b=>b.onclick=()=>setCuts(P.cuts.map(c=>c.t==b.dataset.t?{...c,t:+b.dataset.alt,alt:+b.dataset.t,manual:true}:c)));
+ res.querySelectorAll('.zoomc').forEach(b=>b.onclick=async()=>{const t=+b.dataset.t;view=[Math.max(0,t-12),Math.min(P.dur,t+12)];await fetchWave();draw();zoomState();$('.stage').scrollIntoView({block:'center'})});
+ $('#undo').onclick=()=>setCuts(JSON.parse(undo.pop()),true);
+ $('#zo').onclick=async()=>{view=[0,P.dur];await fetchWave();draw();zoomState()};
+ $('#zin').onclick=()=>zoomBy(.5);$('#zout').onclick=()=>zoomBy(2);zoomState();$('#halt').onclick=()=>au.pause();
+ $('#exp2').onclick=async()=>{try{await api(`/projects/${P.id}/export`,{method:'POST'});watch()}catch(x){$('#re').textContent=x.message}};
+ if($('#of'))$('#of').onclick=()=>api('/open-folder',{method:'POST',body:{path:P.outDir}});
+}
+function zoomState(){const a=$('#zin'),b=$('#zout');if(!a)return;a.disabled=view[1]-view[0]<=4.01;b.disabled=view[0]<=0&&view[1]>=P.dur}
+// Zoomt um die Abspielposition, wenn sie sichtbar ist, sonst um die Mitte des Ausschnitts.
+async function zoomBy(f){let c=(view[0]+view[1])/2;if(au.dataset.base!==undefined&&!au.paused){const t=+au.dataset.base+au.currentTime;if(t>=view[0]&&t<=view[1])c=t}
+ let w=Math.max(4,Math.min(P.dur,(view[1]-view[0])*f)),a=c-w/2;a=Math.max(0,Math.min(P.dur-w,a));view=[a,a+w];await fetchWave();draw();zoomState()}
+async function setCuts(c,noUndo){if(!noUndo)undo.push(snap);c.sort((a,b)=>a.t-b.t);await save({cuts:c});snap=JSON.stringify(P.cuts||[]);await rail();renderRes()}
+function play(a,b){au.src=`/api/projects/${P.id}/audio?from=${a}&to=${b||0}`;au.dataset.base=a;au.play().catch(()=>{})}
+function draw(){const c=$('#wave');if(!c||!peaks)return;const d=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*d;c.height=H*d;const g=c.getContext('2d');g.scale(d,d);
+ const css=getComputedStyle(document.documentElement),col=n=>css.getPropertyValue(n).trim();const X=t=>(t-view[0])/(view[1]-view[0])*W,mid=H/2+8,ps=partsOf(P);
+ const hOf=v=>Math.max(1,Math.pow(Math.max(0,v-70)/130,1.6)*(H-30));
+ // unscharfer Farbschein hinter der Welle
+ g.save();g.filter='blur(14px)';g.globalAlpha=.55;ps.forEach((p,i)=>{g.fillStyle=i%2?col('--blue'):col('--coral');const a=Math.max(0,X(p.a)),b=Math.min(W,X(p.b));for(let x=Math.floor(a);x<b;x+=3){const h=hOf(peaks[Math.floor(x/W*peaks.length)]||0)*1.15;g.fillRect(x,mid-h/2,3,h)}});g.restore();
+ // scharfe Welle mit Randlicht
+ ps.forEach((p,i)=>{const a=Math.max(0,X(p.a)),b=Math.min(W,X(p.b));if(b<=0||a>=W)return;g.fillStyle=i%2?col('--blue'):col('--coral');for(let x=Math.floor(a);x<b;x++){const h=hOf(peaks[Math.floor(x/W*peaks.length)]||0);g.fillRect(x,mid-h/2,1,h)}});
+ const w=view[1]-view[0],labels=W/ps.length>70||w<P.dur;g.font='12px '+col('--body');
+ for(const k of accepted()){const x=X(k.t);if(x<0||x>W)continue;g.fillStyle=col('--mark');g.shadowColor=col('--mark');g.shadowBlur=9;g.fillRect(x-1,0,2,H);g.shadowBlur=0}
+ g.fillStyle=col('--paper');g.textAlign='left';if(labels)ps.forEach((p,i)=>{const x=X(p.a);if(x>=-1&&x<W-40)g.fillText(i+1,Math.max(0,x)+6,14)});
+ const rng=`${w<120?fine(view[0]):clock(view[0])} ${Kit.t('bis')} ${w<120?fine(view[1]):clock(view[1])}`;g.textAlign='right';g.fillStyle=col('--ink2');g.fillRect(W-g.measureText(rng).width-14,H-22,g.measureText(rng).width+14,22);g.fillStyle=col('--dim');g.fillText(rng,W-8,H-7);
+ if(au.dataset.base!==undefined&&!au.paused){const x=X(+au.dataset.base+au.currentTime);g.fillStyle=col('--paper');g.fillRect(x,0,2,H)}}
+function wire(c){const T=e=>{const r=c.getBoundingClientRect();return view[0]+(e.clientX-r.left)/r.width*(view[1]-view[0])};let drag=null,moved=false;
+ c.onpointerdown=e=>{if(e.button!==0)return;moved=false;const t=T(e),px=(view[1]-view[0])/c.clientWidth;drag=accepted().find(k=>Math.abs(k.t-t)<px*7)||null;if(drag)c.setPointerCapture(e.pointerId)};
+ c.onpointermove=e=>{if(drag){moved=true;drag.t=Math.max(.1,Math.min(P.dur-.1,T(e)));draw()}};
+ c.onpointerup=e=>{if(e.button!==0)return;if(drag&&moved){const k=drag;drag=null;k.manual=true;delete k.alt;setCuts(P.cuts)}else{drag=null;play(T(e),0)}};
+ c.oncontextmenu=e=>{e.preventDefault();const t=T(e),px=(view[1]-view[0])/c.clientWidth,k=accepted().find(k=>Math.abs(k.t-t)<px*7);if(k)setCuts(P.cuts.filter(x=>x!==k))};
+ c.ondblclick=e=>{au.pause();setCuts([...(P.cuts||[]),{t:T(e),score:1,reason:'von dir gesetzt',accepted:true,manual:true}])};
+ c.onwheel=async e=>{e.preventDefault();const t=T(e),f=e.deltaY<0?.6:1.6,a=t-(t-view[0])*f,b=t+(view[1]-t)*f;view=[Math.max(0,a),Math.min(P.dur,Math.max(b,a+4))];clearTimeout(c._z);draw();zoomState();c._z=setTimeout(async()=>{await fetchWave();draw()},120)}}
+au.ontimeupdate=draw;addEventListener('resize',draw);
+(async()=>{kinds=await api('/kinds');sp=await api('/spotify/status');await rail();empty()})();$('#ovb').onclick=()=>{rail().then(empty)};
+
+// Drag & drop: MP3 auf das Fenster ziehen
+Kit.onDrop(async paths=>{const f=paths.find(x=>/\.mp3$/i.test(x))||paths[0];
+ try{if(!P){const np=await api('/projects',{method:'POST',body:{name:f.split(/[\\/]/).pop().replace(/\.[^.]+$/,'')}});await open_(np)}
+  P=await api('/projects/'+P.id,{method:'PATCH',body:{source:f}});peaks=null;await rail();render()}catch(x){Kit.toast(x.message)}});
+document.addEventListener('kit-theme',()=>{try{if(typeof renderRes==='function'&&P&&P.analyzed)renderRes()}catch(e){}});
+
+// Tastenkürzel (frei belegbar, F1)
+const HK=Kit.hotkeys('mp3',[
+ ['undo','Bearbeiten','Rückgängig',['Ctrl+Z'],()=>{const b=document.getElementById('undo');if(b&&!b.disabled)b.click();else Kit.toast(Kit.t('Nichts zum Rückgängigmachen.'))}],
+ ['play','Abspielen','Abspielen / Pause',['Space'],()=>{const a=document.getElementById('au');if(!a||!a.src)return;a.paused?a.play().catch(()=>{}):a.pause()}],
+ ['stop','Abspielen','Stopp',['Esc'],()=>{const a=document.getElementById('au');if(a)a.pause()}],
+ ['zin','Ansicht','Hineinzoomen',['Ctrl++','+','Shift++'],()=>document.getElementById('zin')?.click()],['zout','Ansicht','Herauszoomen',['Ctrl+-','-'],()=>document.getElementById('zout')?.click()],
+ ['keys','Hilfe','Tastenkürzel',['F1'],()=>HK.editor()]]);
+</script></body></html>

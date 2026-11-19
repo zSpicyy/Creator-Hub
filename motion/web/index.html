@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motion Design</title>
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="/kit/tokens.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/kit/polish.css">
+</head>
+<body>
+<!-- Startfenster -->
+<div id="start" class="ch-shell">
+  <header class="ch-top"><div class="ch-brand"><img src="logo.svg" alt="">Motion Design</div><span class="ch-sp"></span><button class="btn" id="backEd" hidden>Zurück zur Animation</button></header>
+  <nav class="ch-nav"><button class="ch-item on" type="button"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button><div class="ch-sp"></div><small>Animierte Titel, Logos und Motion Graphics – mit Ebenen und Keyframes.</small></nav>
+  <div class="ch-main">
+    <section class="newsec">
+      <h2>Neue Animation</h2>
+      <div class="presets" id="presets"></div>
+      <div class="custom">
+        <label>Breite<input type="number" id="nw" value="1920" min="16" max="8192"></label><span>×</span>
+        <label>Höhe<input type="number" id="nh" value="1080" min="16" max="8192"></label>
+        <label>Bildrate<select id="nfps"><option>24</option><option>25</option><option selected>30</option><option>50</option><option>60</option></select></label>
+        <label>Dauer (Sekunden)<input type="number" id="ndur" value="10" min="1" max="3600" step="1"></label>
+        <button class="btn primary" id="newCustom">Erstellen</button>
+      </div>
+    </section>
+    <section class="newsec">
+      <h2>Vorlagen</h2>
+      <div class="tpls" id="tpls"></div>
+    </section>
+    <section>
+      <h2 style="display:flex;align-items:center;gap:12px">Projekte <input id="psearch" placeholder="Suchen …" style="font-size:13px;font-weight:400;max-width:220px"></h2>
+      <div class="projects" id="projects"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Editor -->
+<div id="editor" class="editor" hidden>
+  <header class="bar">
+    <button class="ib home" data-act="home" title="Zu den Projekten"><img src="logo.svg" alt=""></button>
+    <nav class="menus" id="menus">
+      <div class="dd"><button>Datei</button><div class="ddm">
+        <button data-act="home">Projekte</button><button data-act="save">Speichern</button><hr>
+        <button data-act="import">Importieren …</button><hr>
+        <button data-act="export">Exportieren (Renderliste) …</button><button data-act="still">Einzelbild speichern …</button></div></div>
+      <div class="dd"><button>Bearbeiten</button><div class="ddm">
+        <button data-act="undo">Rückgängig</button><button data-act="redo">Wiederholen</button><hr>
+        <button data-act="copy">Kopieren</button><button data-act="paste">Einfügen</button><button data-act="dup">Duplizieren</button><button data-act="splitl">Ebene teilen</button><button data-act="del">Löschen</button><hr>
+        <button data-act="selall">Alle Ebenen auswählen</button><button data-act="desel">Auswahl aufheben</button><hr><button data-act="keys">Tastenkürzel …</button></div></div>
+      <div class="dd"><button>Komposition</button><div class="ddm">
+        <button data-act="newcomp">Neue Komposition …</button><button data-act="compset">Kompositionseinstellungen …</button><hr>
+        <button data-act="trimwork">Komposition auf Arbeitsbereich zuschneiden</button><button data-act="workall">Arbeitsbereich = ganze Komposition</button><hr>
+        <button data-act="export">Zur Renderliste hinzufügen …</button><button data-act="still">Einzelbild speichern …</button></div></div>
+      <div class="dd"><button>Ebene</button><div class="ddm">
+        <button data-act="newtext">Neu: Text</button><button data-act="newsolid">Neu: Farbfläche …</button><button data-act="newshape">Neu: Formebene</button><button data-act="newnull">Neu: Null-Objekt</button><button data-act="newadjust">Neu: Einstellungsebene</button><hr>
+        <button data-act="precomp">Vorkomponieren …</button><button data-act="fitcomp">An Komposition anpassen</button><button data-act="center">In der Mitte ausrichten</button><button data-act="resettr">Transformieren zurücksetzen</button><hr>
+        <button data-act="front">In den Vordergrund</button><button data-act="fwd">Eine Ebene nach vorne</button><button data-act="bwd">Eine Ebene nach hinten</button><button data-act="back">In den Hintergrund</button><hr>
+        <button data-act="seq">Ebenen sequenzieren …</button><button data-act="mbtoggle">Bewegungsunschärfe an/aus</button></div></div>
+      <div class="dd"><button>Animation</button><div class="ddm">
+        <button data-act="ease">Easy Ease</button><button data-act="easein">Easy Ease In</button><button data-act="easeout">Easy Ease Out</button><button data-act="linear">Linear</button><button data-act="hold">Interpolation unterbrechen (Halten)</button><hr>
+        <button data-act="addkf">Keyframe an Abspielkopf setzen</button><button data-act="expr">Expression hinzufügen</button><hr>
+        <button data-act="showanim">Animierte Eigenschaften zeigen (U)</button><button data-act="graph">Diagrammeditor an/aus</button><hr><button data-act="presets">Animationsvorgaben …</button></div></div>
+      <div class="dd"><button>Effekt</button><div class="ddm" id="fxmenu"></div></div>
+      <div class="dd"><button>Ansicht</button><div class="ddm">
+        <button data-act="zin">Vergrößern</button><button data-act="zout">Verkleinern</button><button data-act="fit">Einpassen</button><button data-act="z100">100 %</button><hr>
+        <button data-act="grid">Raster</button><button data-act="safe">Titelsichere Ränder</button><button data-act="checker">Transparenzraster</button><button data-act="paths">Bewegungspfade</button></div></div>
+      <div class="dd"><button>Hilfe</button><div class="ddm"><button data-act="help">Erste Schritte</button><button data-act="keys">Tastenkürzel …</button></div></div>
+    </nav>
+    <input class="pname" id="pname" spellcheck="false" aria-label="Projektname">
+    <span class="saved" id="saved"></span>
+    <div class="grow"></div>
+    <button class="btn" data-act="still" title="Aktuelles Bild als PNG speichern"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button class="btn primary" data-act="export"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Exportieren</button>
+  </header>
+  <div class="tools" id="tools"></div>
+  <div class="work" id="work">
+    <aside class="pane projp" id="projpane">
+      <div class="phead"><b>Projekt</b><div class="grow"></div><button class="ib" data-act="import" title="Importieren (Strg+I)"><svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg></button><button class="ib" data-act="newcomp" title="Neue Komposition (Strg+N)"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 9v6M9 12h6"/></svg></button></div>
+      <div class="plist" id="plist"></div>
+    </aside>
+    <div class="gut v" data-gut="left"></div>
+    <section class="pane viewer" id="viewer">
+      <div class="vtabs" id="vtabs"></div>
+      <div class="stage" id="stage"><canvas id="cv"></canvas><canvas id="ov"></canvas><textarea id="tedit" spellcheck="false" hidden></textarea></div>
+      <div class="vbar"><select id="vzoom" title="Zoom"><option value="fit">Einpassen</option><option value="0.25">25 %</option><option value="0.5">50 %</option><option value="1">100 %</option><option value="2">200 %</option></select>
+        <select id="vq" title="Auflösung der Vorschau"><option value="1">Voll</option><option value="0.5" selected>Halb</option><option value="0.33">Drittel</option><option value="0.25">Viertel</option></select>
+        <input id="vtime" class="tc" spellcheck="false" title="Aktuelle Zeit"><span class="muted" id="vinfo"></span><div class="grow"></div>
+        <button class="ib" data-act="checker" id="bchecker" title="Transparenzraster"><svg viewBox="0 0 24 24"><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" stroke="none" opacity=".6"/><rect x="4" y="4" width="16" height="16" rx="1"/></svg></button>
+        <button class="ib" data-act="grid" id="bgrid" title="Raster"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M9 4v16M15 4v16"/></svg></button>
+        <button class="ib" data-act="safe" id="bsafe" title="Titelsichere Ränder"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/><rect x="6" y="8" width="12" height="8" rx="1"/></svg></button>
+        <button class="ib" data-act="play" id="bplay" title="Abspielen (Leertaste)"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></button>
+      </div>
+    </section>
+    <div class="gut v" data-gut="right"></div>
+    <aside class="pane side" id="side">
+      <div class="stabs" id="stabs"><button data-tab="props" class="on">Eigenschaften</button><button data-tab="fx">Effekte &amp; Vorgaben</button><button data-tab="ec">Effekteinstellungen</button><button data-tab="align">Ausrichten</button></div>
+      <div class="sbody2" id="sbody"></div>
+    </aside>
+  </div>
+  <div class="gut h" data-gut="tl"></div>
+  <section class="pane tl" id="tl">
+    <div class="tlhead"><input id="ttime" class="tc big" spellcheck="false" title="Aktuelle Zeit"><span class="muted" id="tframe"></span>
+      <div class="grow"></div>
+      <button class="ib" data-act="shytoggle" id="bshy" title="Ausgeblendete Ebenen (Shy) verstecken"><svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5"/><path d="M8 18c2 2 6 2 8 0"/></svg></button>
+      <button class="ib on" data-act="mbmaster" id="bmb" title="Bewegungsunschärfe für alle Ebenen"><svg viewBox="0 0 24 24"><circle cx="14" cy="12" r="5"/><path d="M3 9h5M2 12h6M3 15h5"/></svg></button>
+      <button class="ib" data-act="graph" id="bgraph" title="Diagrammeditor (Umschalt+F3)"><svg viewBox="0 0 24 24"><path d="M3 20h18M3 20V4"/><path d="M5 17c4 0 5-10 9-10s4 6 6 6"/></svg></button>
+      <input type="range" id="tzoom" min="0" max="100" value="30" title="Zeitleiste zoomen" style="width:120px">
+    </div>
+    <div class="tlbody" id="tlbody">
+      <div class="tleft" id="tleft"><div class="tcols" id="tcols"></div><div class="trows" id="trows"></div></div><div class="gut v" data-gut="tleft"></div>
+      <div class="tright" id="tright"><div class="ruler" id="ruler"></div><div class="tlanes" id="tlanes"><div class="lanes" id="lanes"></div></div><canvas id="graph" hidden></canvas><div class="phead2" id="phl"></div></div>
+    </div>
+  </section>
+</div>
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="ctx" id="ctx" hidden></div>
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script src="core.js"></script>
+<script src="fx.js"></script>
+<script src="app.js"></script>
+<script src="viewer.js"></script>
+<script src="timeline.js"></script>
+<script src="panels.js"></script>
+<script src="export.js"></script>
+</body>
+</html>

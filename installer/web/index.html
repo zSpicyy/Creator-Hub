@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Creator Hub installieren</title>
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="/kit/kit.css">
+<style>
+body{display:block;overflow:hidden}
+.wrap{height:100vh;display:flex;flex-direction:column}
+.pv{height:190px;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,#4c8dff 55%,transparent),color-mix(in srgb,#4c8dff 14%,var(--panel2)) 72%)}
+.pv img{width:112px;height:112px;filter:drop-shadow(0 8px 18px #1d3d8a)}
+.body{flex:1;padding:24px 30px;display:flex;flex-direction:column}
+h1{margin:0 0 6px;font-size:22px}p{color:var(--muted);margin:0 0 16px}
+.opt{display:flex;align-items:center;gap:10px;margin:4px 0 18px;cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--accent)}
+.where{font-size:12px;color:var(--muted);margin-bottom:14px;word-break:break-all}
+.sp{flex:1}
+.note{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--muted);margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="pv"><img src="logo.svg" alt=""></div><div class="body" id="b"></div></div>
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script>
+const {$,esc,api}=Kit;let S=null,t=null;
+function view(){const b=$('#b');
+ if(S.phase==='start')b.innerHTML=`<h1>Creator Hub installieren</h1><p>Alle Werkzeuge für Content Creator an einem Ort. Die KI wird automatisch mit eingerichtet.</p>
+  <label class="opt"><input type="checkbox" id="desk" checked>Verknüpfung auf dem Desktop</label>${S.old?`<label class="opt"><input type="checkbox" id="keepold"><span>Projekte einer früheren Installation behalten</span>&nbsp;(${S.old})</label>`:''}<div class="where">Wird installiert nach: ${esc(S.dir)}</div><div class="sp"></div><button class="btn primary big" id="go">Installieren</button>`;
+ else if(S.phase==='copy'||S.phase==='ai')b.innerHTML=`<h1>Wird installiert …</h1><p>${esc(S.text)}</p><div class="bar"><i style="width:${Math.round(S.done*100)}%"></i></div><small class="muted">${Math.round(S.done*100)} %</small><div class="sp"></div>`;
+ else if(S.phase==='done')b.innerHTML=`<h1>Fertig</h1><p>Creator Hub ist installiert. Du findest ihn im Startmenü${$('#desk')?'':''}.</p>${S.aiNote?`<div class="note">${esc(S.aiNote)}</div>`:''}<div class="sp"></div><button class="btn primary big" id="launch">Creator Hub starten</button>`;
+ else b.innerHTML=`<h1>Das hat nicht geklappt</h1><p class="err">${esc(S.error)}</p><div class="sp"></div><button class="btn primary big" id="go">Nochmal versuchen</button>`}
+async function load(){S=await api('api/state');view()}
+document.addEventListener('click',async e=>{
+ if(e.target.closest('#go')){const d=$('#desk');const ko=$('#keepold');await api('api/install',{desktop:d?d.checked:true,keepOld:ko?ko.checked:false});clearInterval(t);t=setInterval(async()=>{await load();if(S.phase==='done'||S.phase==='error')clearInterval(t)},400);return}
+ if(e.target.closest('#launch'))return api('api/launch',{});
+});
+load();
+</script>
+</body>
+</html>

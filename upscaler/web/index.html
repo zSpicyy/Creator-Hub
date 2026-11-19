@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Upscaler</title>
+<link rel="icon" href="/logo.svg">
+<link rel="stylesheet" href="/kit/kit.css">
+<style>
+.work{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+@media(max-width:1050px){.work{grid-template-columns:1fr}}
+.cmp{position:relative;height:calc(100vh - 210px);min-height:320px;border-radius:var(--r);overflow:hidden;background:var(--panel2);border:1px solid var(--line);user-select:none;cursor:ew-resize}
+.cmp .layer{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}
+.cmp .layer img{display:block;max-width:none}
+.cmp .after{clip-path:inset(0 0 0 var(--cut,50%))}
+.cmp .line2{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:2px;background:#fff;box-shadow:0 0 0 1px #0006;pointer-events:none}
+.cmp .knob{position:absolute;top:50%;left:var(--cut,50%);translate:-50% -50%;width:40px;height:40px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;box-shadow:0 2px 10px #0007;pointer-events:none}
+.cmp .knob svg{font-size:20px}
+.cmp .tag{position:absolute;top:10px;padding:4px 10px;border-radius:7px;background:#000b;color:#fff;font-size:12px;pointer-events:none}
+.cmp .tag.l{left:10px}.cmp .tag.r{right:10px}
+.cmp .wait{position:absolute;inset:0;display:none;place-items:center;background:#0005;color:#fff;font-weight:600}
+.cmp.loading .wait{display:grid}.cmp.loading .knob,.cmp.loading .line2{display:none}
+.mini{display:flex;gap:12px;align-items:center;margin-top:10px}
+.mini .pic{position:relative;line-height:0;cursor:pointer;flex:none;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.mini .pic img{max-width:150px;max-height:84px;display:block}
+.mini .sel{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 999px #0007;pointer-events:none}
+.mini small{color:var(--muted)}
+.res{border-color:var(--ok)}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><img src="/logo.svg" alt="">Upscaler</div><div class="sp"></div><button class="btn primary" id="pick"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Bild öffnen</button></header>
+<nav>
+  <button data-page="start"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Neues Bild</button>
+  <button data-page="projects"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button>
+  <div class="sp"></div><small>Bilder kannst du auch einfach ins Fenster ziehen.</small>
+</nav>
+<main id="main"></main>
+<script src="/kit/kit.js"></script>
+<script>
+const {$,esc,api,size,num}=Kit;
+let page='start',projects=[],cur=null,pos={x:.5,y:.5},cut=50,timer=null,sampleT=null,AI={ready:false},factor=4,outDir='';
+const ICON_SWAP='<svg viewBox="0 0 24 24"><path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg>';
+
+async function refresh(){projects=await api('/api/projects')}
+async function aiState(){AI=await api('/api/ai')}
+function nav(){document.querySelectorAll('nav [data-page]').forEach(b=>b.classList.toggle('on',b.dataset.page===page||(page==='work'&&b.dataset.page==='projects')))}
+
+function viewStart(msg){page='start';nav();clearInterval(timer);
+ $('#main').innerHTML=`<div class="start"><div class="hero"><div class="pv" style="--c:#33c97c"><img src="/logo.svg" alt=""></div><div class="body"><h2>Bild vergrößern</h2><p>Ziehe ein Bild in dieses Fenster oder öffne es über den Knopf. Die KI macht es 2-, 4- oder 8-mal so groß und rechnet fehlende Details dazu.</p>
+ <div class="acts"><button class="btn primary" id="pick2">Bild öffnen</button></div>${msg?`<p class="err" style="margin:14px 0 0">${esc(msg)}</p>`:''}<div class="hint">PNG, JPG oder GIF · jede Größe</div></div></div></div>`}
+
+function viewProjects(){page='projects';nav();clearInterval(timer);
+ $('#main').innerHTML=`<div class="head"><h2>Projekte</h2><span>${projects.length} insgesamt</span></div>
+ <div class="pgrid">${projects.map(p=>`<button class="proj" data-id="${p.id}"><div class="th" style="background-image:url('/api/img?id=${p.id}&k=thumb')"></div><div class="tx"><b>${esc(p.name)}</b><span>${esc(p.detail)}</span></div><span class="del" data-del="${p.id}" title="Aus der Liste entfernen">Entfernen</span></button>`).join('')||'<div class="empty">Noch keine Projekte. Öffne ein Bild, dann erscheint es hier.</div>'}</div>`}
+
+async function openPath(p){try{const pr=await api('/api/open',{path:p});await refresh();show(pr)}catch(e){viewStart(e.message)}}
+Kit.onDrop(paths=>openPath(paths[0]));
+
+function show(p){cur=p;page='work';nav();clearInterval(timer);pos={x:.5,y:.5};factor=[2,4,8].includes(p.factor)?p.factor:4;outDir=p.outDir;
+ render()}
+
+function render(){const p=cur;const W=Math.round(p.w*factor),H=Math.round(p.h*factor);
+ const fmt=/\.jpe?g$/i.test(p.source)?'JPG':'PNG';
+ const aiLine=AI.ready?'':AI.loading?`<div class="line"><div>KI wird eingerichtet<small>Einmalig, etwa 30 MB. Danach arbeitet die KI ohne Internet.</small><div class="bar"><i style="width:${Math.round(AI.done*100)}%"></i></div></div></div>`
+  :`<div class="line"><div>KI konnte nicht eingerichtet werden<small class="err">${esc(AI.error||'Unbekannter Fehler')}</small></div><button class="btn primary" id="aiinstall">Nochmal versuchen</button></div>`;
+ $('#main').innerHTML=`<div class="head"><h2>${esc(p.name)}</h2><span>${num(p.w)} × ${num(p.h)} Pixel</span></div>
+ <div class="work"><div>
+  <div class="cmp" id="cmp" style="--cut:${cut}%"><div class="layer"><img id="raw" alt=""></div><div class="layer after"><img id="res" alt=""></div><div class="line2"></div><div class="knob">${ICON_SWAP}</div><span class="tag l">Vorher</span><span class="tag r">Nachher</span><div class="wait">${AI.ready?'KI rechnet die Vorschau …':AI.loading?'KI wird eingerichtet …':'Die KI fehlt noch'}</div></div>
+  <div class="mini"><div class="pic" id="pic"><img id="pimg" src="/api/img?id=${p.id}" alt=""><div class="sel" id="sel"></div></div><small>Der große Ausschnitt zeigt das Bild in echter Größe. Klicke ins kleine Bild, um eine andere Stelle anzusehen, und ziehe im großen Bild den Regler zur Seite.</small></div>
+ </div>
+ <div>
+  <div class="sec"><h3>Einstellungen</h3>
+   <div class="line"><div>Vergrößerung<small>So viel größer wird das Bild.</small></div></div>
+   <div class="seg" id="facs" style="margin-bottom:12px">${[2,4,8].map(x=>`<button class="btn ${factor===x?'on':''}" data-f="${x}">${x}-fach</button>`).join('')}</div>
+   ${aiLine}
+   <div class="line"><div>Neue Größe<small>${(W*H/1e6).toFixed(1).replace('.',',')} Megapixel · ${fmt}</small></div><span class="val">${num(W)} × ${num(H)}</span></div>
+   <div class="line"><div>Speichern in<small title="${esc(outDir)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(outDir)}</small></div><button class="btn" id="pickdir">Ändern</button></div>
+  </div>
+  <button class="btn primary big" id="render" ${AI.ready?'':'disabled'}>${AI.ready?'Bild vergrößern':'Warte auf die KI …'}</button>
+  <div id="status"></div>
+ </div></div>`;
+ const cmp=$('#cmp');let drag=false;
+ const setCut=e=>{const r=cmp.getBoundingClientRect();cut=Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100));cmp.style.setProperty('--cut',cut+'%')};
+ cmp.addEventListener('pointerdown',e=>{drag=true;cmp.setPointerCapture(e.pointerId);setCut(e)});
+ cmp.addEventListener('pointermove',e=>{if(drag)setCut(e)});cmp.addEventListener('pointerup',()=>drag=false);
+ $('#pimg').addEventListener('load',placeSel);
+ if(p.result&&!timer)showDone(p);
+ sample()}
+
+function placeSel(){const img=$('#pimg');if(!img||!img.naturalWidth)return;const box=$('#cmp');const cw=Math.min(1,(box.clientWidth/factor+1)/cur.w),ch=Math.min(1,(box.clientHeight/factor+1)/cur.h);
+ const W=img.clientWidth,H=img.clientHeight,s=$('#sel');s.style.width=Math.max(8,W*cw)+'px';s.style.height=Math.max(8,H*ch)+'px';
+ s.style.left=W*Math.min(Math.max(pos.x-cw/2,0),1-cw)+'px';s.style.top=H*Math.min(Math.max(pos.y-ch/2,0),1-ch)+'px'}
+function sample(){clearTimeout(sampleT);sampleT=setTimeout(()=>{const box=$('#cmp');if(!cur||!box)return;if(!AI.ready){box.classList.add('loading');return}
+ const q=`id=${cur.id}&x=${pos.x}&y=${pos.y}&f=${factor}&bw=${Math.round(box.clientWidth)}&bh=${Math.round(box.clientHeight)}`;
+ const raw=$('#raw'),res=$('#res'),z=Date.now();box.classList.add('loading');
+ raw.onload=()=>{raw.style.width=Math.round(raw.naturalWidth*factor)+'px';raw.style.height=Math.round(raw.naturalHeight*factor)+'px'};
+ res.onload=()=>{res.style.width=res.naturalWidth+'px';box.classList.remove('loading')};res.onerror=()=>box.classList.remove('loading');
+ raw.src=`/api/sample?${q}&raw=1&_=${z}`;res.src=`/api/sample?${q}&ai=1&_=${z}`;placeSel()},150)}
+
+async function startRender(){$('#status').innerHTML='';
+ try{await api('/api/render',{id:cur.id,factor,sharp:0,quality:95,outDir,ai:true})}catch(e){$('#status').innerHTML=`<p class="err">${esc(e.message)}</p>`;return}
+ $('#render').disabled=true;poll()}
+function showDone(p){$('#status').innerHTML=`<div class="sec res" style="margin-top:14px"><h3>Fertig</h3><div class="line"><div>${num(p.resultW)} × ${num(p.resultH)} Pixel<small>${size(p.bytes)} · ${esc(Kit.base(p.result))}</small></div><button class="btn" id="showres">Im Ordner zeigen</button></div></div>`}
+function poll(){clearInterval(timer);const id=cur.id;
+ timer=setInterval(async()=>{if(!cur||cur.id!==id||page!=='work'){clearInterval(timer);timer=null;return}const j=await api('/api/job?id='+id);const st=$('#status');if(!st)return;
+  if(j.running){const eta=j.eta>0?` · noch etwa ${j.eta>90?Math.round(j.eta/60)+' Minuten':j.eta+' Sekunden'}`:'';st.innerHTML=`<div class="bar" style="margin-top:14px"><i style="width:${Math.round(j.done*100)}%"></i></div><small class="muted">${Math.round(j.done*100)} %${eta}</small>`;return}
+  clearInterval(timer);timer=null;$('#render').disabled=false;
+  if(j.error){st.innerHTML=`<p class="err">${esc(j.error)}</p>`;return}
+  if(j.finish){await refresh();const p=projects.find(x=>x.id===id);if(p){cur=p;showDone(p)}}},600)}
+
+let installing=false;
+async function installAI(){if(installing)return;installing=true;await api('/api/ai',{});await aiState();if(page==='work')render();
+ const iv=setInterval(async()=>{await aiState();if(page==='work'){const b=$('.line .bar i');if(b&&AI.loading)b.style.width=Math.round(AI.done*100)+'%';else render()}if(!AI.loading){clearInterval(iv);installing=false;if(page==='work')render()}},700)}
+
+document.addEventListener('click',async e=>{const t=e.target;let el;
+ try{
+ if(t.closest('#pick')||t.closest('#pick2')){const p=await Kit.pick('file','Bilder|*.png;*.jpg;*.jpeg;*.gif');if(p[0])openPath(p[0]);return}
+ if(el=t.closest('[data-del]')){e.stopPropagation();await api('/api/delete?id='+el.dataset.del);await refresh();return viewProjects()}
+ if(el=t.closest('[data-page]')){return el.dataset.page==='start'?viewStart():viewProjects()}
+ if(el=t.closest('.proj')){const p=projects.find(x=>x.id===el.dataset.id);if(p)show(p);return}
+ if(el=t.closest('#facs button')){factor=+el.dataset.f;return render()}
+ if(t.closest('#aiinstall'))return installAI();
+ if(t.closest('#pickdir')){const p=await Kit.pick('folder');if(p[0]){outDir=p[0];render()}return}
+ if(t.closest('#render'))return startRender();
+ if(t.closest('#showres'))return Kit.openFolder(cur.result);
+ if(t.closest('#pic')){const r=$('#pimg').getBoundingClientRect();pos={x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))};sample()}
+ }catch(x){Kit.toast(x.message)}
+});
+window.addEventListener('resize',()=>{placeSel();sample()});
+Promise.all([refresh(),aiState()]).then(()=>{if(!AI.ready&&!AI.error)installAI();projects.length?viewProjects():viewStart()});
+</script>
+</body>
+</html>

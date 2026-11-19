@@ -1,0 +1,18 @@
+# Niemals hochladen: private Schlüssel
+*.key
+*.pem
+# Fertige Programme und Build-Ordner
+dist/
+tools-dist/
+release/out/
+macos/build/
+appimage/AppDir/
+*.exe
+*.AppImage
+*.zip
+*.gz
+*.dmg
+models/
+node_modules/
+webseite/
+*.log

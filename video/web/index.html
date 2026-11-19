@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Videoschnitt</title>
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="/kit/tokens.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/kit/polish.css">
+</head>
+<body>
+<!-- Startfenster -->
+<div id="start" class="ch-shell">
+  <header class="ch-top"><div class="ch-brand"><img src="logo.svg" alt="">Videoschnitt</div><span class="ch-sp"></span></header>
+  <nav class="ch-nav"><button class="ch-item on" type="button"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button><div class="ch-sp"></div><small>Videos kannst du auch einfach ins Fenster ziehen.</small></nav>
+  <div class="startbody ch-main">
+    <div id="setup"></div>
+    <section class="newp"><h2>Neues Projekt</h2>
+      <div class="ratios" id="ratios"></div>
+    </section>
+    <section><div class="head"><h2>Projekte</h2><span id="pcount"></span><input id="psearch" placeholder="Suchen …" style="margin-left:auto;max-width:220px;font-size:13px"></div><div class="pgrid" id="plist"></div></section>
+  </div>
+</div>
+
+<!-- Editor: Aufbau wie Filmora -->
+<div id="editor" class="editor" hidden>
+  <header class="bar">
+    <div class="brand"><img src="logo.svg" alt=""><span>Videoschnitt</span></div>
+    <nav class="menu">
+      <div class="dd"><button class="mbtn">Datei</button><div class="ddm">
+        <button data-act="new">Neues Projekt</button><button data-act="home">Projekte</button><hr>
+        <button data-act="save">Speichern<kbd>Strg+S</kbd></button><hr>
+        <button data-act="import">Medien importieren …<kbd>Strg+I</kbd></button><button data-act="projset">Projekteinstellungen</button><hr>
+        <button data-act="srtload">Untertitel laden (SRT) …</button><button data-act="srtsave">Untertitel speichern (SRT) …</button><button data-act="chapters">YouTube-Kapitel aus Markern …</button><hr>
+        <button data-act="export">Exportieren …<kbd>Strg+E</kbd></button></div></div>
+      <div class="dd"><button class="mbtn">Bearbeiten</button><div class="ddm">
+        <button data-act="undo">Rückgängig<kbd>Strg+Z</kbd></button><button data-act="redo">Wiederholen<kbd>Strg+Y</kbd></button><hr>
+        <button data-act="cut">Ausschneiden<kbd>Strg+X</kbd></button><button data-act="copy">Kopieren<kbd>Strg+C</kbd></button><button data-act="paste">Einfügen<kbd>Strg+V</kbd></button><button data-act="dup">Duplizieren<kbd>Strg+D</kbd></button><hr>
+        <button data-act="delete">Löschen<kbd>Entf</kbd></button><button data-act="ripple">Lückenlos löschen<kbd>Umschalt+Entf</kbd></button><button data-act="gap">Lücken schließen<kbd>Alt+Entf</kbd></button><hr>
+        <button data-act="copyfx">Effekte kopieren<kbd>Strg+Alt+C</kbd></button><button data-act="pastefx">Effekte einfügen<kbd>Strg+Alt+V</kbd></button><hr>
+        <button data-act="selall">Alles auswählen<kbd>Strg+A</kbd></button><hr><button data-act="keys">Tastenkürzel anpassen …</button></div></div>
+      <div class="dd"><button class="mbtn">Werkzeuge</button><div class="ddm">
+        <button data-act="split">Teilen<kbd>Strg+B</kbd></button><button data-act="trims">Anfang bis Abspielkopf kürzen<kbd>Alt+[</kbd></button><button data-act="trime">Ende ab Abspielkopf kürzen<kbd>Alt+]</kbd></button><hr>
+        <button data-act="speed">Tempo</button><button data-act="reverse">Rückwärts abspielen</button><button data-act="freeze">Standbild einfügen<kbd>Alt+F</kbd></button><button data-act="detach">Ton abtrennen<kbd>Strg+Alt+D</kbd></button><button data-act="mute">Stumm<kbd>Strg+Umschalt+M</kbd></button><hr>
+        <button data-act="rotr">90° nach rechts drehen<kbd>Strg+Alt+→</kbd></button><button data-act="rotl">90° nach links drehen<kbd>Strg+Alt+←</kbd></button><hr>
+        <button data-act="marker">Marker hinzufügen<kbd>M</kbd></button>
+        <button data-act="addtext">Text hinzufügen</button><button data-act="snapshot">Standbild speichern<kbd>Strg+Alt+S</kbd></button><button data-act="addtrack">Spur hinzufügen</button><hr>
+        <button data-act="snap">Magnetisch einrasten</button></div></div>
+      <div class="dd"><button class="mbtn">Extras</button><div class="ddm"><button data-act="record">Aufnehmen (Bildschirm, Webcam, Mikrofon) …</button><hr><button data-act="silence">Stille herausschneiden …</button><button data-act="beats">Beats als Marker setzen</button><hr><button data-act="curves">Kurven …</button><button data-act="lut">LUT laden (.cube) …</button><hr><button data-act="ramp">Tempo-Rampe …</button><button data-act="track">Bewegung verfolgen</button><button data-act="splitscreen">Split-Screen …</button><button data-act="nest">Clips verschachteln</button><button data-act="unnest">Verschachtelung auflösen</button></div></div>
+      <div class="dd"><button class="mbtn">KI</button><div class="ddm"><button data-act="autosubs">Untertitel aus Sprache …</button><button data-act="matte">Hintergrund entfernen</button><button data-act="reframe">Automatisch ins Hochformat (9:16) …</button></div></div>
+      <div class="dd"><button class="mbtn">Ansicht</button><div class="ddm">
+        <button data-act="zoomin">Vergrößern<kbd>+</kbd></button><button data-act="zoomout">Verkleinern<kbd>−</kbd></button><button data-act="fit">Ganze Zeitleiste zeigen<kbd>Umschalt+Z</kbd></button><hr>
+        <button data-act="fullscreen">Vorschau im Vollbild<kbd>Alt+Enter</kbd></button><button data-act="layout">Bereiche zurücksetzen</button></div></div>
+      <div class="dd"><button class="mbtn">Hilfe</button><div class="ddm">
+        <button data-act="guide">Erste Schritte</button><button data-act="keys">Tastenkürzel<kbd>F1</kbd></button></div></div>
+    </nav>
+    <div class="ptitle"><input id="pname" spellcheck="false" aria-label="Projektname"><span id="saved" class="muted"></span></div>
+    <button class="btn primary" id="exportbtn" data-act="export"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>Exportieren</button>
+  </header>
+
+  <div class="ws" id="ws">
+    <div class="lcol">
+      <div class="trow">
+        <section class="pane lib" id="lib">
+          <nav class="ltabs" id="tabs">
+            <button data-tab="media"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg><span>Medien</span></button>
+            <button data-tab="audio"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg><span>Audio</span></button>
+            <button data-tab="titles"><svg viewBox="0 0 24 24"><path d="M5 6h14M12 6v13"/></svg><span>Text</span></button>
+            <button data-tab="trans"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="8" height="12" rx="1"/><rect x="13" y="6" width="8" height="12" rx="1"/><path d="M9 12h6"/></svg><span>Übergänge</span></button>
+            <button data-tab="fx"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.5L20 9l-4.2 3.9L17 19l-5-3-5 3 1.2-6.1L4 9l5.6-.5z"/></svg><span>Effekte</span></button>
+            <button data-tab="filter"><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="5"/><circle cx="15" cy="10" r="5"/><circle cx="12" cy="15" r="5"/></svg><span>Filter</span></button>
+            <button data-tab="stickers"><svg viewBox="0 0 24 24"><path d="M4 4h16v9l-7 7H4z"/><path d="M13 20v-5a2 2 0 0 1 2-2h5"/></svg><span>Sticker</span></button>
+            <button data-tab="tpl"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg><span>Vorlagen</span></button>
+          </nav>
+          <div class="lwrap"><aside class="side" id="side"></aside><div class="lmain"><div class="libtop" id="libtop"></div><div class="libbody" id="libbody"></div></div></div>
+        </section>
+        <div class="gut v" data-split="lib" title="Größe ändern"></div>
+        <section class="pane props" id="props"></section>
+      </div>
+      <div class="gut h" data-split="top" title="Größe ändern"></div>
+      <section class="pane tl" id="tl">
+        <div class="tlbar">
+          <button class="ib" data-act="undo" title="Rückgängig (Strg+Z)"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+          <button class="ib" data-act="redo" title="Wiederholen (Strg+Y)"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+          <button class="ib" data-act="delete" title="Löschen (Entf)"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+          <button class="ib" data-act="split" title="Teilen (Strg+B)"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8 7.5 20 17M8 16.5 20 7"/></svg></button>
+          <button class="ib" data-act="addtext" title="Text hinzufügen"><svg viewBox="0 0 24 24"><path d="M5 6h14M12 6v13"/></svg></button>
+          <button class="ib" data-act="speed" title="Tempo"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 13l4-4M12 3v2"/></svg></button>
+          <button class="ib" data-act="freeze" title="Standbild einfügen (Alt+F)"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M10 9v6M14 9v6"/></svg></button>
+          <button class="ib" data-act="marker" title="Marker hinzufügen (M)"><svg viewBox="0 0 24 24"><path d="M6 3h12v14l-6-4-6 4z"/></svg></button>
+          <button class="ib" data-act="detach" title="Ton abtrennen"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-6 4 12 3-6h4"/></svg></button>
+          <button class="ib" data-act="record" title="Aufnehmen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg></button><button class="ib" data-act="splitscreen" title="Split-Screen"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/></svg></button><button class="ib" data-act="snapshot" title="Standbild speichern"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+          <div class="sp"></div>
+          <button class="ib tog" data-act="snap" id="snapbtn" title="Magnetisch einrasten"><svg viewBox="0 0 24 24"><path d="M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4z"/></svg></button>
+          <span class="sep"></span>
+          <button class="ib" data-act="zoomout" title="Verkleinern (−)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></button>
+          <input type="range" id="zoom" min="0" max="100" value="40" aria-label="Zoom">
+          <button class="ib" data-act="zoomin" title="Vergrößern (+)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></button>
+          <button class="ib" data-act="fit" title="Ganze Zeitleiste zeigen"><svg viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg></button>
+        </div>
+        <div class="tlmain">
+          <div class="heads" id="headsWrap"><div class="hhead"><button class="ib" data-act="addtrack" title="Spur hinzufügen"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 9v6M9 12h6"/></svg></button></div><div id="heads"></div></div>
+          <div class="lanes" id="lanes"><div class="ruler" id="ruler"></div><div class="rows" id="rows"></div><div class="ph" id="ph"><i></i></div><div class="tlempty" id="tlempty"><div class="box"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5-5-8 8"/></svg></div><span>Ziehe Medien und Effekte hierher, um dein Video zu erstellen.</span></div></div>
+        </div>
+      </section>
+    </div>
+    <div class="gut v" data-split="player" title="Größe ändern"></div>
+    <section class="pane player" id="player">
+      <div class="phead"><b>Player</b><select id="pq" aria-label="Vorschauqualität"><option value="1920">Höchste Qualität</option><option value="1280" selected>Gute Qualität</option><option value="640">Flüssige Wiedergabe</option></select><div class="sp"></div></div>
+      <div class="stage" id="stage"><canvas id="cv"></canvas><div class="pmsg" id="pmsg"></div></div>
+      <div class="scrubrow"><div class="scrub" id="scrub"><i></i><b></b></div><span class="tc"><input id="tcur" spellcheck="false" aria-label="Zeit"><span class="muted">/</span><span id="ttot" class="muted">00:00:00:00</span></span></div>
+      <div class="pctl">
+        <button class="ib" data-act="prev" title="Ein Bild zurück (←)"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-9 6 9 6z"/></svg></button>
+        <button class="ib play" data-act="play" title="Abspielen (Leertaste)" id="playbtn"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></button>
+        <button class="ib" data-act="next" title="Ein Bild vor (→)"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l9 6-9 6z"/></svg></button>
+        <button class="ib" data-act="stop" title="Stopp"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></button>
+        <div class="sp"></div>
+        <span class="ratiolbl" id="ratiolbl" title="Projekteinstellungen" data-act="projset"></span>
+        <button class="ib" data-act="snapshot" title="Standbild speichern"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+        <button class="ib" data-act="pmute" id="pmute" title="Vorschau stumm"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7"/></svg></button>
+        <button class="ib" data-act="fullscreen" title="Vollbild"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<div id="hidden" hidden></div>
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script src="fx.js"></script>
+<script src="dock.js"></script>
+<script src="app.js"></script>
+<script src="player.js"></script>
+<script src="timeline.js"></script>
+<script src="panels.js"></script>
+<script src="keys.js"></script>
+<script src="pro.js"></script>
+<script src="pro2.js"></script>
+<script src="pro3.js"></script>
+<script src="filmora.js"></script>
+</body>
+</html>

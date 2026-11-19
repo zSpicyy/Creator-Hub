@@ -1,0 +1,97 @@
+Eingebaute Soundeffekte / Built-in sound effects
+
+Alle Dateien: CC0 1.0 (gemeinfrei / public domain), https://creativecommons.org/publicdomain/zero/1.0/
+Quellen über / collected via github.com/Barty-Bart/motion-graphics (sfx/manifest.json)
+
+Whoosh/Whoosh 01.ogg: deleted_user_6479820 via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/deleted_user_6479820/sounds/393811/
+Whoosh/Whoosh 02.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Whoosh/Whoosh 03.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Whoosh/Whoosh 04.ogg: migoreng1 via Freesound (CC0; credit optional) – https://freesound.org/people/migoreng1/sounds/786514/
+Whoosh/Whoosh 05.ogg: MeanRaccoon via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/MeanRaccoon/sounds/830856/
+Whoosh/Whoosh 06.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Whoosh/Whoosh 07.ogg: Sadiquecat via Freesound (CC0; credit optional) – https://freesound.org/people/Sadiquecat/sounds/816262/
+Whoosh/Whoosh 08.ogg: dave.des via Freesound (CC0; credit optional) – https://freesound.org/people/dave.des/sounds/127197/
+Whoosh/Whoosh 09.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Whoosh/Whoosh 10.ogg: CVLTIV8R via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/CVLTIV8R/sounds/810485/
+Whoosh/Whoosh 11.ogg: LilMati via Freesound (CC0; credit optional) – https://freesound.org/people/LilMati/sounds/702773/
+Whoosh/Whoosh 12.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Whoosh/Whoosh 13.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Whoosh/Whoosh 14.ogg: florianreichelt via Freesound (CC0; credit optional) – https://freesound.org/people/florianreichelt/sounds/683096/
+Whoosh/Whoosh 15.ogg: florianreichelt via Freesound (CC0; credit optional) – https://freesound.org/people/florianreichelt/sounds/683101/
+Whoosh/Whoosh 16.ogg: Halgrimm via Freesound (CC0; credit optional) – https://freesound.org/people/Halgrimm/sounds/169867/
+Whoosh/Whoosh 17.ogg: brktkrgll via Freesound (CC0; credit optional) – https://freesound.org/people/brktkrgll/sounds/856168/
+Whoosh/Whoosh 18.ogg: Shinplaster via Freesound (CC0; credit optional) – https://freesound.org/people/Shinplaster/sounds/264777/
+Whoosh/Whoosh 19.ogg: Gravy42 via Freesound (CC0; credit optional) – https://freesound.org/people/Gravy42/sounds/850347/
+Pop/Pop 01.ogg: Narjara via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/Narjara/sounds/527522/
+Pop/Pop 02.ogg: Reitanna via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/Reitanna/sounds/323738/
+Pop/Pop 03.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 04.ogg: benzix2 via Freesound (CC0; credit optional) – https://freesound.org/people/benzix2/sounds/467951/
+Pop/Pop 05.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 06.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 07.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 08.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 09.ogg: deraj via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/deraj/sounds/202230/
+Pop/Pop 10.ogg: Breviceps via Freesound (CC0; credit optional) – https://freesound.org/people/Breviceps/sounds/447910/
+Pop/Pop 11.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 12.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Pop/Pop 13.ogg: jcallison via Freesound (CC0; credit optional) – https://freesound.org/people/jcallison/sounds/258269/
+Pop/Pop 14.ogg: Sadiquecat via Freesound (CC0; credit optional) – https://freesound.org/people/Sadiquecat/sounds/824189/
+Pop/Pop 15.ogg: oussamaben via Freesound (CC0; credit optional) – https://freesound.org/people/oussamaben/sounds/514833/
+Tippen/Tippen 01.ogg: Sky_Motion via Freesound (CC0; credit optional) – https://freesound.org/people/Sky_Motion/sounds/416777/
+Tippen/Tippen 02.ogg: Sky_Motion via Freesound (CC0; credit optional) – https://freesound.org/people/Sky_Motion/sounds/511418/
+Tippen/Tippen 03.ogg: Breviceps via Freesound (CC0; credit optional) – https://freesound.org/people/Breviceps/sounds/447909/
+Tippen/Tippen 04.ogg: Alivvie via Freesound (CC0; credit optional) – https://freesound.org/people/Alivvie/sounds/323432/
+Tippen/Tippen 05.ogg: j1987 via Freesound (CC0; credit optional) – https://freesound.org/people/j1987/sounds/79388/
+Riser/Riser 01.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/digital-audio
+Riser/Riser 02.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/digital-audio
+Riser/Riser 03.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/digital-audio
+Riser/Riser 04.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/digital-audio
+Riser/Riser 05.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/digital-audio
+Riser/Riser 06.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/digital-audio
+Riser/Riser 07.ogg: Diim_1 via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/Diim_1/sounds/867126/
+Riser/Riser 08.ogg: syntheffects via Freesound (CC0; credit optional) – https://freesound.org/people/syntheffects/sounds/685256/
+Riser/Riser 09.ogg: Xinematix via Freesound (CC0; credit optional) – https://freesound.org/people/Xinematix/sounds/396161/
+Riser/Riser 10.ogg: Xinematix via Freesound (CC0; credit optional) – https://freesound.org/people/Xinematix/sounds/396160/
+Riser/Riser 11.ogg: kasa90 via Freesound (CC0; credit optional) – https://freesound.org/people/kasa90/sounds/174363/
+Riser/Riser 12.ogg: DylanTheFish via Freesound (CC0; credit optional) – https://freesound.org/people/DylanTheFish/sounds/464250/
+Aufprall/Aufprall 01.ogg: SamsterBirdies via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/SamsterBirdies/sounds/745291/
+Aufprall/Aufprall 02.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/impact-sounds
+Aufprall/Aufprall 03.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/impact-sounds
+Aufprall/Aufprall 04.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/impact-sounds
+Aufprall/Aufprall 05.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/impact-sounds
+Aufprall/Aufprall 06.ogg: DeVern via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/DeVern/sounds/524817/
+Aufprall/Aufprall 07.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/sci-fi-sounds
+Aufprall/Aufprall 08.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/sci-fi-sounds
+Aufprall/Aufprall 09.ogg: deleted_user_3277771 via Freesound (CC0; credit optional) – https://freesound.org/people/deleted_user_3277771/sounds/177242/
+Aufprall/Aufprall 10.ogg: qubodup via Freesound (CC0; credit optional) – https://freesound.org/people/qubodup/sounds/222517/
+Aufprall/Aufprall 11.ogg: Kinoton via Freesound (CC0; credit optional) – https://freesound.org/people/Kinoton/sounds/347561/
+Ding/Ding 01.ogg: adh.dreaming via Freesound (CC0; credit optional) – https://freesound.org/people/adh.dreaming/sounds/634690/
+Ding/Ding 02.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Ding/Ding 03.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Ding/Ding 04.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Ding/Ding 05.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Ding/Ding 06.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Ding/Ding 07.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Ding/Ding 08.ogg: LegitCheese via Freesound (CC0; credit optional) – https://freesound.org/people/LegitCheese/sounds/571513/
+Ding/Ding 09.ogg: cabled_mess via Freesound (CC0; credit optional) – https://freesound.org/people/cabled_mess/sounds/349504/
+Glitch/Glitch 01.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Glitch/Glitch 02.ogg: plasterbrain via Freesound (CC0; credit optional) – https://freesound.org/people/plasterbrain/sounds/402451/
+Glitch/Glitch 03.ogg: lucaslima via Freesound (CC0; credit optional) – https://freesound.org/people/lucaslima/sounds/339521/
+Glitch/Glitch 04.ogg: garogourou via Freesound (CC0; credit optional) – https://freesound.org/people/garogourou/sounds/144546/
+Glitch/Glitch 05.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/sci-fi-sounds
+Glitch/Glitch 06.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/sci-fi-sounds
+Glitch/Glitch 07.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/sci-fi-sounds
+Klick/Klick 01.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Klick/Klick 02.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Klick/Klick 03.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Klick/Klick 04.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Klick/Klick 05.ogg: Mediasaur via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/Mediasaur/sounds/788933/
+Klick/Klick 06.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Klick/Klick 07.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Klick/Klick 08.ogg: Kenney (kenney.nl), CC0; credit optional – https://kenney.nl/assets/interface-sounds
+Tick/Tick 01.ogg: BaggoNotes via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/BaggoNotes/sounds/721514/
+Tick/Tick 02.ogg: Jummit via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/Jummit/sounds/528561/
+Tick/Tick 03.ogg: malle99 via Freesound (CC0; credit given voluntarily) – https://freesound.org/people/malle99/sounds/384187/
+Weitere/*: selbst erzeugt / self-generated (Creator Hub)
+
+Nach Namen gestaltete, selbst erzeugte Klänge (synthetisch, Creator Hub, frei nutzbar): Whoosh/<Name>, Filmisch, Cartoon, Reaktionen, Benachrichtigung, Sci-Fi, Übergänge, Horror, Countdown, Natur

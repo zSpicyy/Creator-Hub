@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creator Hub</title>
+<link rel="icon" href="/logos/hub.svg" type="image/svg+xml">
+<style>
+:root{--bg:#14161a;--panel:#1b1e24;--panel2:#22262d;--line:#2d323b;--text:#e8eaee;--muted:#98a0ad;--accent:#4c8dff;--accent-ink:#06142e;--danger:#ff6b6b;--ok:#4cc38a;--r:10px;--pad:18px}
+:root[data-theme=black]{--bg:#000;--panel:#0c0c0e;--panel2:#16161a;--line:#24242a;--text:#f2f2f5;--muted:#8d8d98}
+:root[data-theme=light]{--bg:#f3f4f6;--panel:#fff;--panel2:#eceef2;--line:#dcdfe5;--text:#1b1e24;--muted:#626a78;--accent-ink:#fff;--danger:#c93a3a;--ok:#1d8f5a}
+/* Catppuccin (https://github.com/catppuccin/palette, MIT) */
+:root[data-theme=latte]{--bg:#dce0e8;--panel:#eff1f5;--panel2:#e6e9ef;--line:#ccd0da;--text:#4c4f69;--muted:#6c6f85;--danger:#d20f39;--ok:#40a02b;--warn:#df8e1d;color-scheme:light}
+:root[data-theme=frappe]{--bg:#232634;--panel:#303446;--panel2:#414559;--line:#51576d;--text:#c6d0f5;--muted:#a5adce;--danger:#e78284;--ok:#a6d189;--warn:#e5c890;color-scheme:dark}
+:root[data-theme=macchiato]{--bg:#181926;--panel:#24273a;--panel2:#363a4f;--line:#494d64;--text:#cad3f5;--muted:#a5adcb;--danger:#ed8796;--ok:#a6da95;--warn:#eed49f;color-scheme:dark}
+:root[data-theme=mocha]{--bg:#11111b;--panel:#1e1e2e;--panel2:#313244;--line:#45475a;--text:#cdd6f4;--muted:#a6adc8;--danger:#f38ba8;--ok:#a6e3a1;--warn:#f9e2af;color-scheme:dark}
+:root[data-density=compact]{--pad:12px;--r:8px}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",system-ui,sans-serif;display:grid;grid-template-columns:200px 1fr;grid-template-rows:auto auto 1fr;grid-template-areas:"top top" "nav hist" "nav main";overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+svg{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.top{grid-area:top;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;width:168px;letter-spacing:.2px}
+.brand img{width:30px;height:30px}
+.search{flex:1;max-width:520px;position:relative}
+.search input{width:100%;padding:8px 12px 8px 34px;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.search input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.search svg{position:absolute;left:11px;top:50%;translate:0 -50%;color:var(--muted);font-size:15px}
+.ctl{display:flex;align-items:center;gap:8px;margin-left:auto}
+select,.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+.btn:hover,select:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:default}
+.icon{width:34px;height:34px;padding:0;display:grid;place-items:center;font-size:17px}
+.seg{display:flex}.seg .btn{border-radius:0}.seg .btn:first-child{border-radius:8px 0 0 8px}.seg .btn:last-child{border-radius:0 8px 8px 0;border-left:0}.seg .on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;border:0}
+nav{grid-area:nav;padding:14px 10px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+nav button{display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:8px;padding:9px 11px;text-align:left;color:var(--muted)}
+nav button:hover{background:var(--panel2);color:var(--text)}
+nav button.on{background:var(--panel2);color:var(--text);font-weight:600}
+nav button.on svg{color:var(--accent)}
+nav .sp{flex:1}
+nav small{color:var(--muted);padding:8px 11px;font-size:12px}
+.hist{grid-area:hist;padding:12px var(--pad) 10px;border-bottom:1px solid var(--line);min-height:68px}
+.hist h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.chip{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:6px 12px 6px 8px;min-width:190px;text-align:left}
+.chip:hover{border-color:var(--accent)}
+.chip .gl{width:30px;height:30px;display:block}.chip .gl img{width:100%;height:100%}
+.chip b{display:block;font-weight:600;line-height:1.2}
+.chip span{font-size:12px;color:var(--muted)}
+.chip.live .gl{background:var(--ok);color:#fff}
+.empty{color:var(--muted);font-size:13px;padding:4px 0}
+main{grid-area:main;overflow:auto;padding:var(--pad)}
+.head{display:flex;align-items:baseline;gap:10px;margin:2px 0 14px}
+.head h2{margin:0;font-size:19px}.head span{color:var(--muted)}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat{background:none;border:1px solid var(--line);border-radius:99px;padding:4px 13px;color:var(--muted)}
+.cat.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--pad);display:flex;flex-direction:column;gap:10px}
+.card:hover{border-color:var(--muted)}
+.pv{height:112px;border-radius:8px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--c) 55%,transparent),color-mix(in srgb,var(--c) 14%,var(--panel2)) 72%)}
+.pv img{width:84px;height:84px;filter:drop-shadow(0 6px 14px color-mix(in srgb,var(--c) 70%,#000))}
+.logo{width:100%;height:100%;object-fit:contain}
+.list .pv{display:none}
+.card.tool{cursor:pointer}
+.pv{position:relative;overflow:hidden}
+.inst{position:absolute;right:8px;bottom:8px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--text);border:1px solid var(--line)}
+.inst i{position:fixed;display:none}.inst.busy{left:8px;right:8px;text-align:center;overflow:hidden}.inst.busy i{position:absolute;display:block;left:0;bottom:0;height:2px;background:var(--accent)}
+.pv:has(.inst.soon) img{opacity:.5;filter:grayscale(.6)}
+.inst.soon{color:var(--muted);font-weight:500}.inst.err{color:var(--danger)}
+.card.tool:hover .inst:not(.soon){color:var(--accent)}
+#toolframe{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:30;background:var(--bg);display:none}
+body.tool-open #toolframe{display:block}
+.updbox{border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:10px;padding:12px 14px;margin:8px 0 6px}.updbox p{margin:6px 0;color:var(--muted)}.updbox .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 6px}.updbox small{color:var(--muted)}.updbox input[type=time]{max-width:110px}.btn.sm{padding:3px 9px;font-size:12px}
+.upd{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--accent);border-radius:var(--r);padding:12px 16px;margin-bottom:14px}.upd>div{flex:1}.upd small{display:block;color:var(--muted)}
+.bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent)}
+.card .row{display:flex;align-items:center;gap:12px}
+.card .gl{display:none;width:40px;height:40px;flex:none}.list .card .gl{display:block}.card .gl img{width:100%;height:100%}
+.card h3{margin:0;font-size:15px}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 8px;margin-left:auto;white-space:nowrap}
+.card p{margin:0;color:var(--muted);flex:1}
+.card .foot{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+.card .foot .btn{margin-left:auto}
+.list .grid{grid-template-columns:1fr;gap:8px}
+.list .card{flex-direction:row;align-items:center;padding:10px var(--pad)}
+.list .card p{flex:1}.list .card .row{width:310px}
+.list .tag{margin-left:0}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.proj{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;display:block;width:100%}
+.proj:hover{border-color:var(--accent)}
+.proj .th{height:124px;background:var(--panel2);display:grid;place-items:center;background-size:cover;background-position:center}
+.proj .th img{width:72px;height:72px;opacity:.9}
+.proj .tx{padding:10px 12px}
+.proj b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj span{font-size:12px;color:var(--muted)}/* Projektkarten im Stil der Werkzeugkarten im Hub */.proj{padding:12px!important;border-radius:14px!important;display:flex!important;flex-direction:column;gap:0;background:var(--panel);overflow:hidden}.proj .th{border-radius:10px;overflow:hidden;height:150px!important;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--accent) 22%,var(--panel2)),var(--panel2) 75%)}.proj .tx{padding:12px 2px 2px!important;display:flex;flex-direction:column;gap:6px;flex:1}.proj .tr{display:flex;align-items:center;gap:8px;min-width:0}.proj .tr b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.proj .tag{font-style:normal;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;white-space:nowrap;flex:none}.proj .tx>span{font-size:13px;color:var(--muted)}.proj .open{font-style:normal;align-self:flex-end;margin-top:4px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;border-radius:9px;padding:6px 14px}.proj:hover .open{filter:brightness(1.08)}.proj .pacts{top:20px!important;right:20px!important}
+.set{max-width:720px}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--pad);margin-bottom:14px}
+.sec h3{margin:0 0 12px;font-size:14px}
+.line{display:flex;align-items:center;gap:14px;padding:9px 0;border-top:1px solid var(--line)}
+.line:first-of-type{border-top:0;padding-top:0}
+.line>div{flex:1}.line small{display:block;color:var(--muted)}
+.themes{display:flex;gap:10px;flex-wrap:wrap}
+.theme{width:112px;border:2px solid var(--line);border-radius:10px;background:none;padding:6px;text-align:center}
+.theme.on{border-color:var(--accent)}
+.theme i{display:block;height:48px;border-radius:6px;margin-bottom:5px;border:1px solid #8884}
+.theme.ctp i{display:flex;flex-direction:column;justify-content:space-between;padding:6px 7px;text-align:left}.theme.ctp b{font-size:14px;line-height:1}.theme.ctp span{display:flex;gap:3px}.theme.ctp em{width:8px;height:8px;border-radius:50%}
+.sw{display:flex;gap:9px;flex-wrap:wrap}
+.sw button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;outline:2px solid transparent;outline-offset:2px}
+.sw button.on{outline-color:var(--text)}
+.addc{width:30px;height:30px;border-radius:50%;border:2px dashed var(--muted);display:grid;place-items:center;color:var(--muted);font-weight:700;cursor:pointer;position:relative;overflow:hidden}.addc:hover{border-color:var(--text);color:var(--text)}.addc input{position:absolute;inset:0;opacity:0;cursor:pointer}
+#kitOverlay{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(3px);pointer-events:none}#kitOverlay div{border:3px dashed var(--accent);border-radius:18px;padding:40px 60px;background:var(--panel);font-size:18px;font-weight:600;color:var(--accent)}body.kit-dragging #kitOverlay{display:grid}
+.modal{position:fixed;inset:0;background:#0007;z-index:40;display:none;place-items:center}.modal.show{display:grid}.modal>div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;width:min(520px,92vw)}.modal h3{margin:0 0 4px}.modal p{color:var(--muted);margin:0 0 14px}.owl{display:grid;gap:8px}.ow{display:flex;gap:12px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;text-align:left}.ow:hover{border-color:var(--accent)}.ow img{width:36px;height:36px}.ow small{display:block;color:var(--muted)}
+.switch{width:42px;height:24px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);position:relative;padding:0}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.15s}
+.switch.on{background:var(--accent);border-color:var(--accent)}.switch.on::after{left:20px;background:var(--accent-ink)}
+input[type=text],input[type=email],input[type=number]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 11px;width:100%}
+.pop{position:fixed;top:56px;right:16px;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 12px 34px #0006;z-index:20;display:none}
+.pop.show{display:block}
+.pop label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.pop .acts{display:flex;gap:8px;margin-top:14px}
+.pop .me{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.toast{position:fixed;bottom:20px;left:50%;translate:-50% 0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 16px;z-index:30;display:none;max-width:560px}
+.toast.show{display:block}
+@media(max-width:820px){body{grid-template-columns:1fr;grid-template-areas:"top" "hist" "main"}nav{display:none}.brand{width:auto}}
+
+/* Update-Hinweis unten rechts */
+.updpop{position:fixed;right:20px;bottom:20px;width:350px;max-width:calc(100vw - 40px);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;z-index:40;box-shadow:0 18px 50px rgba(0,0,0,.45),0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent),0 0 34px color-mix(in srgb,var(--accent) 22%,transparent);overflow:hidden;animation:updin .35s cubic-bezier(.2,.9,.3,1.2)}
+.updpop::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 30%,#fff))}
+@keyframes updin{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+.updpop .hd{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.updpop .hd img{width:40px;height:40px}
+.updpop .hd b{display:block;font-size:15px}
+.updpop .hd span{color:var(--muted);font-size:12.5px}
+.updpop .ver{display:inline-block;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);border-radius:99px;padding:1px 9px;font-weight:700;font-size:12.5px;margin-left:2px}
+.updpop .x{position:absolute;top:10px;right:10px;background:none;border:0;color:var(--muted);font-size:18px;line-height:1;padding:4px 7px;border-radius:6px}
+.updpop .x:hover{background:var(--panel2);color:var(--text)}
+.updpop .whatsnew{background:var(--panel2);border-radius:9px;padding:8px 10px;margin:0 0 10px;max-height:110px;overflow:auto}.updpop .whatsnew b{font-size:12px;color:var(--accent)}.updpop .whatsnew p{margin:3px 0 0;font-size:12.5px;line-height:1.45}
+.updpop .note{color:var(--muted);font-size:12px;margin:0 0 12px}
+.updpop .row{display:flex;gap:8px;flex-wrap:wrap}
+.updpop .row .btn{flex:1;white-space:nowrap}
+.updpop .plan{display:grid;gap:6px;margin-top:10px}
+.updpop .plan button{text-align:left}
+.updpop .plan .tm{display:flex;gap:6px}
+.updpop .plan input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:6px 9px}
+.updpop .planned{background:var(--panel2);border-radius:9px;padding:8px 10px;font-size:13px;margin-bottom:10px}
+</style>
+<link rel="stylesheet" href="/kit/polish.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="/logos/hub.svg" alt="">Creator Hub</div>
+  <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Werkzeuge suchen…  (Strg+K)" autocomplete="off"></div>
+  <div class="ctl">
+    <select id="sort" title="Sortierung">
+      <option value="az">A bis Z</option><option value="za">Z bis A</option>
+      <option value="recent">Zuletzt benutzt</option>
+      <option value="cat">Nach Kategorie</option>
+    </select>
+    <div class="seg"><button class="btn icon" id="vGrid" title="Kacheln"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg></button><button class="btn icon" id="vList" title="Liste"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></div>
+    <button class="btn icon" id="gear" title="Einstellungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    <button class="avatar btn" id="acct" title="Konto"></button>
+  </div>
+</header>
+<nav>
+  <button data-page="tools" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>Werkzeuge</button>
+  <button data-page="projects"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button>
+  <button data-page="settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Einstellungen</button>
+  <div class="sp"></div><small id="ver">Alle Daten bleiben auf diesem PC.</small>
+</nav>
+<section class="hist" id="hist"></section>
+<main id="main"></main>
+<div class="pop" id="pop"></div>
+<div class="toast" id="toast"></div>
+<div class="updpop" id="updpop" hidden></div>
+
+<div class="modal" id="ow"><div id="owIn"></div></div>
+<iframe id="toolframe" title="Werkzeug"></iframe>
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script>
+const ICONS={
+ mp3:'<svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+ convert:'<svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>',
+ cutout:'<svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8 7.5 20 17M8 16.5 20 7"/></svg>',
+ image:'<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.7"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>',
+ video:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10.5 5-3v9l-5-3z"/></svg>',
+ upscale:'<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg>',
+ motion:'<svg viewBox="0 0 24 24"><path d="M4 19c3-6 6 0 9-6s4-6 5-6"/><circle cx="18.5" cy="6.5" r="2.5"/><path d="M4 16.5 6 19l-2 2.5L2 19z"/></svg>',
+ streampilot:'<svg viewBox="0 0 24 24"><path d="M6 6c-2 2-2 10 0 12M18 6c2 2 2 10 0 12"/><path d="M10 8.5l5 3.5-5 3.5z"/></svg>'};
+const COLORS={mp3:'#f0663a',convert:'#1fc4b8',cutout:'#e0449a',image:'#3f78f0',video:'#8a5ef0',upscale:'#33c97c',motion:'#4f5bd5',streampilot:'#7c4dff'};
+const LOGO=id=>`<img src="/logos/${id}.svg" alt="">`;
+const ACCENTS={indigo:'#7c6cff',blau:'#4c8dff',türkis:'#25b8c9',grün:'#3fbf7f',gelb:'#e0b43a',orange:'#f08a3c',rot:'#e5584f',pink:'#e5629f',violett:'#9a78f0'};
+const CTP={"latte":{"rosewater":"#dc8a78","flamingo":"#dd7878","pink":"#ea76cb","mauve":"#8839ef","red":"#d20f39","maroon":"#e64553","peach":"#fe640b","yellow":"#df8e1d","green":"#40a02b","teal":"#179299","sky":"#04a5e5","sapphire":"#209fb5","blue":"#1e66f5","lavender":"#7287fd"},"frappe":{"rosewater":"#f2d5cf","flamingo":"#eebebe","pink":"#f4b8e4","mauve":"#ca9ee6","red":"#e78284","maroon":"#ea999c","peach":"#ef9f76","yellow":"#e5c890","green":"#a6d189","teal":"#81c8be","sky":"#99d1db","sapphire":"#85c1dc","blue":"#8caaee","lavender":"#babbf1"},"macchiato":{"rosewater":"#f4dbd6","flamingo":"#f0c6c6","pink":"#f5bde6","mauve":"#c6a0f6","red":"#ed8796","maroon":"#ee99a0","peach":"#f5a97f","yellow":"#eed49f","green":"#a6da95","teal":"#8bd5ca","sky":"#91d7e3","sapphire":"#7dc4e4","blue":"#8aadf4","lavender":"#b7bdf8"},"mocha":{"rosewater":"#f5e0dc","flamingo":"#f2cdcd","pink":"#f5c2e7","mauve":"#cba6f7","red":"#f38ba8","maroon":"#eba0ac","peach":"#fab387","yellow":"#f9e2af","green":"#a6e3a1","teal":"#94e2d5","sky":"#89dceb","sapphire":"#74c7ec","blue":"#89b4fa","lavender":"#b4befe"}};
+const CTPF=[['latte','Latte','#eff1f5','#4c4f69'],['frappe','Frappé','#303446','#c6d0f5'],['macchiato','Macchiato','#24273a','#cad3f5'],['mocha','Mocha','#1e1e2e','#cdd6f4']];
+const CTPN={rosewater:'Rosewater',flamingo:'Flamingo',pink:'Pink',mauve:'Mauve',red:'Red',maroon:'Maroon',peach:'Peach',yellow:'Yellow',green:'Green',teal:'Teal',sky:'Sky',sapphire:'Sapphire',blue:'Blue',lavender:'Lavender'};
+const ctpFl=th=>CTP[th]?th:(th==='light'?'latte':'mocha');
+const THEMES=[['black','Schwarz','#000'],['dark','Dunkel','#14161a'],['light','Hell','#f3f4f6'],['system','Wie das System','linear-gradient(90deg,#14161a 50%,#f3f4f6 50%)']];
+let S=null,page=(()=>{try{const b=JSON.parse(sessionStorage.getItem('hubBack')||'null');return b&&b.page||'tools'}catch(e){return'tools'}})(),cat='',pcat='',toastT;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(u,body){const r=await fetch(u,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Fehler');return j}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4200)}
+function ago(ts){const d=S.now-ts;if(d<60)return'gerade eben';if(d<3600)return`vor ${Math.floor(d/60)} Min.`;if(d<86400)return`vor ${Math.floor(d/3600)} Std.`;const n=Math.floor(d/86400);return n===1?'gestern':`vor ${n} Tagen`}
+function dur(s){if(s<60)return`${s} Sek.`;if(s<3600)return`${Math.round(s/60)} Min.`;return`${Math.floor(s/3600)} Std. ${Math.round(s%3600/60)} Min.`}
+const tool=id=>S.tools.find(t=>t.id===id);
+
+function applyTheme(){const s=S.settings;let th=s.theme;if(th==='system')th=matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
+ const r=document.documentElement;r.dataset.theme=th;r.dataset.density=s.density;
+ const ca=/^ctp-/.test(s.accent||'')?CTP[ctpFl(th)][s.accent.slice(4)]:null;const c=ca||ACCENTS[s.accent]||(/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:ACCENTS.indigo);r.style.setProperty('--accent',c);
+ const l=parseInt(c.slice(1,3),16)*.3+parseInt(c.slice(3,5),16)*.59+parseInt(c.slice(5,7),16)*.11;
+ r.style.setProperty('--accent-ink',l>150?'#10131a':'#fff')}
+async function saveSettings(){await api('/api/settings',S.settings);applyTheme();render()}
+
+let openId=null,waiting={};
+async function launch(id,files){const t=tool(id);if(!t)return;
+ if(t.kind==='soon')return toast(`${t.name} ist noch in Arbeit.`);
+ if(!t.installed){waiting[id]=files||[];if(!t.installing){try{await api('/api/install?id='+id,{})}catch(e){return toast(e.message)}}return load()}
+ try{await api('/api/launch?id='+id,{files:files||[]})}catch(e){return toast(e.message)}
+ if(t.kind==='hub'){openId=id;const f=$('#toolframe');f.onload=()=>{if(openId!==id)return;f.onload=null;document.body.classList.add('tool-open');if(files&&files.length){setTimeout(()=>{try{f.contentWindow.Kit._drop(files,'drop')}catch(e){}},300)}};f.src='/t/'+id+'/'}
+ load()}
+// Nach dem Installieren automatisch öffnen
+function afterLoad(){for(const id of Object.keys(waiting)){const t=tool(id);if(t&&t.installed){const f=waiting[id];delete waiting[id];launch(id,f)}else if(t&&!t.installing&&t.error){delete waiting[id]}}}
+window.Hub={closeTool(){const f=$('#toolframe');document.body.classList.remove('tool-open');const id=openId;openId=null;f.onload=null;f.src='about:blank';load();if(id)api('/api/close?id='+id,{}).catch(()=>{}).finally(load)}};
+// Dateien auf den Hub ziehen: passende Werkzeuge anbieten
+let dropped=[];
+const EXT={audio:/\.(mp3|wav|flac|m4a|aac|ogg|opus|wma|aiff?)$/i,video:/\.(mp4|mkv|webm|mov|avi|wmv|flv|m4v|mpe?g|ts)$/i,image:/\.(png|jpe?g|webp|bmp|gif|tiff?|heic|avif)$/i};
+const FOR={audio:['mp3','convert'],video:['video','motion','convert'],image:['upscale','cutout','image','convert'],other:['convert']};
+Kit.onDrop(paths=>{dropped=paths;const k=Object.keys(EXT).find(k=>paths.every(p=>EXT[k].test(p)))||'other';
+ const ids=FOR[k];$('#owIn').innerHTML=`<h3>Womit öffnen?</h3><p>${paths.length===1?esc(Kit.base(paths[0])):paths.length+' Dateien'}</p><div class="owl">${ids.map(id=>{const t=tool(id);return`<button class="ow" data-with="${id}" ${t.kind==='soon'?'disabled style="opacity:.5"':''}>${LOGO(id)}<span><b>${esc(t.name)}</b><small>${t.kind==='soon'?'Bald verfügbar':t.installed?esc(t.desc):'Wird beim Öffnen installiert'}</small></span></button>`}).join('')}</div>`;
+ $('#ow').classList.add('show')});
+
+function renderHist(){
+ const el=$('#hist');el.hidden=page==='settings';
+ if(!S.settings.historyOn){el.innerHTML='<h4>Verlauf</h4><div class="empty">Der Verlauf ist in den Einstellungen ausgeschaltet.</div>';return}
+ const seen=new Set(),items=[];
+ for(const h of [...S.history].reverse()){if(seen.has(h.tool)||!tool(h.tool))continue;seen.add(h.tool);items.push(h);if(items.length>=8)break}
+ el.innerHTML='<h4>Zuletzt benutzt</h4>'+(items.length?'<div class="chips">'+items.map(h=>{const t=tool(h.tool);
+  const sub=h.open||t.running?'Läuft gerade':`${ago(h.start)} · ${h.secs?dur(h.secs):'kurz'}`;
+  return`<button class="chip ${t.running?'live':''}" data-launch="${t.id}"><span class="gl">${LOGO(t.id)}</span><span><b>${esc(t.name)}</b><span>${sub}</span></span></button>`}).join('')+'</div>':'<div class="empty">Noch nichts benutzt. Starte ein Werkzeug, dann erscheint es hier.</div>');
+}
+
+function sorted(list){const m=S.settings.sort;const c=[...list];
+ const by={az:(a,b)=>a.name.localeCompare(b.name,'de'),za:(a,b)=>b.name.localeCompare(a.name,'de'),
+  recent:(a,b)=>b.last-a.last||a.name.localeCompare(b.name,'de'),
+  cat:(a,b)=>a.category.localeCompare(b.category,'de')||a.name.localeCompare(b.name,'de')};
+ return c.sort(by[m]||by.az)}
+function matches(t,q){if(!q)return true;const h=(t.name+' '+t.desc+' '+t.category+' '+t.tags.join(' ')).toLowerCase();return q.toLowerCase().split(/\s+/).every(w=>h.includes(w))}
+
+function instOverlay(t){if(t.installed)return'';
+ if(t.kind==='soon')return'<div class="inst soon">Bald verfügbar</div>';
+ if(t.installing)return`<div class="inst busy"><span>Wird installiert … ${Math.round(t.progress*100)} %</span><i style="width:${Math.round(t.progress*100)}%"></i></div>`;
+ if(t.error)return`<div class="inst err" title="${esc(t.error)}">Fehler · nochmal versuchen</div>`;
+ return''}
+function viewTools(){
+ const q=$('#q').value.trim();
+ const cats=[...new Set(S.tools.map(t=>t.category))].sort((a,b)=>a.localeCompare(b,'de'));
+ let list=sorted(S.tools.filter(t=>matches(t,q)&&(!cat||t.category===cat)));
+ const grid=list.map(t=>`<div class="card tool" data-launch="${t.id}" style="--c:${COLORS[t.id]||'var(--accent)'}"><div class="pv" style="--c:${COLORS[t.id]}">${LOGO(t.id)}${instOverlay(t)}</div><div class="row"><span class="gl">${LOGO(t.id)}</span><h3>${esc(t.name)}</h3><span class="tag">${esc(t.category)}</span></div><p>${esc(t.desc)}</p>
+  ${t.installed?`<div class="foot"><button class="btn primary" data-launch="${t.id}">${t.running?'Anzeigen':'Öffnen'}</button></div>`:t.kind!=='soon'&&!t.installing?`<div class="foot"><button class="btn" data-launch="${t.id}">${t.error?'Nochmal versuchen':'Installieren'}</button></div>`:''}</div>`).join('');
+ return updBanner()+`<div class="head"><h2>Werkzeuge</h2><span>${list.length} von ${S.tools.length}</span></div>
+ <div class="cats"><button class="cat ${cat?'':'on'}" data-cat="">Alle</button>${cats.map(c=>`<button class="cat ${cat===c?'on':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+ <div class="${S.settings.view==='list'?'list':''}"><div class="grid">${grid||'<div class="empty">Kein Werkzeug gefunden.</div>'}</div></div>`}
+
+function viewProjects(){
+ const used=[...new Set(S.projects.map(p=>p.tool))];
+ const list=S.projects.filter(p=>!pcat||p.tool===pcat);
+ return`<div class="head"><h2>Projekte</h2><span>${list.length} insgesamt</span></div>
+ <div class="cats"><button class="cat ${pcat?'':'on'}" data-pcat="">Alle</button>${used.map(u=>`<button class="cat ${pcat===u?'on':''}" data-pcat="${u}">${esc(tool(u).name)}</button>`).join('')}</div>
+ <div class="pgrid">${list.map(p=>{const t=tool(p.tool);
+  const th=p.thumb?` style="background-image:url('/api/thumb?tool=${p.tool}&id=${encodeURIComponent(p.id)}')"`:'';
+  return`<button class="proj" data-launch="${p.tool}" title="Öffnet ${esc(t.name)}"><div class="th"${th}>${p.thumb?'':LOGO(p.tool)}</div><div class="tx"><div class="tr"><b>${esc(p.name||'Ohne Namen')}</b><em class="tag">${esc(t.name)}</em></div><span>${ago(p.updated)}${p.detail?' · '+esc(p.detail):''}</span><i class="open">Öffnen</i></div></button>`}).join('')||'<div class="empty">Noch keine Projekte. Sobald du in einem Werkzeug ein Projekt anlegst, erscheint es hier.</div>'}</div>`}
+
+function sw(on,key){return`<button class="switch ${on?'on':''}" data-sw="${key}" role="switch" aria-checked="${on}"></button>`}
+function viewSettings(){const s=S.settings;
+ return`<div class="head"><h2>Einstellungen</h2></div><div class="set">
+ <div class="sec"><h3>Sprache</h3><div class="line"><div>Sprache<small>Sprache der App.</small></div><div class="seg" id="langs"><button class="btn ${s.lang!=='de'?'on':''}" data-lang="en">English</button><button class="btn ${s.lang==='de'?'on':''}" data-lang="de">Deutsch</button></div></div></div>
+ <div class="sec"><h3>Design</h3>
+  <div class="themes">${THEMES.map(([k,n,c])=>`<button class="theme ${s.theme===k?'on':''}" data-th="${k}"><i style="background:${c}"></i>${n}</button>`).join('')}</div>
+  <div class="line" style="margin-top:14px"><div>Catppuccin<small>Die beliebten Pastell-Designs. Passen sich in allen Werkzeugen an.</small></div></div>
+  <div class="themes">${CTPF.map(([k,n,bg,tx])=>{const a=CTP[k];return`<button class="theme ctp ${s.theme===k?'on':''}" data-th="${k}"><i style="background:${bg};color:${tx}"><b>Aa</b><span>${['mauve','pink','peach','yellow','green','sky','blue','lavender'].map(x=>`<em style="background:${a[x]}"></em>`).join('')}</span></i>${n}</button>`}).join('')}</div>
+  <div class="line" style="margin-top:14px"><div>Akzentfarbe<small>Gilt für Knöpfe, Auswahl und Symbole.</small></div></div>
+  <div class="sw" style="margin-bottom:6px">${Object.entries(ACCENTS).map(([k,c])=>`<button class="${s.accent===k?'on':''}" data-accent="${k}" title="${k}" style="background:${c}"></button>`).join('')}</div>
+  <div class="line" style="margin-top:8px"><div>Catppuccin-Farben<small>Passen sich der gewählten Catppuccin-Variante an.</small></div></div>
+  <div class="sw" style="margin-bottom:6px">${Object.entries(CTP[ctpFl(document.documentElement.dataset.theme)]).map(([k,c])=>`<button class="${s.accent==='ctp-'+k?'on':''}" data-accent="ctp-${k}" title="${CTPN[k]}" style="background:${c}"></button>`).join('')}</div>
+  <div class="line" style="margin-top:8px"><div>Eigene Farben<small>Klicke auf Plus und wähle eine beliebige Farbe. Rechtsklick auf eine eigene Farbe entfernt sie.</small></div></div>
+  <div class="sw" style="margin-bottom:6px">${(s.customAccents||[]).map(c=>`<button class="${s.accent===c?'on':''}" data-accent="${c}" data-custom="${c}" title="${c} (Rechtsklick: entfernen)" style="background:${c}"></button>`).join('')}<label class="addc" title="Eigene Farbe hinzufügen">+<input type="color" id="addColor" value="${/^#/.test(s.accent)?s.accent:(ACCENTS[s.accent]||'#4c8dff')}"></label></div>
+  <div class="line"><div>Kompakte Darstellung<small>Weniger Abstand, mehr auf einmal sichtbar.</small></div>${sw(s.density==='compact','compact')}</div></div>
+ <div class="sec"><h3>Werkzeuge</h3>
+  <div class="line"><div>Standard-Sortierung<small>Wird beim Start verwendet.</small></div><select id="sSort"><option value="az">A bis Z</option><option value="za">Z bis A</option><option value="recent">Zuletzt benutzt</option><option value="cat">Nach Kategorie</option></select></div>
+  <div class="line"><div>Ansicht<small>Kacheln oder Liste.</small></div><select id="sView"><option value="grid">Kacheln</option><option value="list">Liste</option></select></div></div>
+ <div class="sec"><h3>Verlauf</h3>
+  <div class="line"><div>Verlauf aufzeichnen<small>Zeigt oben, was du zuletzt benutzt hast und wie lange.</small></div>${sw(s.historyOn,'historyOn')}</div>
+  <div class="line"><div>Einträge behalten<small>Ältere werden gelöscht.</small></div><input type="number" id="sMax" min="10" max="1000" style="max-width:100px" value="${s.historyMax}"></div>
+  <div class="line"><div>Verlauf löschen</div><button class="btn danger" id="clearHist">Löschen</button></div></div>
+ <div class="sec"><h3>Updates</h3>
+  <div class="line"><div>Version ${esc(U?U.current:'')}<small id="updState">${updText()}</small></div>${updButton()}</div>
+  ${updSettingsBox()}
+  <div class="line"><div>Automatisch nach Updates suchen<small>Prüft beim Start und alle 6 Stunden und lädt neue Versionen im Hintergrund. Installiert wird erst, wenn du es sagst.</small></div>${sw(s.autoUpdate,'autoUpdate')}</div>
+  <div class="line"><div>Update-Hinweis anzeigen<small>Das Fenster unten rechts, sobald ein Update bereitliegt.</small></div>${sw(!s.updQuiet,'updShow')}</div>
+  <div class="line"><div>Hinweis nach dem Schließen wieder zeigen<small>Wenn du den Hinweis wegklickst.</small></div><select id="sRemind" ${s.updQuiet?'disabled':''}><option value="start">Beim nächsten Start</option><option value="1h">Nach 1 Stunde</option><option value="4h">Nach 4 Stunden</option><option value="1d">Nach einem Tag</option></select></div>
+  <div class="line"><div>Update-Quelle<small>${UP&&UP.repo?'GitHub: '+esc(UP.repo):'Neuere Setup-Dateien auf dem Desktop, im Ordner „Creator Hub“ oder in Downloads'}</small></div></div></div>
+ <div class="sec"><h3>Tastenkürzel</h3>
+  <div class="line"><div>Creator Hub<small>Suche, Seiten wechseln und mehr.</small></div><button class="btn" data-keys="hub">Bearbeiten</button></div>
+  <div class="line"><div>Dateityp-Umwandler</div><button class="btn" data-keys="convert">Bearbeiten</button></div>
+  <div class="line"><div>Upscaler</div><button class="btn" data-keys="upscale">Bearbeiten</button></div>
+  <div class="line"><div>Videoschnitt, Bildbearbeitung, MP3 Schneider<small>Diese Programme haben eigene Fenster. Dort öffnest du die Tastenkürzel mit F1 (oder Bearbeiten → Tastenkürzel). Strg+Z macht in allen Werkzeugen den letzten Schritt rückgängig.</small></div></div></div>
+ <div class="sec"><h3>Leistung</h3>
+  <div class="line"><div>Grafikbeschleunigung<small>Nutzt die Grafikkarte: flüssiger und schärfer. Nur ausschalten, wenn Fenster weiß oder schwarz bleiben. Gilt nach einem Neustart der Werkzeuge.</small></div>${sw(S.gpu!==false,'gpu')}</div></div>
+ <div class="sec"><h3>Daten</h3>
+  <div class="line"><div>Datenordner<small>Einstellungen, Verlauf und Konto liegen lokal auf diesem PC.</small></div><button class="btn" id="openData">Öffnen</button></div></div>
+ </div>`}
+
+let U=null;
+async function loadUpd(do_){try{U=await api('/api/update'+(do_?'?do='+do_:''),do_?{}:undefined)}catch(e){toast(e.message)}}
+function updText(){if(!U)return'';if(U.loading)return`Update wird geladen … ${Math.round(U.done*100)} %`;if(U.error)return U.error;if(U.noServer)return'Der Update-Server ist noch nicht eingerichtet.';
+ if(U.available)return`Update auf Version ${U.latest} verfügbar`;if(U.checking)return'Lädt …';return U.checked?'Du hast die neueste Version.':`Du hast Version ${U.current}.`}
+function updButton(){if(!U)return'';if(U.ready)return UP&&UP.available?'':'<button class="btn primary" data-upd="apply">Jetzt aktualisieren</button>';if(U.available&&!U.loading)return'<button class="btn primary" data-upd="download">Jetzt aktualisieren</button>';if(U.loading||U.checking)return'';return'<button class="btn" data-upd="check">Jetzt prüfen</button>'}
+function updSettingsBox(){if(!UP||!UP.available)return'';const pl=UP.plan||{};const planned=pl.at>0||pl.onExit;
+ return`<div class="updbox"><b>Version ${esc(UP.version)} ist bereit</b>${UP.notes?`<p>${esc(UP.notes)}</p>`:''}
+ ${planned?`<p class="pl">Geplant: <b>${pl.onExit?'Beim Beenden des Hubs':esc(upWhen(pl.at))}</b> <button class="btn sm" data-up="unplan">Plan aufheben</button></p>`:''}
+ <div class="row"><button class="btn primary" data-up="install">Jetzt installieren</button><button class="btn" data-up="exit">Beim Beenden</button><button class="btn" data-up="in" data-min="60">In 1 Stunde</button><input type="time" id="upTimeS" value="22:00"><button class="btn" data-up="atS">Um diese Uhrzeit</button></div>
+ <small>Der Hub startet kurz neu, offene Werkzeuge werden geschlossen.</small></div>`}
+function updBanner(){if(!U||!U.available||U.ready)return'';return`<div class="upd"><div><b>Neue Version ${esc(U.latest)} ist da</b>${U.notes?`<small>${esc(U.notes)}</small>`:''}${U.loading?`<div class="bar"><i style="width:${Math.round(U.done*100)}%"></i></div>`:''}${U.error?`<small class="err">${esc(U.error)}</small>`:''}</div>${updButton()}</div>`}
+function render(){
+ $('#sort').value=S.settings.sort;
+ $('#vGrid').classList.toggle('on',S.settings.view!=='list');$('#vList').classList.toggle('on',S.settings.view==='list');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.page===page));
+ const a=S.account;const av=$('#acct');
+ if(a){av.textContent=(a.name[0]||'?').toUpperCase();av.style.background=a.color||'#4c8dff';av.title=a.name}
+ else{av.innerHTML='<svg viewBox="0 0 24 24" style="color:var(--text);font-size:17px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';av.style.background='';av.title='Konto erstellen'}
+ renderHist();
+ const m=$('#main'),sc=m.scrollTop;
+ m.innerHTML=page==='tools'?viewTools():page==='projects'?viewProjects():viewSettings();
+ if(page==='settings'){$('#sSort').value=S.settings.sort;$('#sView').value=S.settings.view;$('#sRemind').value=S.settings.updRemind||'4h'}
+ m.scrollTop=sc}
+
+function popAccount(){const a=S.account,p=$('#pop');
+ const cols=Object.values(ACCENTS);
+ p.innerHTML=(a?`<div class="me"><span class="avatar" style="background:${a.color}">${esc(a.name[0]||'?').toUpperCase()}</span><div><b>${esc(a.name)}</b><br><small style="color:var(--muted)">${esc(a.email||'Keine E-Mail')}</small></div></div>`:'<b>Konto erstellen</b><div style="color:var(--muted);font-size:12px;margin-top:4px">Das Konto liegt nur auf diesem PC. Es gibt noch keine Anmeldung im Netz.</div>')+
+ `<label>Name</label><input type="text" id="aName" value="${esc(a?.name)}" maxlength="40"><label>E-Mail (optional)</label><input type="email" id="aMail" value="${esc(a?.email)}">
+ <label>Farbe</label><div class="sw" id="aCol">${cols.map(c=>`<button data-c="${c}" style="background:${c}" class="${(a?.color||cols[0])===c?'on':''}"></button>`).join('')}</div>
+ <div class="acts"><button class="btn primary" id="aSave">${a?'Speichern':'Erstellen'}</button>${a?'<button class="btn danger" id="aOut">Abmelden</button>':''}</div>`;
+ p.classList.toggle('show');
+ if(p.classList.contains('show')){p.dataset.col=a?.color||cols[0];setTimeout(()=>$('#aName').focus(),0)}}
+
+document.addEventListener('click',async e=>{
+ const t=e.target;
+ const pop=$('#pop');if(pop.classList.contains('show')&&!pop.contains(t)&&!t.closest('#acct'))pop.classList.remove('show');
+ let el;
+ if(el=t.closest('[data-with]')){$('#ow').classList.remove('show');return launch(el.dataset.with,dropped)}
+ if(t.id==='ow'){return $('#ow').classList.remove('show')}
+ if(el=t.closest('[data-launch]'))return launch(el.dataset.launch);
+ if(el=t.closest('[data-page]')){page=el.dataset.page;return render()}
+ if(el=e.target.closest('[data-keys]')){const k=el.dataset.keys;if(k==='hub')return HK.editor();location.href='/t/'+k+'/#keys';return}
+ if(el=t.closest('[data-cat]')){cat=el.dataset.cat;return render()}
+ if(el=t.closest('[data-pcat]')){pcat=el.dataset.pcat;return render()}
+ if(el=t.closest('[data-upd]')){const d=el.dataset.upd;await loadUpd(d);if(d==='download'){const iv=setInterval(async()=>{await loadUpd();render();if(!U.loading){clearInterval(iv);if(U.ready){await loadUpd('apply')}}},500)}render();return}
+ if(el=t.closest('[data-lang]')){if(S.settings.lang!==el.dataset.lang){S.settings.lang=el.dataset.lang;await api('/api/settings',S.settings);try{sessionStorage.setItem('hubBack',JSON.stringify({page,y:(document.scrollingElement||document.documentElement).scrollTop,m:($('main')||{}).scrollTop||0}))}catch(e){}location.reload()}return}
+ if(el=t.closest("[data-th]")){S.settings.theme=el.dataset.th;return saveSettings()}
+ if(el=t.closest('[data-accent]')){S.settings.accent=el.dataset.accent;return saveSettings()}
+ if(el=t.closest('[data-sw]')){const k=el.dataset.sw;if(k==='gpu'){S.gpu=S.gpu===false;try{await api('/api/gpu',{on:S.gpu})}catch(e){}return render()}if(k==='updShow'){S.settings.updQuiet=!S.settings.updQuiet;await saveSettings();return loadUp()}if(k==='compact')S.settings.density=S.settings.density==='compact'?'normal':'compact';else S.settings[k]=!S.settings[k];return saveSettings()}
+ if(t.closest('#vGrid')){S.settings.view='grid';return saveSettings()}
+ if(t.closest('#vList')){S.settings.view='list';return saveSettings()}
+ if(t.closest('#gear')){page='settings';return render()}
+ if(t.closest('#acct'))return popAccount();
+ if(el=t.closest('#aCol button')){document.querySelectorAll('#aCol button').forEach(b=>b.classList.toggle('on',b===el));pop.dataset.col=el.dataset.c;return}
+ if(t.closest('#aSave')){const n=$('#aName').value.trim();if(!n)return toast('Bitte einen Namen eingeben.');
+  const r=await api('/api/account',{name:n,email:$('#aMail').value.trim(),color:pop.dataset.col});S.account=r.account;pop.classList.remove('show');toast(`Konto „${n}“ gespeichert.`);return render()}
+ if(t.closest('#aOut')){await api('/api/account',{name:''});S.account=null;pop.classList.remove('show');return render()}
+ if(t.closest('#clearHist')){await api('/api/history/clear',{});toast('Verlauf gelöscht.');return load()}
+ if(t.closest('#openData')){return api('/api/open-data',{})}
+});
+document.addEventListener('change',async e=>{
+ if(e.target.id==='addColor'){const c=e.target.value.toLowerCase();const l=S.settings.customAccents||[];if(!l.includes(c))l.push(c);S.settings.customAccents=l.slice(-12);S.settings.accent=c;return saveSettings()}
+ if(e.target.id==='sort'){S.settings.sort=e.target.value;return saveSettings()}
+ if(e.target.id==='sSort'){S.settings.sort=e.target.value;return saveSettings()}
+ if(e.target.id==='sView'){S.settings.view=e.target.value;return saveSettings()}
+ if(e.target.id==='sRemind'){S.settings.updRemind=e.target.value;await saveSettings();return loadUp()}
+ if(e.target.id==='sDir'){S.settings.toolsDir=e.target.value.trim();return saveSettings().then(load)}
+ if(e.target.id==='sMax'){S.settings.historyMax=parseInt(e.target.value)||100;return saveSettings()}
+});
+$('#q').addEventListener('input',()=>{if(page!=='tools'){page='tools'}render()});
+document.addEventListener('contextmenu',e=>{const el=e.target.closest('[data-custom]');if(!el)return;e.preventDefault();const c=el.dataset.custom;S.settings.customAccents=(S.settings.customAccents||[]).filter(x=>x!==c);if(S.settings.accent===c)S.settings.accent='blau';saveSettings()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#pop').classList.remove('show')});
+const HK=Kit.hotkeys('hub',[
+ ['search','Allgemein','Werkzeug suchen',['Ctrl+K'],()=>{page='tools';render();setTimeout(()=>{$('#q')&&($('#q').focus(),$('#q').select())},30)}],
+ ['tools','Allgemein','Werkzeuge',['Ctrl+1'],()=>{page='tools';render()}],
+ ['settings','Allgemein','Einstellungen',['Ctrl+,'],()=>{page='settings';render()}],
+ ['keys','Hilfe','Tastenkürzel',['F1'],()=>HK.editor()]]);
+matchMedia('(prefers-color-scheme:light)').addEventListener('change',()=>S&&applyTheme());
+
+async function load(){S=await api('/api/state');if(S.notice)toast(S.notice);applyTheme();afterLoad();try{const bk=JSON.parse(sessionStorage.getItem('hubBack')||'null');if(bk){sessionStorage.removeItem('hubBack');requestAnimationFrame(()=>{(document.scrollingElement||document.documentElement).scrollTop=bk.y||0;const m=$('main');if(m)m.scrollTop=bk.m||0})}}catch(e){}
+ const f=document.activeElement;if(f&&f.matches('input[type=text],input[type=email],input[type=number]'))return renderHist();
+ render()}
+loadUpd().then(()=>load()).then(()=>{setInterval(()=>loadUpd().then(()=>{if(U&&(U.available||U.loading))render()}),15000);let n=0;setInterval(()=>{n++;const busy=S&&S.tools.some(t=>t.installing);if(busy||n%4===0)load().catch(()=>{})},1000)});
+
+// ---- Update-Hinweis ----
+let UP=null,upPlanOpen=false;
+function upWhen(at){const d=new Date(at*1000),n=new Date();const hm=d.toLocaleTimeString(S&&S.settings.lang==='de'?'de-DE':'en-GB',{hour:'2-digit',minute:'2-digit'});const tom=new Date(n);tom.setDate(n.getDate()+1);
+ if(d.toDateString()===n.toDateString())return 'Heute um '+hm;if(d.toDateString()===tom.toDateString())return 'Morgen um '+hm;return d.toLocaleDateString()+' '+hm}
+function renderUpd(){const el=$('#updpop');if(!UP||!UP.available||UP.dismissed){el.hidden=true;return}
+ const pl=UP.plan||{};const planned=pl.at>0||pl.onExit;
+ const tv=new Date(Date.now()+3600e3);const def=String(tv.getHours()).padStart(2,'0')+':'+String(tv.getMinutes()).padStart(2,'0');
+ el.innerHTML=`<button class="x" data-up="dismiss" title="Schließen">×</button>
+ <div class="hd"><img src="/logos/hub.svg" alt=""><div><b>Neues Update verfügbar</b><span>Version <span class="ver">${esc(UP.version)}</span> · installiert ist ${esc(UP.current)}</span></div></div>
+ ${planned?`<div class="planned">Geplant: <b>${pl.onExit?'Beim Beenden des Hubs':esc(upWhen(pl.at))}</b></div>`:''}
+ ${UP.notes?`<div class="whatsnew"><b>Was ist neu</b><p>${esc(UP.notes)}</p></div>`:''}
+ <p class="note">Der Hub startet kurz neu. Offene Werkzeuge werden dabei geschlossen.</p>
+ <div class="row"><button class="btn primary" data-up="install">Jetzt installieren</button><button class="btn" data-up="planopen">${planned?'Plan ändern':'Installation planen'}</button></div>
+ ${planned?`<div class="row" style="margin-top:8px"><button class="btn" data-up="unplan">Plan aufheben</button></div>`:''}
+ ${upPlanOpen?`<div class="plan">
+  <button class="btn" data-up="exit">Beim Beenden des Hubs</button>
+  <button class="btn" data-up="in" data-min="60">In 1 Stunde</button>
+  <button class="btn" data-up="in" data-min="180">In 3 Stunden</button>
+  <div class="tm"><input type="time" id="uptime" value="${def}"><button class="btn primary" data-up="at">Planen</button></div>
+ </div>`:''}`;
+ el.hidden=false}
+async function loadUp(q){const before=JSON.stringify(UP);try{UP=await api('/api/upd'+(q?'?'+q:''),q?{}:undefined)}catch(e){if(q)toast(e.message)}renderUpd();if(page==='settings'&&JSON.stringify(UP)!==before&&!document.activeElement.matches('input,select'))render()}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-up]');if(!b)return;const d=b.dataset.up;
+ if(d==='planopen'){upPlanOpen=!upPlanOpen;return renderUpd()}
+ if(d==='install'){b.disabled=true;b.textContent='Wird installiert …';return loadUp('do=install')}
+ if(d==='dismiss'){upPlanOpen=false;return loadUp('do=dismiss')}
+ if(d==='unplan')return loadUp('do=unplan');
+ let at=0,exit=0;
+ if(d==='exit')exit=1;
+ if(d==='in')at=Math.floor(Date.now()/1000)+(+b.dataset.min)*60;
+ if(d==='at'||d==='atS'){const v=($(d==='at'?'#uptime':'#upTimeS').value||'').split(':');if(v.length<2)return;const t=new Date();t.setHours(+v[0],+v[1],0,0);if(t<=new Date())t.setDate(t.getDate()+1);at=Math.floor(t/1000)}
+ upPlanOpen=false;await loadUp('do=plan&at='+at+'&exit='+exit);toast(exit?'Das Update wird beim Beenden des Hubs installiert.':'Update geplant: '+upWhen(at)+'.')});
+setTimeout(()=>loadUp(),1500);setInterval(()=>loadUp(),20000);
+</script>
+</body>
+</html>

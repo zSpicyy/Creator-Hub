@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bildbearbeitung</title>
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="/kit/tokens.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/kit/polish.css">
+</head>
+<body>
+<!-- Startfenster: Projekte und neues Bild -->
+<div id="start" class="ch-shell">
+  <header class="ch-top"><div class="ch-brand"><img src="logo.svg" alt="">Bildbearbeitung</div><span class="ch-sp"></span><button class="btn" id="backImg" hidden>Zurück zum Bild</button><button class="btn primary" id="openImg">Bild öffnen</button></header>
+  <nav class="ch-nav"><button class="ch-item on" type="button"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button><div class="ch-sp"></div><small>Bilder kannst du auch einfach ins Fenster ziehen.</small></nav>
+  <div class="sbody ch-main">
+    <section class="newsec">
+      <h2>Neues Bild</h2>
+      <div class="presets" id="presets"></div>
+      <div class="custom">
+        <label>Breite<input type="number" id="nw" value="1920" min="1" max="30000"></label><span>×</span>
+        <label>Höhe<input type="number" id="nh" value="1080" min="1" max="30000"></label>
+        <label>Einheit<select id="nunit"><option value="px">Pixel (px)</option><option value="mm">Millimeter (mm)</option><option value="cm">Zentimeter (cm)</option><option value="in">Zoll (in)</option><option value="pt">Punkt (pt)</option></select></label>
+        <label id="nppiL" hidden>Auflösung (ppi)<input type="number" id="nppi" value="300" min="10" max="2400"></label>
+        <label>Hintergrund<select id="nbg"><option value="#ffffff">Weiß</option><option value="#000000">Schwarz</option><option value="">Transparent</option></select></label>
+        <button class="btn primary" id="newCustom">Erstellen</button>
+      </div>
+      <p class="hint">Oder ein Bild einfach hierher ziehen.</p>
+    </section>
+    <section id="recent"></section>
+    <section>
+      <h2 style="display:flex;align-items:center;gap:12px">Projekte <input id="psearch" placeholder="Suchen …" style="font-size:13px;font-weight:400;max-width:220px"></h2>
+      <div class="projects" id="projects"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Editor -->
+<div id="editor" class="editor" hidden>
+  <header class="bar">
+    <button class="ib home" id="home" title="Zu den Projekten"><img src="logo.svg" alt=""></button>
+    <nav class="menus" id="menus">
+      <div class="dd"><button>Datei</button><div class="ddm">
+        <button data-act="new">Neues Bild …</button><button data-act="home">Projekte</button><hr>
+        <button data-act="save">Speichern</button><button data-act="addimg">Bild als Ebene einfügen …</button><hr>
+        <button data-act="export">Exportieren …</button><button data-act="print">Drucken …</button><hr><button data-act="dupimg">Bild duplizieren</button></div></div>
+      <div class="dd"><button>Bearbeiten</button><div class="ddm">
+        <button data-act="undo">Rückgängig</button><button data-act="redo">Wiederholen</button><hr>
+        <button data-act="cut">Ausschneiden</button><button data-act="copy">Kopieren</button><button data-act="paste">Einfügen</button><hr>
+        <button data-act="clearsel">Auswahl leeren (Entf)</button><button data-act="fillfg">Mit Vordergrundfarbe füllen</button><button data-act="fillbg">Mit Hintergrundfarbe füllen</button><button data-act="fillpat">Mit Muster füllen</button><hr><button data-act="tipsel">Pinselspitze aus Auswahl</button><button data-act="patsel">Muster aus Auswahl</button><hr>
+        <button data-act="macrorec">Aktion aufzeichnen</button><button data-act="macrostop">Aufnahme stoppen</button><hr><button data-act="keys">Tastenkürzel …</button></div></div>
+      <div class="dd"><button>Auswahl</button><div class="ddm">
+        <button data-act="selall">Alles</button><button data-act="selnone">Nichts</button><button data-act="selinv">Invertieren</button><hr>
+        <button data-act="feather">Ausblenden …</button><button data-act="grow">Vergrößern …</button><button data-act="shrink">Verkleinern …</button><button data-act="border">Rand …</button><hr><button data-act="alpha2sel">Alpha zu Auswahl</button><button data-act="selsave">Auswahl speichern</button><button data-act="sellift">Ausgewählten Teil herauslösen (verschiebbar)</button><button data-act="seltolayer">Auswahl als neue Ebene</button><button data-act="croptosel">Auf Auswahl zuschneiden</button></div></div>
+      <div class="dd"><button>Ansicht</button><div class="ddm">
+        <button data-act="fit">Ganzes Bild</button><button data-act="z100">Originalgröße (100 %)</button>
+        <button data-act="zin">Vergrößern</button><button data-act="zout">Verkleinern</button><hr><button data-act="rulers">Lineale</button><button data-act="grid">Raster</button><button data-act="gridsize">Rastergröße …</button><button data-act="guides">Hilfslinien</button><button data-act="guidecenter">Hilfslinien in die Mitte</button><button data-act="guidesclear">Hilfslinien entfernen</button><button data-act="snap">Einrasten</button><hr><button data-act="layout">Bereiche zurücksetzen</button><button data-act="journal">Journal</button></div></div>
+      <div class="dd"><button>Bild</button><div class="ddm">
+        <button data-act="rotl">90° nach links drehen</button><button data-act="rotr">90° nach rechts drehen</button>
+        <button data-act="fliph">Horizontal spiegeln</button><button data-act="flipv">Vertikal spiegeln</button><hr>
+        <button data-act="crop">Zuschneiden</button><button data-act="croptosel">Auf Auswahl zuschneiden</button><button data-act="resize">Bildgröße …</button><button data-act="canvas">Arbeitsfläche …</button><hr>
+        <button data-act="ai_upscale">KI: Bild vergrößern (2× / 4×) …</button><button data-act="imgautocrop">Automatisch zuschneiden</button><button data-act="flatten">Auf eine Ebene reduzieren</button></div></div>
+      <div class="dd"><button>Ebene</button><div class="ddm">
+        <button data-act="newlayer">Neue Ebene …</button><button data-act="group">Neue Ebenengruppe</button><button data-act="ungroup">Gruppe auflösen</button><button data-act="text">Text hinzufügen</button><button data-act="addimg">Bild einfügen …</button><hr>
+        <button data-act="dup">Ebene duplizieren</button><button data-act="del">Ebene löschen</button><hr>
+        <button data-act="up">Nach oben</button><button data-act="down">Nach unten</button><button data-act="top">Ganz nach oben</button><button data-act="bottom">Ganz nach unten</button><hr>
+        <button data-act="merge">Mit darunter zusammenfügen</button><button data-act="visible">Sichtbares als neue Ebene</button><button data-act="raster">In Pixel umwandeln</button><hr><button data-act="mask_white">Ebenenmaske: weiß (alles sichtbar)</button><button data-act="mask_black">Ebenenmaske: schwarz (alles versteckt)</button><button data-act="mask_sel">Ebenenmaske aus Auswahl</button><button data-act="mask_alpha">Ebenenmaske aus Alphakanal</button><button data-act="mask_edit">Maske bearbeiten an/aus</button><button data-act="mask_off">Maske deaktivieren an/aus</button><button data-act="ai_matte">KI: Motiv freistellen (als Maske)</button><button data-act="ai_lift">KI: Motiv als eigene Ebene herauslösen …</button><button data-act="mask_apply">Maske anwenden</button><button data-act="mask_del">Maske löschen</button><hr><button data-act="alphalock">Alphakanal sperren an/aus</button><button data-act="l2img">Ebene auf Bildgröße</button><button data-act="lautocrop">Ebene automatisch zuschneiden</button><button data-act="lfliph">Ebene horizontal spiegeln</button><button data-act="lflipv">Ebene vertikal spiegeln</button></div></div>
+      <div class="dd"><button>Farben</button><div class="ddm" id="mColors"></div></div>
+      <div class="dd"><button>Werkzeuge</button><div class="ddm" id="mTools"></div></div>
+      <div class="dd"><button>Filter</button><div class="ddm" id="mFilters"></div></div>
+      <div class="dd"><button>Hilfe</button><div class="ddm"><button data-act="guide">Erste Schritte</button><button data-act="keys">Tastenkürzel …</button></div></div>
+    </nav>
+    <input id="pname" class="pname" spellcheck="false">
+    <span id="saved" class="saved"></span>
+    <span class="grow"></span>
+    <button class="ib" data-act="undo" title="Rückgängig (Strg+Z)"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+    <button class="ib" data-act="redo" title="Wiederholen (Strg+Y)"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+    <button class="btn primary" data-act="export"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Exportieren</button>
+  </header>
+  <div class="work ws" id="ws">
+    <aside class="tools pane" id="tools"><div id="tgrid"></div><div class="topts" id="topts"></div></aside>
+    <div class="center pane" id="center">
+      <div class="tabs" id="tabs"></div>
+      <div class="opts" id="opts"></div>
+      <div class="stage" id="stage"><canvas id="view"></canvas><div class="zoomctl"><button class="ib" data-act="zout">−</button><span id="zoomv">100 %</span><button class="ib" data-act="zin">+</button><button class="ib" data-act="fit" title="Ganzes Bild"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div></div>
+    </div>
+    <aside class="side pane" id="side"></aside>
+  </div>
+</div>
+
+<div id="hidden" hidden></div>
+<div id="modal" class="modal"><div class="mbox" id="mbox"></div></div>
+<div id="busy" class="busy" hidden><div><i></i><span id="busyt">Bitte warten …</span></div></div>
+<input type="color" id="colorPick" hidden>
+
+<script src="/kit/i18n.js"></script>
+<script src="/kit/kit.js"></script>
+<script src="colordlg.js"></script>
+<script src="doc.js"></script>
+<script src="sel.js"></script>
+<script src="fx.js"></script>
+<script src="tools.js"></script>
+<script src="warp.js"></script>
+<script src="path.js"></script>
+<script src="fg.js"></script>
+<script src="tools2.js"></script>
+<script src="psd.js"></script>
+<script src="export.js"></script>
+<script src="extra.js"></script>
+<script src="ai.js"></script>
+<script src="dock.js"></script>
+<script src="ui.js"></script>
+<script src="spin.js"></script>
+</body>
+</html>
