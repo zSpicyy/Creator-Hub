@@ -2,7 +2,7 @@
 // Untertitel (SRT), Export-Vorlagen. Die Berechnung beim Export macht ffmpeg (render.go).
 const Pro=(()=>{const R={};const t=s=>Kit.t(s);
  // ---- Vorschau-Bearbeitung je Clip ----
- R.needs=c=>!!(c.mask||c.region||c.curves||(c.lut&&luts[c.lut])||(typeof Grade!=='undefined'&&Grade.active(c.wheels)));
+ R.needs=c=>!!(c.mask||c.region||c.curves||(c.lut&&luts[c.lut])||(typeof Grade!=='undefined'&&Grade.active(c.wheels)))&&!(window.GradeBypass&&!c.mask&&!c.region);
  const luts={},lutLoading={};
  const loadLut=async p=>{if(luts[p]||lutLoading[p])return;lutLoading[p]=true;try{const r=await fetch('api/textfile?path='+encodeURIComponent(p));if(!r.ok)throw 0;luts[p]=parseCube(await r.text());Player.draw()}catch(e){Kit.toast(t('Die LUT-Datei ließ sich nicht lesen.'))}};
  const parseCube=txt=>{let N=0;const d=[];let dmin=[0,0,0],dmax=[1,1,1];for(const line of txt.split(/\r?\n/)){const l=line.trim();if(!l||l[0]==='#')continue;
@@ -27,7 +27,7 @@ const Pro=(()=>{const R={};const t=s=>Kit.t(s);
    const n=g.mode==='pixel'?Math.max(2,(g.amt||.5)*40):Math.max(2,(g.amt||.5)*Math.min(rw,rh)/3);const s=document.createElement('canvas');s.width=Math.max(1,Math.round(rw/n));s.height=Math.max(1,Math.round(rh/n));
    const sx=s.getContext('2d');sx.imageSmoothingQuality='high';sx.drawImage(cv,rx,ry,rw,rh,0,0,s.width,s.height);x.save();x.imageSmoothingEnabled=g.mode!=='pixel';x.imageSmoothingQuality='high';x.drawImage(s,rx,ry,rw,rh);x.restore()}
   const L=c.lut&&luts[c.lut];if(c.lut&&!luts[c.lut])loadLut(c.lut);
-  const WH=typeof Grade!=='undefined'&&Grade.active(c.wheels);if(c.curves||L||WH){const id=x.getImageData(0,0,w,h),p=id.data;if(WH)Grade.apply(c.wheels,p);const C=c.curves?curveTabs(c.curves):null;
+  const BY=!!window.GradeBypass,WH=!BY&&typeof Grade!=='undefined'&&Grade.active(c.wheels);if(!BY&&(c.curves||L||WH)){const id=x.getImageData(0,0,w,h),p=id.data;if(WH)Grade.apply(c.wheels,p);const C=c.curves?curveTabs(c.curves):null;
    if(C)for(let i=0;i<p.length;i+=4){p[i]=C.lr[p[i]];p[i+1]=C.lg[p[i+1]];p[i+2]=C.lb[p[i+2]]}
    if(L){const N=L.N,d=L.d,s=(N-1)/255;for(let i=0;i<p.length;i+=4){const ri=Math.round(p[i]*s),gi=Math.round(p[i+1]*s),bi=Math.round(p[i+2]*s);const k=(bi*N*N+gi*N+ri)*3;p[i]=d[k]*255;p[i+1]=d[k+1]*255;p[i+2]=d[k+2]*255}}
    x.putImageData(id,0,0)}

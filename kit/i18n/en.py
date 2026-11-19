@@ -559,3 +559,12 @@ EN.update({
 "Lautheit wird gemessen …":"Measuring loudness …","Zum Messen fehlt noch ffmpeg. Richte es zuerst ein.":"ffmpeg is still missing for measuring. Set it up first.",
 "Farbsaum entfernen (Spill)":"Remove colour spill","Verwackeln ausgleichen (beim Export, in zwei Durchgängen)":"Stabilise shaky footage (on export, in two passes)",
 })
+EN.update({"Zur Renderliste hinzugefügt.":"Added to the render queue.","Zur Renderliste":"Add to render queue","Renderliste":"Render queue","Entfernen":"Remove","Leeren":"Clear","Alle rendern":"Render all",
+"Renderliste fertig, mit Fehlern.":"Render queue finished, with errors.","Renderliste fertig.":"Render queue finished.","Dynamic Zoom":"Dynamic zoom","Dynamic Zoom aus":"Dynamic zoom off","Dynamic Zoom aus.":"Dynamic zoom off.",
+"Dynamic Zoom an: der Clip zoomt langsam um 15 % heran. Die Schlüsselbilder kannst du anpassen.":"Dynamic zoom on: the clip slowly zooms in by 15 %. You can adjust the keyframes.",
+"Vorher: Farbkorrektur ausgeblendet (Umschalt+D)":"Before: colour grade hidden (Shift+D)","Nachher: Farbkorrektur sichtbar":"After: colour grade visible",
+"Die Vorlage ließ sich nicht speichern.":"The preset could not be saved.","Dieser Clip hat noch keine Farbkorrektur.":"This clip has no colour grade yet.","Name der Vorlage":"Preset name","Mein Look":"My look",
+"Vorlage gespeichert.":"Preset saved.","Vorlage angewendet.":"Preset applied.","Vorlage löschen?":"Delete preset?","Farbkorrektur auf weitere Clips übertragen":"Colour grade copied to other clips",
+"Als Vorlage speichern":"Save as preset","Auf alle Clips übertragen":"Apply to all clips","Weißabgleich-Pipette":"White balance picker",
+"Klicke im Vorschaubild auf eine Stelle, die weiß oder grau sein soll.":"Click a spot in the preview that should be white or grey.","Weißabgleich gesetzt (über Gain in den Farbrädern).":"White balance set (via gain in the colour wheels).",
+"Löschen (Lücke bleibt)":"Delete (leave gap)"})

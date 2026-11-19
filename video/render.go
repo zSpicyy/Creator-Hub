@@ -888,6 +888,19 @@ func (a *App) build(p *Project, ex *Export, out string, tmpdir string) ([]string
 			default:
 				continue
 			}
+			// Bild ein- und ausblenden (Fade-Griffe am Clip)
+			if fi, fo := math.Min(c.FadeIn, L), math.Min(c.FadeOut, L); fi > 0.01 || fo > 0.01 {
+				var fd []string
+				if fi > 0.01 {
+					fd = append(fd, "fade=t=in:st=0:d="+f3(fi)+":alpha=1")
+				}
+				if fo > 0.01 {
+					fd = append(fd, fmt.Sprintf("fade=t=out:st=%s:d=%s:alpha=1", f3(math.Max(0, L-fo)), f3(fo)))
+				}
+				nl := g.label()
+				g.add(fmt.Sprintf("[%s]format=yuva420p,%s[%s]", lab, strings.Join(fd, ","), nl))
+				lab = nl
+			}
 			// zur Kette mit dem vorigen Clip, wenn ein Übergang dazwischen liegt
 			if len(chain) > 0 && c.TransIn != nil && c.TransIn.Dur > 0 && prevEnd-c.Start > 0.04 {
 				chain = append(chain, built{c, lab, L})
