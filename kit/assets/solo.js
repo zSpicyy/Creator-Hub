@@ -130,7 +130,8 @@ function renderSet(){if(!so)return;const s=cfg||{},th=s.theme||'black',ac=s.acce
   <div class="so-sw">${Object.entries(ACC).map(([k,c])=>`<button class="${ac===k?'on':''}" data-ac="${k}" title="${k}" style="background:${c}"></button>`).join('')}</div>
   <div class="so-lab">${T('Catppuccin-Farben','Catppuccin colours')}</div>
   <div class="so-sw">${Object.entries(CTP[fl]).map(([k,c])=>`<button class="${ac==='ctp-'+k?'on':''}" data-ac="ctp-${k}" title="${k}" style="background:${c}"></button>`).join('')}</div>
-  <div class="so-line"><div>${T('Kompakte Darstellung','Compact layout')}<small>${T('Weniger Abstand, mehr auf einmal sichtbar.','Less spacing, more on screen.')}</small></div><button class="so-tg ${s.density==='compact'?'on':''}" data-s="compact" role="switch"></button></div></div>`}
+  <div class="so-line"><div>${T('Kompakte Darstellung','Compact layout')}<small>${T('Weniger Abstand, mehr auf einmal sichtbar.','Less spacing, more on screen.')}</small></div><button class="so-tg ${s.density==='compact'?'on':''}" data-s="compact" role="switch"></button></div></div>
+ <div class="so-sec"><div class="so-line"><div>${T('Lizenzen und Hinweise','Licenses and notices')}<small>${T('Freie Software und KI-Modelle, die diese App nutzt.','Free software and AI models used by this app.')}</small></div><button class="so-btn" data-s="lic">${T('Anzeigen','Show')}</button></div></div>`}
 async function openSet(){if(so)return;try{cfg=await api('/kit/solo/settings')}catch(e){cfg={}}
  so=el(`<div class="so-ov" translate="no" role="dialog" aria-modal="true" aria-label="${T('Einstellungen','Settings')}"><div class="so-box so-set" style="--so:var(--accent)"><div class="so-hero"><img src="${LOGO}" alt=""><div><h2>${T('Einstellungen','Settings')}</h2><p>${esc(title())} · ${T('Version','version')} ${esc(S.version)}</p></div><button class="so-x" data-s="close" title="${T('Schließen','Close')}">×</button></div><div class="so-set-body"></div></div></div>`);
  so.addEventListener('click',onSet);so.addEventListener('mousedown',e=>{if(e.target===so)closeSet()});document.body.append(so);setOpen=true;renderSet();
@@ -140,6 +141,7 @@ function closeSet(){if(so){so.remove();so=null}setOpen=false;document.removeEven
 async function save(p){try{cfg=await api('/kit/solo/settings',p);await K.applyTheme();renderSet()}catch(e){K.toast&&K.toast(e.message)}}
 async function onSet(e){const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.s==='close')return closeSet();
+ if(d.s==='lic'){Kit.licenses&&Kit.licenses();return}
  if(d.s==='check'){S.update=await api('/kit/solo/update?do=check',{}).catch(x=>({error:x.message}));popClosed=false;renderSet();renderPop();return}
  if(d.s==='download'){want=true;S.update=await api('/kit/solo/update?do=download',{}).catch(x=>({error:x.message}));renderSet();fast();return}
  if(d.s==='apply'){try{await api('/kit/solo/update?do=apply',{});K.toast&&K.toast(T('Wird neu gestartet …','Restarting …'))}catch(x){K.toast&&K.toast(x.message)}return}

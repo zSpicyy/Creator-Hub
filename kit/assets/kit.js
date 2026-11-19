@@ -119,3 +119,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:0
 })();
 // Ohne den Hub gestartet: Einrichtung, Updates und Einstellungen selbst übernehmen (kit/solo).
 if(!Kit.embedded)fetch('/kit/solo',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.on)return;window.__solo=j;const s=document.createElement('script');s.src='/kit/solo.js';document.head.append(s)}).catch(()=>{});
+
+// Lizenzen und Hinweise als Fenster über der App (Hub, Einzel-Apps, StreamPilot)
+Kit.licenses=()=>{if(document.getElementById('kit-lic'))return;const o=document.createElement('div');o.id='kit-lic';o.style.cssText='position:fixed;inset:0;z-index:2147483000;background:#000a;display:flex;align-items:center;justify-content:center;padding:20px';
+ o.innerHTML='<div style="position:relative;width:min(900px,100%);height:min(86vh,900px);border-radius:12px;overflow:hidden;box-shadow:0 20px 60px #000a"><iframe src="/kit/licenses.html" style="width:100%;height:100%;border:0;background:#111216"></iframe><button aria-label="Schließen" style="position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:#ffffff22;color:#fff;font-size:18px;cursor:pointer">×</button></div>';
+ const close=()=>{o.remove();removeEventListener('keydown',esc,true)},esc=e=>{if(e.key==='Escape'){e.stopPropagation();close()}};o.addEventListener('click',e=>{if(e.target===o||e.target.closest('button'))close()});addEventListener('keydown',esc,true);document.body.append(o)};
