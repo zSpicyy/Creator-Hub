@@ -598,5 +598,6 @@ async function ttsLoop(){for(;;){try{const r=await api('/api/tts/next');if(!r.it
 (async()=>{await refresh();setInterval(poll,1000);ttsLoop();
  if(setupNeeded()&&page==='live'){/* bleibt auf Live mit Hinweis */}})();
 </script>
+<script src="extra.js"></script>
 </body>
 </html>

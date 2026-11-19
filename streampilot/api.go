@@ -76,7 +76,7 @@ func stateJSON() map[string]any {
 		"accounts": map[string]any{
 			"spotify":  map[string]any{"connected": spotify.Connected(), "name": spotify.Name(), "playback": spotify.HasPlaybackScope(), "redirect": spotifyRedirect},
 			"bot":      map[string]any{"connected": botAuth.Connected(), "login": botAuth.Login()},
-			"streamer": map[string]any{"connected": streamerAuth.Connected(), "login": streamerAuth.Login(), "full": streamerAuth.Has("moderator:read:followers") && streamerAuth.Has("chat:edit") && streamerAuth.Has("channel:read:redemptions")},
+			"streamer": map[string]any{"connected": streamerAuth.Connected(), "login": streamerAuth.Login(), "full": streamerAuth.Has("moderator:read:followers") && streamerAuth.Has("chat:edit") && streamerAuth.Has("channel:read:redemptions") && hasModScopes()},
 		},
 		"bot":      botStatus(),
 		"commands": cmds,
@@ -104,6 +104,33 @@ func setLogin(which string, m map[string]any) {
 }
 
 func routes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/own", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var d OwnData
+			if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+				http.Error(w, `{"error":"bad"}`, 400)
+				return
+			}
+			ownMu.Lock()
+			ownSave(d)
+			ownMu.Unlock()
+		}
+		ownMu.Lock()
+		d := ownLoad()
+		ownMu.Unlock()
+		writeJSON(w, d)
+	})
+	mux.HandleFunc("/api/mod", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var c ModCfg
+			if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+				http.Error(w, `{"error":"bad"}`, 400)
+				return
+			}
+			modSave(c)
+		}
+		writeJSON(w, map[string]any{"cfg": modLoad(), "log": modLogSnapshot(), "scopes": hasModScopes(), "streamer": streamerAuth.Connected()})
+	})
 	mux.HandleFunc("/api/state", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, stateJSON()) })
 
 	mux.HandleFunc("/api/events", func(w http.ResponseWriter, r *http.Request) {

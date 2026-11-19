@@ -17,7 +17,7 @@ import (
 )
 
 const botScopes = "chat:read chat:edit"
-const streamerScopes = "chat:read chat:edit moderator:read:followers channel:read:redemptions"
+const streamerScopes = "chat:read chat:edit moderator:read:followers channel:read:redemptions moderator:manage:chat_messages moderator:manage:banned_users moderator:manage:shoutouts"
 
 // ---------------------------------------------------------------- Login (Gerätecode, ohne Client-Secret)
 

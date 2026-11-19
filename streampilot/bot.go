@@ -233,6 +233,7 @@ func StartBot() error {
 		}()
 	}
 	go b.pollSpotify()
+	go b.timerLoop()
 	bot = b
 	logEvent("ok", "Bot started")
 	return nil
@@ -349,6 +350,13 @@ func (b *Bot) onMessage(m ChatMsg) {
 	arg = strings.TrimSpace(arg)
 	level := userLevel(m.Badges)
 	uid := m.Tags["user-id"]
+	ownMu.Lock()
+	chatLines++
+	ownMu.Unlock()
+	// Chat-Schutz zuerst: bestrafte Nachrichten werden nicht weiterverarbeitet (auch nicht vorgelesen)
+	if b.moderate(m, level) {
+		return
+	}
 	for _, c := range commands() {
 		for _, f := range c.Full {
 			if f == word {
@@ -360,6 +368,9 @@ func (b *Bot) onMessage(m ChatMsg) {
 				return
 			}
 		}
+	}
+	if b.handleOwn(m, word, arg, level, uid) {
+		return
 	}
 	if m.Tags["bits"] != "" {
 		if tts.Alert("bits", map[string]string{"user": m.Display, "login": m.Login, "bits": m.Tags["bits"], "message": m.Text}, m.Tags) {
