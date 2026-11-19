@@ -64,7 +64,7 @@ const stText=p=>p.status==='ready'?T('Fertig'):p.status==='error'?T('Fehler'):p.
 
 function viewStart(msg){leave();page='start';nav();
  $('#main').innerHTML=`<div class="start"><div class="hero"><div class="pv" style="--c:#e0449a"><img src="logo.svg" alt=""></div><div class="body"><h2>Hintergrund entfernen</h2><p>Ziehe ein oder mehrere Bilder in dieses Fenster. Die KI erkennt das Motiv und stellt es frei – mit feinen Kanten bei Haaren und Fell. Danach kannst du mit dem Pinsel nachbessern.</p>
- <div class="acts"><button class="btn primary" id="pick2">Bilder öffnen</button></div>${msg?`<p class="err" style="margin:14px 0 0">${esc(msg)}</p>`:''}${aiNote()}<div class="hint">PNG, JPG oder GIF · jede Größe · mehrere Bilder auf einmal</div></div></div></div>`}
+ <div class="acts"><button class="btn primary" id="pick2">Bilder öffnen</button></div>${msg?`<p class="err" style="margin:14px 0 0">${esc(msg)}</p>`:''}${aiNote()}<div class="hint">PNG, JPG oder GIF in jeder Größe, auch mehrere auf einmal</div></div></div></div>`}
 function aiNote(){return AI.ready?'':AI.loading?`<div class="line" style="margin-top:14px"><div>KI wird eingerichtet<small>Einmalig, etwa 170 MB. Danach arbeitet die KI ohne Internet.</small><div class="bar"><i id="aibar" style="width:${Math.round(AI.done*100)}%"></i></div></div></div>`:AI.error?`<div class="line" style="margin-top:14px"><div>KI konnte nicht eingerichtet werden<small class="err">${esc(AI.error)}</small></div><button class="btn primary" id="aiinstall">Nochmal versuchen</button></div>`:''}
 
 function viewProjects(){leave();page='projects';nav();

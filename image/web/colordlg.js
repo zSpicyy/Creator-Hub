@@ -34,7 +34,7 @@ const ColorDlg=(()=>{const t=s=>Kit.t(s);const esc=s=>String(s).replace(/[&<>"]/
   const tabs=[['sq','Farbfeld'],['wheel','Farbkreis'],['cmyk','CMYK'],['pal','Verlauf']].map(([k,n])=>`<button data-cdtab="${k}" class="${tab===k?'on':''}">${esc(t(n))}</button>`).join('');
   const left=tab==='sq'?`<div class="cdsq"><canvas id="cdSV" width="220" height="220"></canvas><canvas id="cdH" width="24" height="220"></canvas></div>`
    :tab==='wheel'?`<div class="cdsq"><canvas id="cdW" width="248" height="248"></canvas></div>`
-   :tab==='cmyk'?`<div class="cdsl">${sl('c','C',100)}${sl('m','M',100)}${sl('y','Y',100)}${sl('k','K',100)}<p class="hint2">${esc(t('Cyan, Magenta, Gelb und Schwarz – so mischt ein Drucker die Farbe.'))}</p></div>`
+   :tab==='cmyk'?`<div class="cdsl">${sl('c','C',100)}${sl('m','M',100)}${sl('y','Y',100)}${sl('k','K',100)}<p class="hint2">${esc(t('Cyan, Magenta, Gelb und Schwarz: So mischt ein Drucker die Farbe.'))}</p></div>`
    :`<div class="cdpal">${hist().map(c=>`<button data-cdh="${c}" style="background:${c}" title="${c}"></button>`).join('')||`<p class="hint2">${esc(t('Hier erscheinen die zuletzt benutzten Farben.'))}</p>`}</div>`;
   return`<div class="cdhead" data-cddrag><b>${esc(st.title)}</b><button class="ib" data-cdx>×</button></div>
   <div class="cdtabs">${tabs}</div><div class="cdmain"><div class="cdleft">${left}</div>

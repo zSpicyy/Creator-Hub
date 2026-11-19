@@ -53,7 +53,7 @@ function nav(){document.querySelectorAll('nav [data-page]').forEach(b=>b.classLi
 
 function viewStart(msg){page='start';nav();clearInterval(timer);
  $('#main').innerHTML=`<div class="start"><div class="hero"><div class="pv" style="--c:#33c97c"><img src="logo.svg" alt=""></div><div class="body"><h2>Bild vergrößern</h2><p>Ziehe ein oder mehrere Bilder in dieses Fenster oder öffne sie über den Knopf. Die KI macht sie 2-, 4- oder 8-mal so groß und rechnet fehlende Details dazu.</p>
- <div class="acts"><button class="btn primary" id="pick2">Bild öffnen</button></div>${msg?`<p class="err" style="margin:14px 0 0">${esc(msg)}</p>`:''}<div class="hint">PNG, JPG oder GIF · jede Größe · mehrere Bilder auf einmal</div></div></div></div>`}
+ <div class="acts"><button class="btn primary" id="pick2">Bild öffnen</button></div>${msg?`<p class="err" style="margin:14px 0 0">${esc(msg)}</p>`:''}<div class="hint">PNG, JPG oder GIF in jeder Größe, auch mehrere auf einmal</div></div></div></div>`}
 
 function viewProjects(){page='projects';nav();clearInterval(timer);
  const todo=projects.filter(p=>!p.result).length;

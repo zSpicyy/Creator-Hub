@@ -145,7 +145,7 @@ const Warp=(()=>{const W={};const {esc}=Kit;const t=s=>Kit.t(s);
    if(m==='3d'&&st)h+=`<div class="olab">${esc(t('Ziehen dreht'))}</div>`+seg('axis',[['xy','X/Y-Achse'],['z','Z-Achse']])+num('ax','Winkel X',st.ang.x,'°')+num('ay','Winkel Y',st.ang.y,'°')+num('az','Winkel Z',st.ang.z,'°');
    if(m==='unified'&&st)h+=`<p class="hint2" id="tfinfo"></p><div class="btns"><button class="btn sm" data-tfx="pivot">${esc(t('Drehpunkt mittig'))}</button></div>`;
    if(m==='handle'&&st)h+=`<p class="hint2">${esc(t('Griffe'))}: <b>${st.hs.length}/4</b></p>`;
-   if(m==='cage'&&st)h+=`<p class="hint2">${st.cage&&st.cage.closed?esc(t('Käfig geschlossen – Punkte ziehen.')):esc(t('Käfig-Punkte'))+': <b>'+((st.cage&&st.cage.src.length)||0)+'</b>'}</p>`;
+   if(m==='cage'&&st)h+=`<p class="hint2">${st.cage&&st.cage.closed?esc(t('Käfig geschlossen. Jetzt Punkte ziehen.')):esc(t('Käfig-Punkte'))+': <b>'+((st.cage&&st.cage.src.length)||0)+'</b>'}</p>`;
    return h+`<p class="hint2">${esc(t(HINT[m]))}</p><div class="btns" style="margin-top:10px"><button class="btn" data-tfx="cancel">${esc(t('Zurücksetzen'))}</button><button class="btn primary" data-tfx="apply">${esc(t('Anwenden'))}</button></div><p class="hint2">${esc(t('Enter wendet an, Esc bricht ab.'))}</p>`},
   leave(){if(st&&st.L)delete st.L._tf;st=null;Doc.need=true;View.draw()},
   key(k){if(!st)return false;if(k==='apply'){if(mode()==='cage'&&st.cage&&!st.cage.closed&&st.cage.src.length>=3){st.cage.closed=true;View.draw();Tools.opts();return true}if(!st.changed)return false;W.apply();return true}
