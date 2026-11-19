@@ -64,7 +64,7 @@ func wsDial(rawURL string, headers map[string]string) (*WSConn, error) {
 	}
 	if resp.StatusCode != 101 {
 		c.Close()
-		return nil, fmt.Errorf("websocket: status %d", resp.StatusCode)
+		return nil, &wsStatusErr{Code: resp.StatusCode, Date: resp.Header.Get("Date")}
 	}
 	_ = c.SetDeadline(time.Time{})
 	return &WSConn{c: c, r: r}, nil
@@ -164,3 +164,11 @@ func (w *WSConn) Read() (data []byte, text bool, err error) {
 		}
 	}
 }
+
+// wsStatusErr: der Server hat die Verbindung abgelehnt (z. B. 403).
+type wsStatusErr struct {
+	Code int
+	Date string
+}
+
+func (e *wsStatusErr) Error() string { return fmt.Sprintf("websocket: status %d", e.Code) }

@@ -362,8 +362,10 @@ func (b *Bot) onMessage(m ChatMsg) {
 		}
 	}
 	if m.Tags["bits"] != "" {
-		tts.Alert("bits", map[string]string{"user": m.Display, "login": m.Login, "bits": m.Tags["bits"], "message": m.Text}, m.Tags)
-		return
+		if tts.Alert("bits", map[string]string{"user": m.Display, "login": m.Login, "bits": m.Tags["bits"], "message": m.Text}, m.Tags) {
+			return
+		}
+		// Bits-Alert aus oder unter dem Mindestbetrag: wie eine normale Chat-Nachricht behandeln
 	}
 	tts.Handle("chat", m.Login, m.Display, level, uid, m.Text, m.Tags, false)
 }

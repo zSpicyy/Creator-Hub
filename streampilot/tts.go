@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
@@ -98,7 +99,8 @@ func (q *TTSQueue) Push(text, voice string, extra int) bool {
 }
 
 // Next wartet bis zu 20 s auf die nächste Nachricht (Long-Polling vom App-Fenster).
-func (q *TTSQueue) Next() *TTSItem {
+// Bricht die Anfrage ab (Fenster neu geladen/geschlossen), bevor sie raus ist, geht keine Nachricht verloren.
+func (q *TTSQueue) Next(done <-chan struct{}) *TTSItem {
 	deadline := time.After(20 * time.Second)
 	for {
 		q.mu.Lock()
@@ -115,7 +117,23 @@ func (q *TTSQueue) Next() *TTSItem {
 		case <-q.wake:
 		case <-deadline:
 			return nil
+		case <-done:
+			return nil
 		}
+	}
+}
+
+// Requeue legt eine nicht abgespielte Nachricht wieder vorne in die Warteschlange.
+func (q *TTSQueue) Requeue(it TTSItem) {
+	q.mu.Lock()
+	q.items = append([]TTSItem{it}, q.items...)
+	if q.Playing != nil && q.Playing.ID == it.ID {
+		q.Playing = nil
+	}
+	q.mu.Unlock()
+	select {
+	case q.wake <- struct{}{}:
+	default:
 	}
 }
 
@@ -195,14 +213,14 @@ func (q *TTSQueue) Handle(source, login, display string, level int, uid, text st
 }
 
 // Alert: liest standardmäßig nur die Nachricht des Zuschauers vor.
-func (q *TTSQueue) Alert(kind string, vars map[string]string, tags map[string]string) {
+func (q *TTSQueue) Alert(kind string, vars map[string]string, tags map[string]string) bool {
 	a := alertCfg(kind)
 	if !a.On || !boolean(cfg.Section("alerts"), "enabled", false) {
-		return
+		return false
 	}
 	c := ttsCfg()
 	if ignoredUsers(c)[strings.ToLower(vars["login"])] {
-		return
+		return false
 	}
 	amount := vars["bits"]
 	if amount == "" {
@@ -210,20 +228,21 @@ func (q *TTSQueue) Alert(kind string, vars map[string]string, tags map[string]st
 	}
 	if a.Min > 0 {
 		if n, _ := strconv.Atoi(amount); n < a.Min {
-			return
+			return false
 		}
 	}
 	if m, ok := vars["message"]; ok {
 		vars["message"] = CleanText(c, m, tags, false)
 		if strings.Contains(a.Text, "{message}") && vars["message"] == "" {
-			return
+			return false
 		}
 	}
 	text := strings.Join(strings.Fields(fill(a.Text, vars)), " ")
 	if text != "" {
 		logEvent("alert", "%s: %s", kind, text)
-		q.Push(text, a.Voice, 10)
+		return q.Push(text, a.Voice, 10)
 	}
+	return false
 }
 
 type alertC struct {
@@ -389,12 +408,20 @@ func CleanText(c map[string]any, text string, tags map[string]string, stripFirst
 			if w == "" || !boolean(e, "on", true) {
 				continue
 			}
-			re := regexp.MustCompile(`(?i)` + regexp.QuoteMeta(w))
+			pat := `(?i)` + regexp.QuoteMeta(w)
+			if len([]rune(w)) <= 4 { // kurze Wörter nur allein, sonst trifft es harmlose Wörter
+				pat = `(?i)(^|[^\pL\pN])` + regexp.QuoteMeta(w) + `($|[^\pL\pN])`
+			}
+			re := regexp.MustCompile(pat)
 			if re.MatchString(text) {
 				if boolean(c, "blockWhole", false) {
 					return ""
 				}
-				text = re.ReplaceAllString(text, "piep")
+				if len([]rune(w)) <= 4 {
+					text = re.ReplaceAllString(text, "${1}piep${2}")
+				} else {
+					text = re.ReplaceAllString(text, "piep")
+				}
 			}
 		}
 	}
@@ -416,7 +443,10 @@ func CleanText(c map[string]any, text string, tags map[string]string, stripFirst
 // ---------------------------------------------------------------- Natürliche Stimmen (Microsoft Edge, kostenlos)
 
 const edgeTrusted = "6A5AA1D4EAFF4E9FB37E23D68491D6F4"
-const edgeChromium = "140.0.3485.14"
+const edgeChromium = "143.0.3650.75"
+
+// edgeSkew gleicht eine falsch gehende PC-Uhr aus (Microsoft lehnt sonst mit 403 ab).
+var edgeSkew int64
 
 func edgeVoiceName(short string) string {
 	p := strings.SplitN(short, "-", 3)
@@ -432,8 +462,24 @@ func randHex(n int) string {
 	return hex.EncodeToString(b)
 }
 
+// EdgeSynth holt die Sprachausgabe; bei 403 (PC-Uhr geht falsch) oder einem Verbindungsfehler ein zweiter Versuch.
 func EdgeSynth(text, voice string, rate, pitch, volume float64) ([]byte, error) {
-	t := time.Now().Unix() + 11644473600
+	b, err := edgeSynth(text, voice, rate, pitch, volume)
+	if err != nil {
+		var se *wsStatusErr
+		if errors.As(err, &se) && se.Code == 403 && se.Date != "" {
+			if st, e := http.ParseTime(se.Date); e == nil {
+				edgeSkew = st.Unix() - time.Now().Unix()
+			}
+		}
+		time.Sleep(300 * time.Millisecond)
+		b, err = edgeSynth(text, voice, rate, pitch, volume)
+	}
+	return b, err
+}
+
+func edgeSynth(text, voice string, rate, pitch, volume float64) ([]byte, error) {
+	t := time.Now().Unix() + edgeSkew + 11644473600
 	t -= t % 300
 	sum := sha256.Sum256([]byte(fmt.Sprintf("%d%s", t*10000000, edgeTrusted)))
 	gec := strings.ToUpper(hex.EncodeToString(sum[:]))

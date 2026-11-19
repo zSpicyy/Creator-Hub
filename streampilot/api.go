@@ -218,7 +218,11 @@ func routes(mux *http.ServeMux) {
 		writeJSON(w, stateJSON())
 	})
 	mux.HandleFunc("/api/tts/next", func(w http.ResponseWriter, r *http.Request) {
-		it := tts.Next()
+		it := tts.Next(r.Context().Done())
+		if it != nil && r.Context().Err() != nil {
+			tts.Requeue(*it) // Fenster ist weg: nicht verlieren
+			return
+		}
 		writeJSON(w, map[string]any{"item": it, "skip": tts.SkipSeq()})
 	})
 	mux.HandleFunc("/api/tts/skipseq", func(w http.ResponseWriter, r *http.Request) {

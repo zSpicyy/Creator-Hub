@@ -205,7 +205,7 @@ en:{
  cooldown:'Cooldown per viewer',cooldown_s:'Seconds between two messages of the same viewer (not for mods).',maxq:'Maximum queue',pause:'Pause between messages',pause_s:'Milliseconds.',
  filters:'Filters',maxc:'Maximum characters',links:'Read links as “link”',links_s:'Otherwise links are removed.',emotes:'Remove emotes',spam:'Shorten spam',spam_s:'“hahahahaha” becomes “hahaha”, repeated words are cut.',
  words:'Blocked words',words_s:'Filter swear words and slurs.',words_on:'Word filter enabled',w_piep:'Replace word with “piep”',w_skip:'Don\'t read the message',words_n:'{a} of {b} words active',words_edit:'Edit list',
- repl:'Pronunciation',repl_s:'word=how to say it, separated by commas.',reset_tts:'Reset TTS',reset_tts_q:'Reset all TTS settings (sources and word list included)?',
+ repl:'Pronunciation',repl_s:'word=how to say it, separated by commas.',reset_tts:'Reset TTS',nat_fail:'The natural voice could not be reached, a Windows voice is reading instead.',reset_tts_q:'Reset all TTS settings (sources and word list included)?',
  w_add_ph:'Add words (comma separated)',w_list:'Word list',w_list_s:'Checked words are filtered. Parts of words count too.',
  al_t:'Alerts',al_s:'Reads what viewers write with their bits, subscriptions and redemptions – not “XY donated”.',al_on:'Read alerts aloud',
  al_text:'Text',al_min:'Minimum',a_bits:'Bits',a_sub:'New subscription',a_resub:'Resubscription',a_points:'Other channel points',a_follow:'New follower',a_subgift:'Gifted subscription',a_giftbomb:'Gift bomb',a_raid:'Raid',
@@ -258,7 +258,7 @@ de:{
  cooldown:'Cooldown pro Zuschauer',cooldown_s:'Sekunden zwischen zwei Nachrichten derselben Person (nicht für Mods).',maxq:'Maximale Warteschlange',pause:'Pause zwischen Nachrichten',pause_s:'Millisekunden.',
  filters:'Filter',maxc:'Maximale Zeichen',links:'Links als „Link“ vorlesen',links_s:'Sonst werden Links weggelassen.',emotes:'Emotes entfernen',spam:'Spam kürzen',spam_s:'„hahahahaha“ wird „hahaha“, Wortwiederholungen werden gekürzt.',
  words:'Verbotene Wörter',words_s:'Filtert Beleidigungen und Schimpfwörter.',words_on:'Wortfilter aktiv',w_piep:'Wort durch „piep“ ersetzen',w_skip:'Nachricht nicht vorlesen',words_n:'{a} von {b} Wörtern aktiv',words_edit:'Liste bearbeiten',
- repl:'Aussprache',repl_s:'wort=so sprechen, mit Komma getrennt.',reset_tts:'TTS zurücksetzen',reset_tts_q:'Alle TTS-Einstellungen (inkl. Quellen und Wortliste) auf Standard setzen?',
+ repl:'Aussprache',repl_s:'wort=so sprechen, mit Komma getrennt.',reset_tts:'TTS zurücksetzen',nat_fail:'Die natürliche Stimme war nicht erreichbar, eine Windows-Stimme liest stattdessen vor.',reset_tts_q:'Alle TTS-Einstellungen (inkl. Quellen und Wortliste) auf Standard setzen?',
  w_add_ph:'Wörter hinzufügen (mit Komma getrennt)',w_list:'Wortliste',w_list_s:'Angehakte Wörter werden gefiltert. Teilwörter zählen mit.',
  al_t:'Alerts',al_s:'Liest vor, was Zuschauer zu Bits, Abos und Kanalpunkten schreiben – nicht „XY hat gespendet“.',al_on:'Alerts vorlesen',
  al_text:'Text',al_min:'Minimum',a_bits:'Bits',a_sub:'Neues Abo',a_resub:'Abo verlängert',a_points:'Andere Kanalpunkte',a_follow:'Neuer Follower',a_subgift:'Abo verschenkt',a_giftbomb:'Abo-Bombe',a_raid:'Raid',
@@ -575,16 +575,24 @@ const handled={};
 /* ---------------------------------------------------------------- Vorlesen im Fenster */
 let speaking=null,skipAt=0;
 function stopSpeaking(){try{speechSynthesis.cancel()}catch(e){}const au=$('#au');au.pause();au.removeAttribute('src');if(speaking)speaking()}
-function speakLocal(it){return new Promise(res=>{try{const u=new SpeechSynthesisUtterance(it.text);const vs=speechSynthesis.getVoices();
- let v=vs.find(x=>x.name===it.voice);if(!v){const want=(it.voice||'').slice(0,2)||lang;v=vs.find(x=>x.lang&&x.lang.startsWith(want))}if(v)u.voice=v;
- u.rate=Math.max(.5,Math.min(2,1+it.rate/10));u.pitch=Math.max(0,Math.min(2,1+it.pitch/10));u.volume=it.volume/100;
- u.onend=u.onerror=()=>res();speaking=res;speechSynthesis.speak(u)}catch(e){res()}})}
-async function speakNatural(it){const r=await fetch('/api/tts/audio',{method:'POST',body:JSON.stringify(it)});if(!r.ok)throw new Error('tts');
- const url=URL.createObjectURL(await r.blob());const au=$('#au');au.volume=it.volume/100;au.src=url;
- await new Promise(res=>{speaking=res;au.onended=au.onerror=()=>res();au.play().catch(()=>res())});URL.revokeObjectURL(url)}
+function speakLocal(it){return new Promise(res=>{let fin=false,keep=0,guard=0;const end=()=>{if(fin)return;fin=true;clearInterval(keep);clearTimeout(guard);res()};
+ try{const u=new SpeechSynthesisUtterance(it.text);const vs=speechSynthesis.getVoices();
+ let v=vs.find(x=>x.name===it.voice);if(!v){const want=(/Neural$/.test(it.voice||'')?it.voice:'').slice(0,2)||lang;v=vs.find(x=>x.lang&&x.lang.toLowerCase().startsWith(want))}if(v){u.voice=v;u.lang=v.lang}
+ u.rate=Math.max(.5,Math.min(2,1+it.rate/10));u.pitch=Math.max(0,Math.min(2,1+it.pitch/10));u.volume=Math.max(0,Math.min(1,it.volume/100));
+ u.onend=u.onerror=end;speaking=()=>{try{speechSynthesis.cancel()}catch(e){}end()};
+ if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();speechSynthesis.speak(u);
+ // Chromium/WebView bricht lange Sätze nach ~15 s ab und meldet manchmal kein Ende: wach halten und Notbremse
+ keep=setInterval(()=>{try{if(speechSynthesis.speaking&&!speechSynthesis.paused){speechSynthesis.pause();speechSynthesis.resume()}}catch(e){}},10000);
+ guard=setTimeout(()=>{try{speechSynthesis.cancel()}catch(e){}end()},8000+it.text.length*180/u.rate)}catch(e){end()}})}
+async function speakNatural(it){const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),20000);let r;
+ try{r=await fetch('/api/tts/audio',{method:'POST',body:JSON.stringify(it),signal:ctl.signal})}finally{clearTimeout(tm)}if(!r.ok)throw new Error('tts');
+ const blob=await r.blob();if(blob.size<200)throw new Error('tts');const url=URL.createObjectURL(blob);const au=$('#au');au.volume=Math.max(0,Math.min(1,it.volume/100));au.src=url;
+ try{await new Promise((res,rej)=>{let fin=false;const end=()=>{if(!fin){fin=true;clearTimeout(g);res()}};speaking=end;au.onended=end;au.onerror=()=>{if(!fin){fin=true;clearTimeout(g);rej(new Error('play'))}};
+  const g=setTimeout(end,15000+it.text.length*200);au.play().catch(e=>{if(!fin){fin=true;clearTimeout(g);rej(e)}})})}finally{URL.revokeObjectURL(url)}}
+let natWarned=false;
 async function ttsLoop(){for(;;){try{const r=await api('/api/tts/next');if(!r.item)continue;const it=r.item;skipAt=r.skip;
  const watch=setInterval(async()=>{try{const s=await api('/api/tts/skipseq');if(s.skip!==skipAt){skipAt=s.skip;stopSpeaking()}}catch(e){}},400);
- try{if(/Neural$/.test(it.voice||'')){try{await speakNatural(it)}catch(e){await speakLocal({...it,voice:''})}}else await speakLocal(it)}finally{clearInterval(watch);speaking=null}
+ try{if(/Neural$/.test(it.voice||'')){try{await speakNatural(it)}catch(e){if(skipAt!==r.skip)throw e;if(!natWarned){natWarned=true;toast(t('nat_fail'))}await speakLocal(it)}}else await speakLocal(it)}catch(e){}finally{clearInterval(watch);speaking=null}
  await new Promise(r=>setTimeout(r,it.pause||0))}catch(e){await new Promise(r=>setTimeout(r,2000))}}}
 
 (async()=>{await refresh();setInterval(poll,1000);ttsLoop();
