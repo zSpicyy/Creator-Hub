@@ -8,7 +8,7 @@ const Player=(()=>{
  // Ein Element je Clip (dieselbe Datei kann mehrmals gleichzeitig laufen)
  function el(c){const m=App.media(c.mediaId);if(!m||!(m.proxy==='ok'||m.proxy==='direct'))return null;const key=c.id+'|'+m.id;let e=els.get(key);
   if(!e){if(m.kind==='image'){e=new Image();e.src=url(m);e.onload=()=>P.draw()}else{e=document.createElement(m.kind==='video'?'video':'audio');e.preload='auto';e.src=url(m);e.playsInline=true;e.addEventListener('seeked',()=>{if(!P.playing)P.draw()});e.addEventListener('loadeddata',()=>{if(!P.playing){seekEl(c,e);P.draw()}})}
-   e.dataset.kind=m.kind;els.set(key,e);if(m.kind!=='image')$('#hidden').append(e)}return e}
+   e.dataset.kind=m.kind;e.dataset.clip=c.id;els.set(key,e);if(m.kind!=='image')$('#hidden').append(e)}return e}
  const srcTime=(c,t)=>c.reverse?Math.max(c.in,c.out-(t-c.start)*(c.speed||1)-0.001):c.in+(t-c.start)*(c.speed||1);
  function seekEl(c,e){if(e.tagName==='IMG')return;const tt=srcTime(c,App.t);if(Math.abs(e.currentTime-tt)>0.02)try{e.currentTime=Math.max(0,tt)}catch(x){}}
  function active(t){const out=[];for(const tr of App.P.tracks)for(const c of tr.clips){const L=App.len(c);if(t>=c.start&&t<c.start+L)out.push({tr,c})}return out}
@@ -18,8 +18,8 @@ const Player=(()=>{
    const on=t>=c.start&&t<c.start+L;
    if(on){act.add(e);const tt=srcTime(c,t);
     if(P.playing){let vol=(tr.mute||c.mute||P.muted)?0:Math.min(1,App.kv(c,'volume',t)*(tr.vol||1));const into=t-c.start,left=c.start+L-t;if(c.fadeIn>0&&into<c.fadeIn)vol*=into/c.fadeIn;if(c.fadeOut>0&&left<c.fadeOut)vol*=left/c.fadeOut;
-     e.volume=clamp(vol,0,1);e.muted=vol<=0;if(Math.abs(e.playbackRate-(c.speed||1))>1e-3)e.playbackRate=c.speed||1;
-     if(c.reverse){e.muted=true;if(!e.paused)e.pause();if(Math.abs(e.currentTime-tt)>1/12&&!e.seeking)try{e.currentTime=tt}catch(x){}}
+     const R=P.rate||1,pr=Math.min(16,(c.speed||1)*Math.abs(R));e.volume=clamp(vol,0,1);e.muted=vol<=0;if(R>0&&Math.abs(e.playbackRate-pr)>1e-3)e.playbackRate=pr;
+     if(c.reverse||R<0){e.muted=true;if(!e.paused)e.pause();if(Math.abs(e.currentTime-tt)>1/12&&!e.seeking)try{e.currentTime=tt}catch(x){}}
      else{if(Math.abs(e.currentTime-tt)>0.3||force)try{e.currentTime=tt}catch(x){}
      if(e.paused)e.play().catch(()=>{})}}
     else{if(!e.paused)e.pause();seekEl(c,e)}}
@@ -32,7 +32,7 @@ const Player=(()=>{
   const iw=e.videoWidth||e.naturalWidth||m.w,ih=e.videoHeight||e.naturalHeight||m.h;const[kw,kh]=cropK(c);
   let cv2=srcCv.get(c.id);if(!cv2){cv2=document.createElement('canvas');srcCv.set(c.id,cv2)}const w=Math.max(2,Math.min(Math.round(fw),960)),h=Math.max(2,Math.round(w*fh/fw));if(cv2.width!==w||cv2.height!==h){cv2.width=w;cv2.height=h}
   const x=cv2.getContext('2d',{willReadFrequently:!!c.key});x.clearRect(0,0,w,h);x.drawImage(e,iw*(c.cropL||0),ih*(c.cropT||0),iw*kw,ih*kh,0,0,w,h);
-  if(c.key)FX.chroma(x,w,h,c.key,c.keySim||.3,c.keyEdge||.1);if(extra)Pro.process(c,cv2,x,w,h,e,m);return cv2}
+  if(c.key)FX.chroma(x,w,h,c.key,c.keySim||.3,c.keyEdge||.1);if(c.key&&c.spill>0.01&&typeof Grade!=='undefined')Grade.despill(x,w,h,c.key,c.spill);if(extra)Pro.process(c,cv2,x,w,h,e,m);return cv2}
  // Maße eines Textes auf der Vorschau (Breite, Höhe, Mitte) – gleiche Formel wie beim Export
  function textMetrics(x,c){const tx=c.text,H=App.P.h,k=ch/H;const fs=Math.max(6,tx.size*H)*k;x.font=`${tx.bold?'bold ':''}${fs}px "${tx.font||'Arial'}", sans-serif`;
   const lines=String(tx.content||'').split('\n');const lh=fs*1.15+fs*.15;const w=Math.max(1,...lines.map(l=>x.measureText(l).width));const h=lines.length*lh-fs*.15;return{fs,lines,lh,w,h,cx:cw/2+App.kv(c,'x')*cw,cy:ch/2+App.kv(c,'y')*ch}}
@@ -73,11 +73,13 @@ const Player=(()=>{
   const empty=!App.P.tracks.some(tr=>tr.clips.length);const msg=$('#pmsg');msg.classList.toggle('show',empty);if(empty)msg.textContent=Kit.t('Ziehe Medien aus der Bibliothek in die Zeitleiste.');
   Timeline.playhead();TB.update()};
  P.sync=(force)=>{if(!App.P)return;steer(force);P.draw()};
- function loop(){if(!P.playing)return;App.t=t0+(performance.now()-start)/1000;const tot=App.total();if(App.t>=tot){App.t=tot;P.pause();P.draw();return}steer(false);P.draw();Timeline.follow();raf=requestAnimationFrame(loop)}
- P.play=()=>{if(P.playing||!App.P)return;if(App.t>=App.total()-0.01)App.t=0;P.playing=true;t0=App.t;start=performance.now();steer(true);$('#playbtn').innerHTML='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';raf=requestAnimationFrame(loop)};
+ function loop(){if(!P.playing)return;App.t=t0+(performance.now()-start)/1000*(P.rate||1);const tot=App.total();if(App.t>=tot){App.t=tot;P.pause();P.draw();return}if(App.t<=0){App.t=0;P.pause();P.draw();return}steer(false);P.draw();Timeline.follow();raf=requestAnimationFrame(loop)}
+ P.play=()=>{if(P.playing||!App.P)return;if((P.rate||1)>0&&App.t>=App.total()-0.01)App.t=0;P.playing=true;t0=App.t;start=performance.now();steer(true);$('#playbtn').innerHTML='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';raf=requestAnimationFrame(loop)};
  P.pause=()=>{P.playing=false;cancelAnimationFrame(raf);for(const e of els.values())if(e.pause&&!e.paused)e.pause();const b=$('#playbtn');if(b)b.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>'};
  P.stop=()=>P.pause();
- P.toggle=()=>P.playing?P.pause():P.play();
+ P.toggle=()=>{P.rate=1;P.playing?P.pause():P.play()};
+ // Shuttle wie in Resolve (J/K/L): Tempo setzen, negativ = rückwärts
+ P.shuttle=r=>{if(!App.P)return;const was=P.playing;if(was){P.pause()}P.rate=r;if(r)P.play()};
  P.seek=(t)=>{App.t=clamp(t,0,Math.max(0,App.total()));if(P.playing){t0=App.t;start=performance.now();steer(true)}else steer(false);P.draw();Panels.syncKf&&Panels.syncKf()};
  P.snapshot=async()=>{const vis=active(App.t).filter(({tr,c})=>tr.kind==='video'&&c.type==='media'&&App.media(c.mediaId)?.kind==='video');
   const pick=(App.sel&&vis.find(v=>v.c.id===App.sel.clip))||vis[0];if(!pick)return Kit.toast(Kit.t('An dieser Stelle ist kein Video.'));

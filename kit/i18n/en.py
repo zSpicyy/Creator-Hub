@@ -539,3 +539,23 @@ EN.update({"Bilder gespeichert (jeweils neben dem Original).":"images saved (eac
 EN.update({"Gespeichert.":"Saved."})
 EN.update({"Alle vergrößern":"Upscale all","Bilder vergrößert.":"images upscaled.","mit Fehler.":"failed.","Bei 8-fach rechnet die KI zweimal. Das dauert länger, wird aber deutlich schärfer.":"At 8× the AI runs twice. That takes longer but is much sharper.","Ziehe ein oder mehrere Bilder in dieses Fenster oder öffne sie über den Knopf. Die KI macht sie 2-, 4- oder 8-mal so groß und rechnet fehlende Details dazu.":"Drag one or more images into this window or open them with the button. The AI makes them 2, 4 or 8 times larger and adds the missing detail."})
 EN.update({"Songwünsche, Vorlesen (TTS), Alerts und Chat-Befehle für deinen Twitch-Stream.":"Song requests, text to speech, alerts and chat commands for your Twitch stream.","Stream":"Stream"})
+# Videoschnitt: Resolve-Funktionen (Schnitt-Werkzeuge, Farbräder, Scopes, Fairlight, Stabilisieren, Spill)
+EN.update({
+"Trimmen: Rand ziehen = Ripple, Alt + Rand = Roll, Clip ziehen = Slip, Alt + Clip = Slide. A beendet.":"Trim: drag an edge = ripple, Alt + edge = roll, drag a clip = slip, Alt + clip = slide. A exits.",
+"Für Roll muss direkt daneben ein Clip liegen.":"Roll needs a clip directly next to it.","Slip geht nur bei Video- und Tonclips.":"Slip only works with video and audio clips.",
+"Magnet an":"Snapping on","Magnet aus":"Snapping off","Trimmen (T) – Ripple, Roll, Slip und Slide":"Trim (T) – ripple, roll, slip and slide",
+"Klinge (B) – Klick auf einen Clip teilt ihn":"Blade (B) – click a clip to split it",
+"Farbräder":"Color wheels","Schatten":"Shadows","Mitteltöne":"Midtones","Lichter":"Highlights","Alles":"All","Gesamt (Helligkeit)":"Master (brightness)",
+"Puk ziehen verschiebt die Farbe, der Regler darunter die Helligkeit. Doppelklick setzt ein Rad zurück.":"Drag the puck to shift the colour, the slider below changes brightness. Double-click resets a wheel.",
+"Alle zurücksetzen":"Reset all","Übernehmen":"Apply","Scopes":"Scopes","Waveform":"Waveform","RGB-Parade":"RGB parade","Vektorskop":"Vectorscope","Histogramm":"Histogram","Schließen":"Close",
+"Wähle zuerst einen Video- oder Bild-Clip aus.":"Select a video or image clip first.","Lift, Gamma, Gain …":"Lift, gamma, gain …","Farbräder zurücksetzen":"Reset color wheels",
+"Hochpass (Rumpeln weg)":"High-pass (removes rumble)","Tiefpass (Zischen weg)":"Low-pass (removes hiss)","Noise Gate (leise Stellen stumm)":"Noise gate (mutes quiet parts)",
+"Kompressor":"Compressor","De-Esser (scharfe S-Laute)":"De-esser (harsh S sounds)","Verstärkung":"Gain","Limiter (Spitzen höchstens −1 dB)":"Limiter (peaks at most −1 dB)",
+"Kanalzug (Fairlight)":"Channel strip (Fairlight)","Aus":"Off",
+"Hoch-/Tiefpass, Kompressor, Verstärkung und Limiter hörst du schon in der Vorschau, Gate und De-Esser beim Export.":"High/low-pass, compressor, gain and limiter can be heard in the preview, gate and de-esser in the export.",
+"Lautheit":"Loudness","Nicht angleichen":"Don't match","−14 LUFS (YouTube, TikTok, Spotify)":"−14 LUFS (YouTube, TikTok, Spotify)","−16 LUFS (Podcast, Apple)":"−16 LUFS (podcast, Apple)",
+"−23 LUFS (Fernsehen, EBU R128)":"−23 LUFS (TV, EBU R128)","−24 LUFS (Fernsehen USA)":"−24 LUFS (US TV)","Lautheit messen":"Measure loudness","Wird gemessen …":"Measuring …",
+"Integriert":"Integrated","Spitze":"Peak","Ziel":"Target","Messen fehlgeschlagen: ":"Measuring failed: ",
+"Lautheit wird gemessen …":"Measuring loudness …","Zum Messen fehlt noch ffmpeg. Richte es zuerst ein.":"ffmpeg is still missing for measuring. Set it up first.",
+"Farbsaum entfernen (Spill)":"Remove colour spill","Verwackeln ausgleichen (beim Export, in zwei Durchgängen)":"Stabilise shaky footage (on export, in two passes)",
+})

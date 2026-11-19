@@ -130,6 +130,29 @@ type Clip struct {
 	EqHigh float64 `json:"eqHigh,omitempty"`
 	Voice  string  `json:"voice,omitempty"`
 	Duck   bool    `json:"duck,omitempty"`
+	// Resolve-Funktionen: Farbräder, Tonbearbeitung (Fairlight), Spill-Unterdrückung
+	Wheels *Wheels  `json:"wheels,omitempty"`
+	Audio  *AudioFx `json:"audio,omitempty"`
+	Spill  float64  `json:"spill,omitempty"`
+}
+
+// Wheels: Farbräder wie in Resolve, je [Rot, Grün, Blau, Gesamt] (etwa −1 … 1).
+type Wheels struct {
+	Lift   [4]float64 `json:"lift"`
+	Gamma  [4]float64 `json:"gamma"`
+	Gain   [4]float64 `json:"gain"`
+	Offset [4]float64 `json:"offset"`
+}
+
+// AudioFx: Tonbearbeitung je Clip (wie Fairlight).
+type AudioFx struct {
+	HPF   float64 `json:"hpf,omitempty"`   // Hochpass in Hz (Brummen/Rumpeln weg)
+	LPF   float64 `json:"lpf,omitempty"`   // Tiefpass in Hz
+	Gate  float64 `json:"gate,omitempty"`  // Noise Gate, Schwelle in dB (z. B. -45)
+	Comp  float64 `json:"comp,omitempty"`  // Kompressor-Stärke 0 … 1
+	DeEss float64 `json:"deess,omitempty"` // De-Esser 0 … 1
+	Limit bool    `json:"limit,omitempty"` // Limiter bei −1 dB
+	Gain  float64 `json:"gain,omitempty"`  // Verstärkung in dB
 }
 
 // Mask: sichtbarer Bereich eines Clips (Mitte X/Y und Größe W/H als Anteil des Clipbildes).
@@ -664,6 +687,7 @@ func (a *App) routes(mux *http.ServeMux) {
 		os.RemoveAll(a.dir(id))
 		kit.JSON(w, map[string]bool{"ok": true})
 	})
+	mux.HandleFunc("/api/loudness", a.loudnessHandler)
 	mux.HandleFunc("/api/import", func(w http.ResponseWriter, r *http.Request) {
 		var rq struct {
 			ID    string

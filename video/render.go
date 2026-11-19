@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -239,17 +240,20 @@ func customExpr(c *Custom) string {
 }
 
 type Export struct {
-	Name    string  `json:"name"`
-	Dir     string  `json:"dir"`
-	Format  string  `json:"format"`          // mp4 | mov | mkv | webm | avi | gif | mp3 | wav
-	Res     int     `json:"res"`             // Höhe, 0 = wie Projekt
-	FPS     float64 `json:"fps"`             // 0 = wie Projekt
-	Quality string  `json:"quality"`         // high | rec | low
-	Start   float64 `json:"start,omitempty"` // Bereich: nur von Start bis End exportieren
-	End     float64 `json:"end,omitempty"`
-	Loud    bool    `json:"loud,omitempty"`   // Lautheit angleichen (-14 LUFS)
-	GPU     *bool   `json:"gpu,omitempty"`    // Grafikkarte nutzen (Standard: an)
-	Gentle  bool    `json:"gentle,omitempty"` // PC schonen: nur die Hälfte der Kerne
+	Name    string            `json:"name"`
+	Dir     string            `json:"dir"`
+	Format  string            `json:"format"`          // mp4 | mov | mkv | webm | avi | gif | mp3 | wav
+	Res     int               `json:"res"`             // Höhe, 0 = wie Projekt
+	FPS     float64           `json:"fps"`             // 0 = wie Projekt
+	Quality string            `json:"quality"`         // high | rec | low
+	Start   float64           `json:"start,omitempty"` // Bereich: nur von Start bis End exportieren
+	End     float64           `json:"end,omitempty"`
+	Loud    bool              `json:"loud,omitempty"` // Lautheit angleichen
+	LUFS    float64           `json:"lufs,omitempty"` // Ziel-Lautheit (Standard −14 LUFS)
+	ln      map[string]string // Messwerte des ersten Durchgangs (zweistufiges Angleichen)
+	stab    map[string]string // Bewegungsdaten je Clip für vid.stab (zweistufiges Stabilisieren)
+	GPU     *bool             `json:"gpu,omitempty"`    // Grafikkarte nutzen (Standard: an)
+	Gentle  bool              `json:"gentle,omitempty"` // PC schonen: nur die Hälfte der Kerne
 }
 
 type RenderJob struct {
@@ -530,6 +534,7 @@ func (a *App) build(p *Project, ex *Export, out string, tmpdir string) ([]string
 				if v := voiceFF(c.Voice); v != "" {
 					af = append(af, v)
 				}
+				af = append(af, audioFxFF(c.Audio)...)
 				if k := c.Kf["volume"]; len(k) > 0 {
 					af = append(af, "volume='"+kfExpr(k, "t")+"':eval=frame")
 				} else if math.Abs(c.Volume-1) > 1e-3 {
@@ -571,12 +576,17 @@ func (a *App) build(p *Project, ex *Export, out string, tmpdir string) ([]string
 				if c.Reverse && m.Kind == "video" {
 					rev = "reverse,"
 				}
-				if c.Smooth && sp < 0.99 && m.Kind == "video" {
-					vf = append(vf, fmt.Sprintf("[%d:v]%ssetpts=(PTS-STARTPTS)/%s,minterpolate=fps=%s:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1", idx, rev, f3(sp), f3(FPS)))
-				} else {
-					vf = append(vf, fmt.Sprintf("[%d:v]%ssetpts=(PTS-STARTPTS)/%s,fps=%s", idx, rev, f3(sp), f3(FPS)))
+				stabF := ""
+				if trf := ex.stab[c.ID]; c.Stab && m.Kind == "video" && trf != "" {
+					// zweite Stufe: Bewegung ausgleichen (vor Tempo und Umkehren, damit die Bilder zu den Messdaten passen)
+					stabF = "vidstabtransform=input=" + ffPath(trf) + ":smoothing=20:optzoom=1:interpol=bicubic,unsharp=5:5:0.6:3:3:0.3,"
 				}
-				if c.Stab && m.Kind == "video" {
+				if c.Smooth && sp < 0.99 && m.Kind == "video" {
+					vf = append(vf, fmt.Sprintf("[%d:v]%s%ssetpts=(PTS-STARTPTS)/%s,minterpolate=fps=%s:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1", idx, stabF, rev, f3(sp), f3(FPS)))
+				} else {
+					vf = append(vf, fmt.Sprintf("[%d:v]%s%ssetpts=(PTS-STARTPTS)/%s,fps=%s", idx, stabF, rev, f3(sp), f3(FPS)))
+				}
+				if c.Stab && m.Kind == "video" && stabF == "" {
 					vf = append(vf, "deshake")
 				}
 				mw, mh := m.W, m.H
@@ -649,6 +659,14 @@ func (a *App) build(p *Project, ex *Export, out string, tmpdir string) ([]string
 						sim = 0.3
 					}
 					vf = append(vf, fmt.Sprintf("format=rgba,colorkey=0x%s:%s:%s", strings.TrimPrefix(c.Key, "#"), f3(sim), f3(math.Max(0.01, c.KeyEdge))))
+					if c.Spill > 0.01 {
+						// Farbsaum (grüner/blauer Schimmer an Kanten) entfernen
+						kind := "green"
+						if r, g, b, ok := hexRGB(c.Key); ok && b > g && b > r {
+							kind = "blue"
+						}
+						vf = append(vf, fmt.Sprintf("despill=type=%s:mix=%s:expand=%s", kind, f3(0.5+0.5*math.Min(1, c.Spill)), f3(0.3*math.Min(1, c.Spill))))
+					}
 				}
 				if c.Enhance {
 					vf = append(vf, "eq=contrast=1.08:saturation=1.18,unsharp=3:3:0.4")
@@ -670,6 +688,9 @@ func (a *App) build(p *Project, ex *Export, out string, tmpdir string) ([]string
 				}
 				if math.Abs(c.Hue) > 0.5 {
 					vf = append(vf, "hue=h="+f3(c.Hue))
+				}
+				if wf := wheelsFF(c.Wheels); wf != "" {
+					vf = append(vf, wf)
 				}
 				if cv := curvesFF(c.Curves); cv != "" {
 					vf = append(vf, cv)
@@ -925,7 +946,21 @@ func (a *App) build(p *Project, ex *Export, out string, tmpdir string) ([]string
 	}
 	if ex.Loud && !noAudio && len(audios) > 0 {
 		// Lautheit angleichen wie bei YouTube, TikTok und Co. (-14 LUFS, Spitzen höchstens -1 dB)
-		g.add("[aout]loudnorm=I=-14:TP=-1:LRA=11,aresample=48000[aloud]")
+		lufs := ex.LUFS
+		if lufs > -5 || lufs < -40 {
+			lufs = -14
+		}
+		lra := 11.0
+		if lufs <= -20 {
+			lra = 15 // Fernsehen: mehr Dynamik erlaubt
+		}
+		extra := ""
+		if m := ex.ln; m != nil && m["input_i"] != "" && m["input_i"] != "-inf" {
+			// zweiter Durchgang: mit den gemessenen Werten genau auf das Ziel
+			extra = fmt.Sprintf(":measured_I=%s:measured_TP=%s:measured_LRA=%s:measured_thresh=%s:offset=%s:linear=true",
+				m["input_i"], m["input_tp"], m["input_lra"], m["input_thresh"], m["target_offset"])
+		}
+		g.add(fmt.Sprintf("[aout]loudnorm=I=%s:TP=-1:LRA=%s%s,aresample=48000[aloud]", f3(lufs), f3(lra), extra))
 		alab = "aloud"
 	}
 
@@ -1094,7 +1129,35 @@ func (a *App) exportHandler(w http.ResponseWriter, r *http.Request) {
 	a.mu.Lock()
 	a.render[p.ID] = j
 	a.mu.Unlock()
-	go a.runExport(j, args, total, tmpOut, out, tmpdir)
+	go func() {
+		// Stabilisieren: erste Stufe (Bewegung messen) für jeden Clip mit „Verwackeln ausgleichen“
+		if m := a.prepStab(&snap, j, tmpdir); len(m) > 0 {
+			ex.stab = m
+			a.mu.Lock()
+			if a2, t2, err := a.build(&snap, &ex, tmpOut, tmpdir); err == nil {
+				args, total = a2, t2
+			}
+			a.mu.Unlock()
+		}
+		// Lautheit genau angleichen: zuerst den Ton messen, dann mit den Messwerten rendern
+		if ex.Loud && ex.Format != "gif" && ex.Format != "png" && ex.Format != "jpg" {
+			a.mu.Lock()
+			j.Note = "Lautheit wird gemessen …"
+			a.mu.Unlock()
+			if m := a.measureLoudnorm(&snap, &ex, tmpdir); m != nil {
+				ex.ln = m
+				a.mu.Lock()
+				if a2, t2, err := a.build(&snap, &ex, tmpOut, tmpdir); err == nil {
+					args, total = a2, t2
+				}
+				a.mu.Unlock()
+			}
+			a.mu.Lock()
+			j.Note = ""
+			a.mu.Unlock()
+		}
+		a.runExport(j, args, total, tmpOut, out, tmpdir)
+	}()
 	kit.JSON(w, map[string]bool{"ok": true})
 }
 
@@ -1547,4 +1610,231 @@ func trimWindow(p *Project, s, e float64) {
 		}
 		t.Clips = keep
 	}
+}
+
+// wheelsFF: Farbräder als Tabelle je Farbkanal – dieselbe Formel wie in der Vorschau (color.js):
+// v = x·Gain + Lift·(1−x), dann v^Gamma, dann + Offset.
+func wheelsFF(w *Wheels) string {
+	if w == nil {
+		return ""
+	}
+	zero := true
+	for i := 0; i < 4; i++ {
+		if w.Lift[i] != 0 || w.Gamma[i] != 0 || w.Gain[i] != 0 || w.Offset[i] != 0 {
+			zero = false
+		}
+	}
+	if zero {
+		return ""
+	}
+	ch := func(i int) string {
+		L := 0.25 * (w.Lift[3] + w.Lift[i])
+		G := 1 + 0.5*(w.Gain[3]+w.Gain[i])
+		Gm := math.Exp(-0.7 * (w.Gamma[3] + w.Gamma[i]))
+		O := 0.25 * (w.Offset[3] + w.Offset[i])
+		return fmt.Sprintf("'clip(255*(pow(clip(val/255*%s+%s*(1-val/255),0,1),%s)+%s),0,255)'", f4(G), f4(L), f4(Gm), f4(O))
+	}
+	return "lutrgb=r=" + ch(0) + ":g=" + ch(1) + ":b=" + ch(2)
+}
+
+// audioFxFF: Tonbearbeitung je Clip wie in Fairlight (Reihenfolge wie im Kanalzug: Filter, Gate, De-Esser, Kompressor, Gain, Limiter).
+func audioFxFF(x *AudioFx) []string {
+	if x == nil {
+		return nil
+	}
+	var af []string
+	if x.HPF >= 20 {
+		af = append(af, fmt.Sprintf("highpass=f=%d:p=2", int(x.HPF)))
+	}
+	if x.LPF >= 1000 && x.LPF < 20000 {
+		af = append(af, fmt.Sprintf("lowpass=f=%d:p=2", int(x.LPF)))
+	}
+	if x.Gate < -1 {
+		thr := math.Pow(10, x.Gate/20)
+		af = append(af, fmt.Sprintf("agate=threshold=%s:ratio=4:attack=5:release=120:range=0.06", f4(thr)))
+	}
+	if x.DeEss > 0.01 {
+		af = append(af, fmt.Sprintf("deesser=i=%s:m=0.5:f=0.5:s=o", f3(math.Min(1, x.DeEss))))
+	}
+	if x.Comp > 0.01 {
+		k := math.Min(1, x.Comp)
+		thr := math.Pow(10, (-10-20*k)/20) // −10 … −30 dB
+		ratio := 2 + 6*k
+		makeup := math.Pow(10, (6*k)/20)
+		af = append(af, fmt.Sprintf("acompressor=threshold=%s:ratio=%s:attack=10:release=150:makeup=%s:knee=4", f4(thr), f3(ratio), f3(makeup)))
+	}
+	if math.Abs(x.Gain) > 0.05 {
+		af = append(af, fmt.Sprintf("volume=%sdB", f3(x.Gain)))
+	}
+	if x.Limit {
+		af = append(af, "alimiter=limit=0.891:attack=5:release=50:level=false")
+	}
+	return af
+}
+
+// loudnessHandler misst die Lautheit der ganzen Zeitleiste (wie die Lautheitsanzeige in Fairlight).
+func (a *App) loudnessHandler(w http.ResponseWriter, r *http.Request) {
+	if !a.eng.Ready() {
+		kit.Fail(w, 400, "Zum Messen fehlt noch ffmpeg. Richte es zuerst ein.")
+		return
+	}
+	a.mu.Lock()
+	p := a.projects[r.URL.Query().Get("id")]
+	if p == nil {
+		a.mu.Unlock()
+		kit.Fail(w, 404, "Projekt nicht gefunden.")
+		return
+	}
+	b, _ := json.Marshal(p)
+	a.mu.Unlock()
+	var snap Project
+	json.Unmarshal(b, &snap)
+	tmpdir, err := os.MkdirTemp("", "videoschnitt-lufs-")
+	if err != nil {
+		kit.Fail(w, 500, err.Error())
+		return
+	}
+	defer os.RemoveAll(tmpdir)
+	out := filepath.Join(tmpdir, "mix.wav")
+	ex := Export{Format: "wav"}
+	a.mu.Lock()
+	args, _, err := a.build(&snap, &ex, out, tmpdir)
+	a.mu.Unlock()
+	if err != nil {
+		kit.Fail(w, 400, err.Error())
+		return
+	}
+	if o, err := a.cmd(args...).CombinedOutput(); err != nil {
+		kit.Fail(w, 500, "Der Ton ließ sich nicht berechnen: "+lastLine(string(o)))
+		return
+	}
+	o, _ := a.cmd("-hide_banner", "-nostats", "-i", out, "-af", "ebur128=peak=true", "-f", "null", "-").CombinedOutput()
+	s := string(o)
+	if i := strings.LastIndex(s, "Summary:"); i >= 0 {
+		s = s[i:]
+	}
+	num := func(re string) float64 {
+		m := regexp.MustCompile(re).FindStringSubmatch(s)
+		if m == nil {
+			return 0
+		}
+		v, _ := strconv.ParseFloat(m[1], 64)
+		return v
+	}
+	kit.JSON(w, map[string]float64{
+		"i":    num(`I:\s+(-?[\d.]+) LUFS`),
+		"lra":  num(`LRA:\s+(-?[\d.]+) LU`),
+		"peak": num(`Peak:\s+(-?[\d.]+) dBFS`),
+	})
+}
+
+func lastLine(s string) string {
+	l := strings.Split(strings.TrimSpace(s), "\n")
+	return l[len(l)-1]
+}
+
+// measureLoudnorm rendert nur den Ton und misst ihn mit loudnorm (erster von zwei Durchgängen).
+func (a *App) measureLoudnorm(p *Project, ex *Export, tmpdir string) map[string]string {
+	wav := filepath.Join(tmpdir, "lautheit.wav")
+	e2 := Export{Format: "wav", Start: ex.Start, End: ex.End}
+	a.mu.Lock()
+	args, _, err := a.build(p, &e2, wav, tmpdir)
+	a.mu.Unlock()
+	if err != nil {
+		return nil
+	}
+	if err := a.cmd(args...).Run(); err != nil {
+		return nil
+	}
+	defer os.Remove(wav)
+	lufs := ex.LUFS
+	if lufs > -5 || lufs < -40 {
+		lufs = -14
+	}
+	lra := 11.0
+	if lufs <= -20 {
+		lra = 15
+	}
+	o, _ := a.cmd("-hide_banner", "-nostats", "-i", wav, "-af", fmt.Sprintf("loudnorm=I=%s:TP=-1:LRA=%s:print_format=json", f3(lufs), f3(lra)), "-f", "null", "-").CombinedOutput()
+	s := string(o)
+	i, k := strings.LastIndex(s, "{"), strings.LastIndex(s, "}")
+	if i < 0 || k < i {
+		return nil
+	}
+	m := map[string]string{}
+	if json.Unmarshal([]byte(s[i:k+1]), &m) != nil {
+		return nil
+	}
+	return m
+}
+
+func hexRGB(h string) (r, g, b int, ok bool) {
+	h = strings.TrimPrefix(h, "#")
+	if len(h) != 6 {
+		return 0, 0, 0, false
+	}
+	v, err := strconv.ParseUint(h, 16, 32)
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	return int(v >> 16 & 255), int(v >> 8 & 255), int(v & 255), true
+}
+
+var vidstabOK *bool
+
+// hasVidstab prüft einmal, ob das installierte ffmpeg vid.stab kann.
+func (a *App) hasVidstab() bool {
+	if vidstabOK != nil {
+		return *vidstabOK
+	}
+	o, _ := a.cmd("-hide_banner", "-filters").Output()
+	ok := strings.Contains(string(o), "vidstabdetect")
+	vidstabOK = &ok
+	return ok
+}
+
+// prepStab misst für jeden zu stabilisierenden Clip die Kamerabewegung (vid.stab, erste Stufe).
+func (a *App) prepStab(p *Project, j *RenderJob, tmpdir string) map[string]string {
+	var list []*Clip
+	for _, t := range p.Tracks {
+		for _, c := range t.Clips {
+			if c.Stab && c.Type == "media" {
+				list = append(list, c)
+			}
+		}
+	}
+	if len(list) == 0 || !a.hasVidstab() {
+		return nil
+	}
+	out := map[string]string{}
+	for n, c := range list {
+		var m *Media
+		for _, x := range p.Media {
+			if x.ID == c.MediaID {
+				m = x
+			}
+		}
+		if m == nil || m.Kind != "video" || c.Out <= c.In {
+			continue
+		}
+		a.mu.Lock()
+		stopped := j.stop
+		j.Note = fmt.Sprintf("Bewegung wird gemessen (%d von %d) …", n+1, len(list))
+		a.mu.Unlock()
+		if stopped {
+			return nil
+		}
+		trf := filepath.Join(tmpdir, "stab-"+c.ID+".trf")
+		cmd := a.cmd("-hide_banner", "-nostdin", "-ss", f3(c.In), "-t", f3(c.Out-c.In), "-i", m.Path, "-an",
+			"-vf", "vidstabdetect=shakiness=6:accuracy=12:result="+ffPath(trf), "-f", "null", "-")
+		if err := cmd.Run(); err == nil {
+			if st, err := os.Stat(trf); err == nil && st.Size() > 0 {
+				out[c.ID] = trf
+			}
+		}
+	}
+	a.mu.Lock()
+	j.Note = ""
+	a.mu.Unlock()
+	return out
 }

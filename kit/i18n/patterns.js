@@ -3,6 +3,7 @@ const PAT=[
 [/^Version (\S+) ist bereit$/,'Version $1 is ready'],[/^GitHub: (.+)$/,'GitHub: $1'],[/^Version (\S+)$/,'Version $1'],
 [/^· installiert ist (.+)$/,'· installed: $1'],[/^Heute um (.+)$/,'Today at $1'],[/^Morgen um (.+)$/,'Tomorrow at $1'],[/^Update geplant: (.+)\.$/,(m,a)=>'Update scheduled: '+a.replace(/^Heute um /,'today at ').replace(/^Morgen um /,'tomorrow at ')+'.'],
 [/^Nummer (\d+)$/,'Number $1'],
+[/^Bewegung wird gemessen \((\d+) von (\d+)\) …$/,"Measuring camera motion ($1 of $2) …"],
 [/^(Strg|Umschalt|Alt\+|Pos1|Entf)[^.!?]{0,30}$/,m=>m.replace(/Strg/g,'Ctrl').replace(/Umschalt/g,'Shift').replace(/Entf/g,'Del').replace(/Pos1/g,'Home').replace(/Ende/g,'End').replace(/Leertaste/g,'Space')],
 [/^(\d+) von (\d+)$/,'$1 of $2'],
 [/^vor (\d+) Min\.( · .+)?$/,(m,a,b)=>a+' min ago'+tail(b)],[/^vor (\d+) Std\.( · .+)?$/,(m,a,b)=>a+' h ago'+tail(b)],[/^vor (\d+) Tagen( · .+)?$/,(m,a,b)=>a+' days ago'+tail(b)],
