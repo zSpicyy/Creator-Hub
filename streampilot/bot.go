@@ -358,8 +358,15 @@ func (b *Bot) onMessage(m ChatMsg) {
 		return
 	}
 	for _, c := range commands() {
+		if !gBool("cmdOn") {
+			break
+		}
 		for _, f := range c.Full {
 			if f == word {
+				// Songwünsche komplett aus: alle Musik-Befehle schweigen, auch für Mods
+				if c.Group != "tts" && !gBool("srFeat") {
+					return
+				}
 				if !c.On || !levelOK(c.Level, level, uid) {
 					return
 				}

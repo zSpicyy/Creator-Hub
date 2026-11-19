@@ -213,8 +213,10 @@ func (b *Bot) handleOwn(m ChatMsg, word, arg string, level int, uid string) bool
 	d := ownLoad()
 	ownMu.Unlock()
 	mod := level >= LvlMod
-	// eingebaute Extras
+	// eingebaute Extras (ganzer Bereich abschaltbar)
+	extra := gBool("extraOn")
 	switch {
+	case !extra:
 	case d.Builtin["quote"] && matchName(word, "quote, zitat"):
 		if len(d.Quotes) == 0 {
 			b.chat.Say(tr("Noch keine Zitate gespeichert.", "No quotes saved yet."))
@@ -287,7 +289,10 @@ func (b *Bot) handleOwn(m ChatMsg, word, arg string, level int, uid string) bool
 		}
 		return true
 	}
-	// eigene Befehle
+	// eigene Befehle (ganzer Bereich abschaltbar)
+	if !gBool("ownOn") {
+		return false
+	}
 	for i, c := range d.Cmds {
 		if !c.On || !matchName(word, c.Names) {
 			continue
@@ -388,7 +393,7 @@ func (b *Bot) timerLoop() {
 		if !run {
 			return
 		}
-		if b.chat == nil || !b.chat.Joined {
+		if b.chat == nil || !b.chat.Joined || !gBool("timerOn") {
 			continue
 		}
 		ownMu.Lock()
