@@ -71,7 +71,7 @@ main{flex:1;overflow:auto;padding:26px 28px 60px}
 .btn.ghost:hover{background:var(--rule2)}
 .btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
 .btn:disabled{opacity:.45;cursor:default}
-input[type=text],input[type=url],input[type=password],input[type=number],input[type=datetime-local],input[type=month],input:not([type]),select,textarea{border:1px solid var(--rule);background:var(--paper);border-radius:10px;padding:8px 11px;width:100%;min-width:0}
+input[type=text],input[type=url],input[type=password],input[type=number],input[type=datetime-local],input[type=month],input[type=date],input[type=time],input:not([type]),select,textarea{border:1px solid var(--rule);background:var(--paper);border-radius:10px;padding:8px 11px;width:100%;min-width:0}
 textarea{resize:vertical}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-soft)}
 label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink2);font-weight:600}
@@ -224,6 +224,10 @@ code{background:var(--rule2);padding:1px 6px;border-radius:5px;font-size:12.5px}
 header{gap:14px!important}
 @media (max-width:1320px){.brand span.bt{display:none}nav.tabs button{padding:7px 9px!important;font-size:13.5px!important}}
 @media (max-width:1120px){#accTxt{font-size:0}#accTxt::before{content:"Konten";font-size:14px}html[lang=en] #accTxt::before{content:"Accounts"}}
+.whenbox{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;background:var(--paper)}
+.seg2{display:inline-flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;background:var(--sheet)}
+.seg2 button{border:0;background:none;padding:7px 16px;font-weight:600;color:var(--ink2)}
+.seg2 button+button{border-left:1px solid var(--rule)}.seg2 button.on{background:var(--ink);color:var(--sheet)}
 </style>
 <link rel="stylesheet" href="/kit/polish.css">
 </head>
