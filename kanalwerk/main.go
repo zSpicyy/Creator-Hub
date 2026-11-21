@@ -1,4 +1,4 @@
-// Kanalwerk: Uploads planen, Statistiken von YouTube und Twitch, beste Zeiten, Kanal-Vergleich,
+// Kanalwerk: Uploads planen (YouTube, TikTok, Facebook, Instagram), Statistiken aller Netzwerke, beste Zeiten, Kanal-Vergleich,
 // Link-Seite, Monatsbericht und automatische Ankündigungen. Werkzeug des Creator Hub und Einzel-App.
 package main
 

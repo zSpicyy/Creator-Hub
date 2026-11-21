@@ -40,7 +40,15 @@ func state() map[string]any {
 	yt := map[string]any{"clientId": d.YT.ClientID, "hasSecret": d.YT.Secret != "", "connected": d.YT.Refresh != "" || d.YT.Access != "",
 		"channel": d.YT.ChannelName, "channelId": d.YT.ChannelID, "avatar": d.YT.Avatar, "login": ys}
 	tw := map[string]any{"clientId": d.TW.ClientID, "connected": d.TW.Access != "", "login": d.TW.Login, "name": d.TW.Name, "avatar": d.TW.Avatar, "device": tl}
-	return map[string]any{"yt": yt, "tw": tw, "uploads": d.Uploads, "events": d.Events, "snaps": d.Snaps, "rivals": d.Rivals, "link": d.Link,
+	mp := metaPage(d)
+	var pages []map[string]string
+	for _, p := range d.Meta.Pages {
+		pages = append(pages, map[string]string{"id": p.ID, "name": p.Name, "ig": p.IGName})
+	}
+	meta := map[string]any{"appId": d.Meta.AppID, "hasSecret": d.Meta.Secret != "", "connected": d.Meta.Token != "", "name": d.Meta.Name, "pages": pages,
+		"pageId": mp.ID, "page": mp.Name, "ig": mp.IGName, "igPic": mp.IGPic, "login": getLogin("meta"), "redirect": metaRedir}
+	tt := map[string]any{"clientKey": d.TT.ClientKey, "hasSecret": d.TT.Secret != "", "connected": d.TT.Access != "", "name": d.TT.Name, "avatar": d.TT.Avatar, "login": getLogin("tt"), "redirect": ttRedir}
+	return map[string]any{"meta": meta, "tt": tt, "posts": d.Posts, "heatIG": heatPosts(d, "ig"), "heatFB": heatPosts(d, "fb"), "heatTT": heatPosts(d, "tt"), "yt": yt, "tw": tw, "uploads": d.Uploads, "events": d.Events, "snaps": d.Snaps, "rivals": d.Rivals, "link": d.Link,
 		"ann": d.Ann, "videos": d.Videos, "vods": d.VODs, "days": d.Days, "stats": d.Stats, "fetched": d.Fetched, "tourDone": d.TourDone,
 		"heatYT": heatYT(d), "heatTW": heatTW(d), "lang": map[bool]string{true: "de", false: "en"}[isDE()]}
 }
@@ -103,6 +111,78 @@ func routes(mux *http.ServeMux) {
 		twLogin.Unlock()
 		writeJSON(w, state())
 	})
+	mux.HandleFunc("/api/meta/creds", func(w http.ResponseWriter, r *http.Request) {
+		var in struct{ AppID, Secret string }
+		_ = body(r, &in)
+		edit(func(d *Data) {
+			d.Meta.AppID = strings.TrimSpace(in.AppID)
+			if in.Secret != "" {
+				d.Meta.Secret = strings.TrimSpace(in.Secret)
+			}
+		})
+		writeJSON(w, state())
+	})
+	mux.HandleFunc("/api/meta/login", func(w http.ResponseWriter, r *http.Request) {
+		if err := metaStartLogin(); err != nil {
+			fail(w, err.Error())
+			return
+		}
+		writeJSON(w, state())
+	})
+	mux.HandleFunc("/api/meta/page", func(w http.ResponseWriter, r *http.Request) {
+		var in struct{ ID string }
+		_ = body(r, &in)
+		edit(func(d *Data) { d.Meta.PageID = in.ID })
+		writeJSON(w, state())
+	})
+	mux.HandleFunc("/api/meta/logout", func(w http.ResponseWriter, r *http.Request) {
+		edit(func(d *Data) {
+			id, sec := d.Meta.AppID, d.Meta.Secret
+			d.Meta = MetaAuth{AppID: id, Secret: sec, Pages: []MetaPage{}}
+			keep := []Post{}
+			for _, p := range d.Posts {
+				if p.Net == "tt" {
+					keep = append(keep, p)
+				}
+			}
+			d.Posts = keep
+		})
+		setLogin("meta", "")
+		writeJSON(w, state())
+	})
+	mux.HandleFunc("/api/tt/creds", func(w http.ResponseWriter, r *http.Request) {
+		var in struct{ ClientKey, Secret string }
+		_ = body(r, &in)
+		edit(func(d *Data) {
+			d.TT.ClientKey = strings.TrimSpace(in.ClientKey)
+			if in.Secret != "" {
+				d.TT.Secret = strings.TrimSpace(in.Secret)
+			}
+		})
+		writeJSON(w, state())
+	})
+	mux.HandleFunc("/api/tt/login", func(w http.ResponseWriter, r *http.Request) {
+		if err := ttStartLogin(); err != nil {
+			fail(w, err.Error())
+			return
+		}
+		writeJSON(w, state())
+	})
+	mux.HandleFunc("/api/tt/logout", func(w http.ResponseWriter, r *http.Request) {
+		edit(func(d *Data) {
+			k, sec := d.TT.ClientKey, d.TT.Secret
+			d.TT = TTAuth{ClientKey: k, Secret: sec}
+			keep := []Post{}
+			for _, p := range d.Posts {
+				if p.Net != "tt" {
+					keep = append(keep, p)
+				}
+			}
+			d.Posts = keep
+		})
+		setLogin("tt", "")
+		writeJSON(w, state())
+	})
 	mux.HandleFunc("/api/open", func(w http.ResponseWriter, r *http.Request) {
 		var in struct{ URL string }
 		_ = body(r, &in)
@@ -135,6 +215,10 @@ func routes(mux *http.ServeMux) {
 			return
 		}
 		u.ID, u.Status, u.Created, u.Progress, u.Error, u.VideoID = uid(), "wait", time.Now().Unix(), 0, "", ""
+		u.TState = map[string]TState{}
+		for _, n := range targetsOf(u) {
+			u.TState[n] = TState{Status: "wait"}
+		}
 		edit(func(d *Data) { d.Uploads = append(d.Uploads, u) })
 		writeJSON(w, state())
 	})
@@ -150,7 +234,12 @@ func routes(mux *http.ServeMux) {
 				switch in.Do {
 				case "retry":
 					if u.Status == "error" {
-						u.Status, u.Error, u.Progress = "wait", "", 0
+						u.Status, u.Error = "wait", ""
+						for k, t := range u.TState {
+							if t.Status == "error" {
+								u.TState[k] = TState{Status: "wait"}
+							}
+						}
 					}
 				case "remove":
 					if u.Status != "uploading" {

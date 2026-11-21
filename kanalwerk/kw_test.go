@@ -58,7 +58,7 @@ func TestUploadResumable(t *testing.T) {
 	defer srv.Close()
 	ytUploadBase = srv.URL
 	at := time.Now().Add(48 * time.Hour).Unix()
-	id, err := doUpload(Upload{ID: "x", File: vf, Title: "Test", Privacy: "public", PublishAt: at, Tags: "a, b"})
+	id, err := doUpload(Upload{ID: "x", File: vf, Title: "Test", Privacy: "public", PublishAt: at, Tags: "a, b"}, func(float64) {})
 	if err != nil || id != "abc123" {
 		t.Fatal(id, err)
 	}

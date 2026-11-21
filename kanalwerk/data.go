@@ -35,21 +35,26 @@ type TWAuth struct {
 }
 
 type Upload struct {
-	ID        string  `json:"id"`
-	File      string  `json:"file"`
-	Thumb     string  `json:"thumb"`
-	Title     string  `json:"title"`
-	Desc      string  `json:"desc"`
-	Tags      string  `json:"tags"`
-	Category  string  `json:"category"`
-	Privacy   string  `json:"privacy"`   // public | unlisted | private
-	PublishAt int64   `json:"publishAt"` // Unix-Sekunden; 0 = sofort
-	Kids      bool    `json:"kids"`
-	Status    string  `json:"status"` // wait | uploading | done | error
-	Progress  float64 `json:"progress"`
-	Error     string  `json:"error"`
-	VideoID   string  `json:"videoId"`
-	Created   int64   `json:"created"`
+	ID        string            `json:"id"`
+	File      string            `json:"file"`
+	Thumb     string            `json:"thumb"`
+	Title     string            `json:"title"`
+	Desc      string            `json:"desc"`
+	Tags      string            `json:"tags"`
+	Category  string            `json:"category"`
+	Privacy   string            `json:"privacy"`   // public | unlisted | private
+	PublishAt int64             `json:"publishAt"` // Unix-Sekunden; 0 = sofort
+	Kids      bool              `json:"kids"`
+	Status    string            `json:"status"` // wait | uploading | done | error
+	Progress  float64           `json:"progress"`
+	Error     string            `json:"error"`
+	VideoID   string            `json:"videoId"`
+	Created   int64             `json:"created"`
+	Targets   []string          `json:"targets"` // yt tt fb ig (leer = nur YouTube)
+	TState    map[string]TState `json:"tstate"`
+	TTPrivacy string            `json:"ttPrivacy"` // SELF_ONLY | MUTUAL_FOLLOW_FRIENDS | FOLLOWER_OF_CREATOR | PUBLIC_TO_EVERYONE
+	FBPublish bool              `json:"fbPublish"` // false = unveröffentlicht hochladen
+	IGPublish bool              `json:"igPublish"` // false = nur vorbereiten, nicht veröffentlichen
 }
 
 type CalEvent struct {
@@ -66,6 +71,9 @@ type Snap struct {
 	YTViews     int64  `json:"ytViews"`
 	YTVideos    int64  `json:"ytVideos"`
 	TWFollowers int64  `json:"twFollowers"`
+	IGFollowers int64  `json:"igFollowers"`
+	FBFollowers int64  `json:"fbFollowers"`
+	TTFollowers int64  `json:"ttFollowers"`
 }
 
 type RSnap struct {
@@ -156,6 +164,59 @@ type Data struct {
 	Stats    map[string]int64 `json:"stats"` // aktuelle Zahlen
 	Fetched  int64            `json:"fetched"`
 	TourDone bool             `json:"tourDone"`
+	Meta     MetaAuth         `json:"meta"`
+	TT       TTAuth           `json:"tt"`
+	Posts    []Post           `json:"posts"` // Beiträge von Instagram, Facebook, TikTok
+}
+
+type MetaPage struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Token  string `json:"token"`
+	IGID   string `json:"igId"`
+	IGName string `json:"igName"`
+	IGPic  string `json:"igPic"`
+}
+
+type MetaAuth struct {
+	AppID  string     `json:"appId"`
+	Secret string     `json:"secret"`
+	Token  string     `json:"token"`
+	Expiry int64      `json:"expiry"`
+	Name   string     `json:"name"`
+	Pages  []MetaPage `json:"pages"`
+	PageID string     `json:"pageId"` // gewählte Seite
+}
+
+type TTAuth struct {
+	ClientKey string `json:"clientKey"`
+	Secret    string `json:"secret"`
+	Access    string `json:"access"`
+	Refresh   string `json:"refresh"`
+	Expiry    int64  `json:"expiry"`
+	OpenID    string `json:"openId"`
+	Name      string `json:"name"`
+	Avatar    string `json:"avatar"`
+}
+
+type Post struct {
+	Net      string `json:"net"` // ig | fb | tt
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Thumb    string `json:"thumb"`
+	At       int64  `json:"at"`
+	Views    int64  `json:"views"`
+	Likes    int64  `json:"likes"`
+	Comments int64  `json:"comments"`
+	URL      string `json:"url"`
+}
+
+type TState struct {
+	Status   string  `json:"status"` // wait | uploading | done | error | skip
+	Progress float64 `json:"progress"`
+	Error    string  `json:"error"`
+	ID       string  `json:"id"`
+	Note     string  `json:"note"`
 }
 
 var (
@@ -203,6 +264,12 @@ func defaults(d *Data) {
 	}
 	if d.VODs == nil {
 		d.VODs = []VOD{}
+	}
+	if d.Posts == nil {
+		d.Posts = []Post{}
+	}
+	if d.Meta.Pages == nil {
+		d.Meta.Pages = []MetaPage{}
 	}
 	if d.Days == nil {
 		d.Days = []DayStat{}

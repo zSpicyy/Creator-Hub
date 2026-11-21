@@ -29,6 +29,16 @@ func refreshAll() map[string]string {
 			errs["tw"] = err.Error()
 		}
 	}
+	if d.Meta.Token != "" {
+		if err := refreshMeta(); err != nil {
+			errs["meta"] = err.Error()
+		}
+	}
+	if d.TT.Access != "" {
+		if err := refreshTikTok(); err != nil {
+			errs["tt"] = err.Error()
+		}
+	}
 	refreshRivals()
 	takeSnap()
 	edit(func(d *Data) { d.Fetched = time.Now().Unix() })
@@ -129,7 +139,8 @@ func refreshTwitch() error {
 // takeSnap merkt sich einmal am Tag die Gesamtzahlen (für Wachstumskurven).
 func takeSnap() {
 	edit(func(d *Data) {
-		sn := Snap{Day: today(), YTSubs: d.Stats["ytSubs"], YTViews: d.Stats["ytViews"], YTVideos: d.Stats["ytVideos"], TWFollowers: d.Stats["twFollowers"]}
+		sn := Snap{Day: today(), YTSubs: d.Stats["ytSubs"], YTViews: d.Stats["ytViews"], YTVideos: d.Stats["ytVideos"], TWFollowers: d.Stats["twFollowers"],
+			IGFollowers: d.Stats["igFollowers"], FBFollowers: d.Stats["fbFollowers"], TTFollowers: d.Stats["ttFollowers"]}
 		if n := len(d.Snaps); n > 0 && d.Snaps[n-1].Day == sn.Day {
 			d.Snaps[n-1] = sn
 		} else {
@@ -246,6 +257,28 @@ func heatYT(d Data) Heat {
 	return bestTimes(it)
 }
 
+// heatPosts: beste Zeiten aus Instagram-, Facebook- oder TikTok-Beiträgen (bewertet nach Likes + Kommentaren bzw. Aufrufen)
+func heatPosts(d Data, net string) Heat {
+	var it []struct {
+		At    int64
+		Views int64
+	}
+	for _, p := range d.Posts {
+		if p.Net != net || p.At == 0 || time.Since(time.Unix(p.At, 0)) < 24*time.Hour {
+			continue
+		}
+		v := p.Views
+		if net != "tt" || v == 0 {
+			v = p.Likes + 3*p.Comments
+		}
+		it = append(it, struct {
+			At    int64
+			Views int64
+		}{p.At, v})
+	}
+	return bestTimes(it)
+}
+
 func heatTW(d Data) Heat {
 	var it []struct {
 		At    int64
@@ -268,7 +301,7 @@ func parseRival(kind, in string) string {
 	if i := strings.LastIndex(in, "/"); i >= 0 {
 		in = in[i+1:]
 	}
-	if kind == "tw" {
+	if kind == "tw" || kind == "ig" {
 		return strings.ToLower(strings.TrimPrefix(in, "@"))
 	}
 	if strings.HasPrefix(in, "UC") && len(in) == 24 {
@@ -307,6 +340,20 @@ func refreshRivals() {
 			name, ext = s(sn["title"]), s(it[0]["id"])
 			avatar = s(obj(obj(sn["thumbnails"])["default"])["url"])
 			subs, views = int64(num(st["subscriberCount"])), int64(num(st["viewCount"]))
+		case "ig":
+			p := metaPage(view())
+			if p.IGID == "" {
+				errS = tr("Für Instagram-Vergleiche muss dein Instagram verbunden sein.", "Instagram comparisons need your Instagram connected.")
+				break
+			}
+			m, err := graph("GET", "/"+p.IGID, p.Token, url.Values{"fields": {"business_discovery.username(" + strings.TrimPrefix(r.Handle, "@") + "){username,name,profile_picture_url,followers_count,media_count}"}})
+			if err != nil {
+				errS = err.Error()
+				break
+			}
+			bd := obj(m["business_discovery"])
+			name, avatar, ext = firstOf(bd["name"], bd["username"]), s(bd["profile_picture_url"]), s(bd["username"])
+			subs, views = int64(num(bd["followers_count"])), int64(num(bd["media_count"]))
 		case "tw":
 			m, err := helix("GET", "/users?login="+url.QueryEscape(r.Handle), nil)
 			if err != nil {

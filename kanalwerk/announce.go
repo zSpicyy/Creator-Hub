@@ -152,7 +152,7 @@ func statsLoop() {
 	time.Sleep(8 * time.Second)
 	for {
 		d := view()
-		if time.Since(time.Unix(d.Fetched, 0)) > 6*time.Hour && (d.YT.Refresh != "" || d.TW.Access != "") {
+		if time.Since(time.Unix(d.Fetched, 0)) > 6*time.Hour && (d.YT.Refresh != "" || d.TW.Access != "" || d.Meta.Token != "" || d.TT.Access != "") {
 			refreshAll()
 		}
 		time.Sleep(30 * time.Minute)

@@ -29,41 +29,147 @@ func setUp(id string, f func(u *Upload)) {
 	})
 }
 
-// uploadLoop arbeitet die Warteschlange ab.
+func targetsOf(u Upload) []string {
+	if len(u.Targets) == 0 {
+		return []string{"yt"}
+	}
+	return u.Targets
+}
+
+func setT(id, net string, f func(t *TState)) {
+	setUp(id, func(x *Upload) {
+		if x.TState == nil {
+			x.TState = map[string]TState{}
+		}
+		t := x.TState[net]
+		f(&t)
+		x.TState[net] = t
+		// Gesamtstand aus den Zielen
+		done, errs, run := 0, 0, false
+		var sum float64
+		for _, n := range targetsOf(*x) {
+			s := x.TState[n]
+			switch s.Status {
+			case "done", "skip":
+				done++
+				sum++
+			case "error":
+				errs++
+				sum++
+			case "uploading":
+				run = true
+				sum += s.Progress
+			}
+		}
+		all := len(targetsOf(*x))
+		x.Progress = sum / float64(all)
+		switch {
+		case run:
+			x.Status = "uploading"
+		case done+errs == all && errs > 0:
+			x.Status = "error"
+		case done == all:
+			x.Status = "done"
+		default:
+			x.Status = "wait"
+		}
+		var msgs []string
+		for _, n := range targetsOf(*x) {
+			if e := x.TState[n].Error; e != "" {
+				msgs = append(msgs, netName(n)+": "+e)
+			}
+		}
+		x.Error = strings.Join(msgs, " · ")
+		if y := x.TState["yt"]; y.ID != "" {
+			x.VideoID = y.ID
+		}
+	})
+}
+
+func netName(n string) string {
+	return map[string]string{"yt": "YouTube", "tt": "TikTok", "fb": "Facebook", "ig": "Instagram"}[n]
+}
+
+func connected(d Data, n string) bool {
+	switch n {
+	case "yt":
+		return d.YT.Refresh != "" || d.YT.Access != ""
+	case "tt":
+		return d.TT.Access != ""
+	case "fb":
+		return metaPage(d).Token != ""
+	case "ig":
+		return metaPage(d).IGID != ""
+	}
+	return false
+}
+
+// uploadLoop arbeitet die Warteschlange ab: jedes Video nacheinander zu allen gewählten Netzwerken.
 func uploadLoop() {
 	for {
 		time.Sleep(3 * time.Second)
 		d := view()
-		var next *Upload
-		for i := range d.Uploads {
-			if d.Uploads[i].Status == "wait" {
-				next = &d.Uploads[i]
-				break
+		for _, u := range d.Uploads {
+			if u.Status != "wait" {
+				continue
+			}
+			for _, n := range targetsOf(u) {
+				st := u.TState[n]
+				if st.Status == "done" || st.Status == "error" || st.Status == "skip" {
+					continue
+				}
+				if !connected(d, n) {
+					if st.Note == "" {
+						setT(u.ID, n, func(t *TState) { t.Note = tr("wartet auf Verbindung", "waiting for connection") })
+					}
+					continue
+				}
+				// TikTok und Instagram können nicht selbst zum Termin veröffentlichen: Kanalwerk lädt dann zum Termin hoch.
+				if (n == "tt" || n == "ig") && u.PublishAt > time.Now().Unix() {
+					setT(u.ID, n, func(t *TState) { t.Note = tr("wird zum Termin hochgeladen", "uploads at the scheduled time") })
+					continue
+				}
+				runTarget(u, n)
 			}
 		}
-		if next == nil || d.YT.Refresh == "" && d.YT.Access == "" {
-			continue
-		}
-		u := *next
-		setUp(u.ID, func(x *Upload) { x.Status, x.Error, x.Progress = "uploading", "", 0 })
-		vid, err := doUpload(u)
-		if err != nil {
-			setUp(u.ID, func(x *Upload) { x.Status, x.Error = "error", err.Error() })
-			continue
-		}
-		setUp(u.ID, func(x *Upload) { x.Status, x.VideoID, x.Progress = "done", vid, 1 })
-		if u.Thumb != "" {
-			if err := setThumb(vid, u.Thumb); err != nil {
-				setUp(u.ID, func(x *Upload) {
-					x.Error = tr("Video ist oben, aber das Thumbnail ging nicht: ", "Video uploaded, but the thumbnail failed: ") + err.Error()
-				})
-			}
-		}
-		go refreshYouTube()
 	}
 }
 
-func doUpload(u Upload) (string, error) {
+func runTarget(u Upload, n string) {
+	setT(u.ID, n, func(t *TState) { t.Status, t.Error, t.Note, t.Progress = "uploading", "", "", 0 })
+	prog := func(p float64) { setT(u.ID, n, func(t *TState) { t.Progress = p }) }
+	var id, note string
+	var err error
+	switch n {
+	case "yt":
+		id, err = doUpload(u, prog)
+		if err == nil && u.Thumb != "" {
+			if e := setThumb(id, u.Thumb); e != nil {
+				note = tr("Thumbnail ging nicht: ", "Thumbnail failed: ") + e.Error()
+			}
+		}
+		if err == nil {
+			go refreshYouTube()
+		}
+	case "tt":
+		id, note, err = ttUpload(u, prog)
+	case "fb":
+		id, note, err = fbUpload(u, prog)
+	case "ig":
+		id, note, err = igUpload(u, prog)
+	}
+	if err != nil {
+		msg := err.Error()
+		if strings.Contains(msg, "dial tcp") || strings.Contains(msg, "no such host") || strings.Contains(msg, "Forbidden (agent proxy") || strings.Contains(msg, "timeout") {
+			msg = tr("Keine Verbindung zu ", "No connection to ") + netName(n) + tr(". Prüfe deine Internetverbindung und versuch es nochmal.", ". Check your internet connection and try again.")
+		}
+		setT(u.ID, n, func(t *TState) { t.Status, t.Error = "error", msg })
+		return
+	}
+	setT(u.ID, n, func(t *TState) { t.Status, t.ID, t.Note, t.Progress = "done", id, note, 1 })
+}
+
+func doUpload(u Upload, prog func(float64)) (string, error) {
 	upMu.Lock()
 	defer upMu.Unlock()
 	f, err := os.Open(u.File)
@@ -143,7 +249,7 @@ func doUpload(u Upload) (string, error) {
 			}
 			retries = 0
 			p := float64(off) / float64(size)
-			setUp(u.ID, func(x *Upload) { x.Progress = p })
+			prog(p)
 		case r.StatusCode == 200 || r.StatusCode == 201:
 			m, err := ytJSON(r, nil)
 			if err != nil {
@@ -179,6 +285,17 @@ func setThumb(videoID, path string) error {
 }
 
 func validUpload(u Upload) error {
+	if len(targetsOf(u)) == 0 {
+		return fmt.Errorf("%s", tr("Wähle mindestens ein Netzwerk.", "Choose at least one network."))
+	}
+	for _, n := range targetsOf(u) {
+		if n != "yt" && n != "tt" && n != "fb" && n != "ig" {
+			return fmt.Errorf("bad target")
+		}
+		if (n == "tt" || n == "ig") && !strings.HasSuffix(strings.ToLower(u.File), ".mp4") && !strings.HasSuffix(strings.ToLower(u.File), ".mov") {
+			return fmt.Errorf("%s", tr("TikTok und Instagram nehmen nur MP4 oder MOV.", "TikTok and Instagram only accept MP4 or MOV."))
+		}
+	}
 	if strings.TrimSpace(u.File) == "" {
 		return fmt.Errorf("%s", tr("Wähle eine Videodatei.", "Choose a video file."))
 	}

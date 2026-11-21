@@ -592,3 +592,5 @@ EN.update({"Cyan, Magenta, Gelb und Schwarz: So mischt ein Drucker die Farbe.":"
 EN.update({"PNG, JPG oder GIF in jeder Größe, auch mehrere auf einmal":"PNG, JPG or GIF in any size, several at once too","Beliebig viele Dateien auf einmal. Sie werden gleichzeitig umgewandelt und lassen sich danach direkt herunterladen.":"Any number of files at once. They are converted at the same time and can be downloaded right after.","Fehler. Nochmal versuchen?":"Error. Try again?"})
 
 EN.update({"Uploads planen, Statistiken von YouTube und Twitch, beste Zeiten, Kanal-Vergleich, Link-Seite und Ankündigungen.":"Schedule uploads, YouTube and Twitch statistics, best times, channel comparison, link page and announcements."})
+
+EN.update({"Uploads für YouTube, TikTok, Instagram und Facebook planen, Statistiken aller Kanäle, beste Zeiten, Vergleich, Link-Seite und Ankündigungen.":"Schedule uploads for YouTube, TikTok, Instagram and Facebook, statistics for all channels, best times, comparison, link page and announcements."})
