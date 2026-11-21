@@ -167,7 +167,7 @@ func bestTimes(items []struct {
 	At    int64
 	Views int64
 }) Heat {
-	var h Heat
+	h := Heat{Top: []string{}} // nie null, sonst stürzt die Bericht-Seite ab
 	if len(items) == 0 {
 		return h
 	}
@@ -225,9 +225,9 @@ func bestTimes(items []struct {
 		}
 	}
 	sort.Slice(cells, func(i, j int) bool { return cells[i].v > cells[j].v })
-	names := strings.Split(tr("Mo,Di,Mi,Do,Fr,Sa,So", "Mon,Tue,Wed,Thu,Fri,Sat,Sun"), ",")
+	names := strings.Split(tr("Montag,Dienstag,Mittwoch,Donnerstag,Freitag,Samstag,Sonntag", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday"), ",")
 	for i := 0; i < len(cells) && i < 3; i++ {
-		h.Top = append(h.Top, fmt.Sprintf("%s %02d:00", names[cells[i].d], cells[i].h))
+		h.Top = append(h.Top, fmt.Sprintf(tr("%s, %d–%d Uhr", "%s, %d:00–%d:00"), names[cells[i].d], cells[i].h, (cells[i].h+1)%24))
 	}
 	return h
 }

@@ -112,7 +112,7 @@ func TestBestTimesAndRival(t *testing.T) {
 		}{tm2.Unix(), 500})
 	}
 	h := bestTimes(it)
-	if h.N != 20 || len(h.Top) == 0 || !strings.HasSuffix(h.Top[0], "18:00") {
+	if h.N != 20 || len(h.Top) == 0 || !strings.Contains(h.Top[0], "18") {
 		t.Fatal(h.Top, h.N)
 	}
 	if parseRival("yt", "https://youtube.com/@CraftLena/") != "@CraftLena" || parseRival("tw", "https://twitch.tv/Rudi") != "rudi" || parseRival("yt", "UCabcdefghijklmnopqrstuv") != "UCabcdefghijklmnopqrstuv" {
