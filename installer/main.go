@@ -39,6 +39,9 @@ type state struct {
 	Old     int           `json:"old"`     // Projekte einer früheren Installation (nur bei Neuinstallation)
 	AITools []ollama.User `json:"aiTools"` // Werkzeuge, die Ollama brauchen (Abfrage nach dem Kopieren)
 	AISize  string        `json:"aiSize"`
+	AINeed  string        `json:"aiNeed"`    // model | update | install
+	AIVer   string        `json:"aiVersion"` // schon vorhandenes Ollama
+	AIMin   string        `json:"aiMin"`
 }
 
 var aiAnswer = make(chan bool, 1)
@@ -154,7 +157,11 @@ func installMode(desktop, withAI bool) {
 		if len(need) == 0 {
 			return nil
 		}
-		set(func(s *state) { s.Phase, s.AITools, s.AISize = "askai", need, ollama.SizeText() })
+		all := ollama.NeedAll() // zuerst prüfen, was auf dem PC schon da ist
+		set(func(s *state) {
+			s.Phase, s.AITools, s.AINeed, s.AIVer, s.AIMin = "askai", need, all.Need, all.Version, all.Min
+			s.AISize = ollama.SizeFor(all.Need)
+		})
 		yes := <-aiAnswer
 		ollama.Answer("*", yes)
 		if !yes {

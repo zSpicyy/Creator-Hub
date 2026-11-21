@@ -510,7 +510,8 @@ func (a *App) routes(mux *http.ServeMux) {
 				asked = false
 			}
 		}
-		return map[string]any{"tools": need, "asked": asked, "size": ollama.SizeText(), "ai": ollama.P.Snapshot()}
+		all := ollama.NeedAll()
+		return map[string]any{"tools": need, "asked": asked, "size": ollama.SizeFor(all.Need), "need": all.Need, "version": all.Version, "min": all.Min, "ai": ollama.P.Snapshot()}
 	}
 	mux.HandleFunc("/api/ai/state", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, aiState()) })
 	mux.HandleFunc("/api/ai/decline", func(w http.ResponseWriter, r *http.Request) {

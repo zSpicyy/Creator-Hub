@@ -30,10 +30,16 @@ h1{margin:0 0 6px;font-size:22px}p{color:var(--muted);margin:0 0 16px}
 <script>
 const {$,esc,api}=Kit;let S=null,t=null;
 function view(){const b=$('#b');const ol=S.phase==='askai'||S.phase==='ollama';$('#pv').classList.toggle('ol',ol);$('#pvi').src=ol?'ollama.svg':'logo.svg';$('#pvi').alt=ol?'Ollama':'';
- if(S.phase==='askai'){b.innerHTML=`<h1>Lokale KI (Ollama) mit installieren?</h1><p>Diese Werkzeuge brauchen eine kleine KI, die nur auf deinem PC läuft:</p>
+ if(S.phase==='askai'){const nd=S.aiNeed;
+  const ttl=nd==='update'?'Ollama aktualisieren?':nd==='model'?'KI-Modell für Ollama laden?':'Lokale KI (Ollama) mit installieren?';
+  const intro=nd==='update'?`<span>Auf deinem PC ist schon Ollama installiert, aber eine ältere Version:</span> <b>${esc(S.aiVersion)}</b><span>. Diese Werkzeuge brauchen mindestens</span> <b>${esc(S.aiMin)}</b><span>:</span>`
+   :nd==='model'?`<span>Ollama ist schon auf deinem PC installiert und wird benutzt:</span> <b>${esc(S.aiVersion||'')}</b><span>. Es fehlt nur das KI-Modell für diese Werkzeuge:</span>`
+   :'<span>Diese Werkzeuge brauchen eine kleine KI, die nur auf deinem PC läuft:</span>';
+  const extra=nd==='update'?'<li>Die neue Version wird für Creator Hub dazugeladen. Dein vorhandenes Ollama bleibt unverändert.</li>':'';
+  b.innerHTML=`<h1>${ttl}</h1><p>${intro}</p>
   <ul class="ail">${(S.aiTools||[]).map(x=>`<li><b>${esc(x.name)}</b><small>${esc(x.purpose)}</small></li>`).join('')}</ul>
-  <ul class="facts"><li><span>Einmaliger Download:</span> <b>${esc(S.aiSize||'')}</b></li><li>Die KI startet nur, wenn du eines dieser Werkzeuge öffnest, und schließt sich automatisch, sobald du es wieder schließt.</li><li>Es wird nichts verschickt. Ohne KI funktionieren diese Werkzeuge nur teilweise. Du kannst sie später beim Öffnen nachinstallieren.</li></ul>
-  <div class="sp"></div><div class="btns"><button class="btn big" id="aino">Ablehnen</button><button class="btn primary big" id="aiyes">Akzeptieren und installieren</button></div>`;return}
+  <ul class="facts"><li><span>Einmaliger Download:</span> <b>${esc(S.aiSize||'')}</b></li>${extra}<li>Die KI startet nur, wenn du eines dieser Werkzeuge öffnest, und schließt sich automatisch, sobald du es wieder schließt.</li><li>Es wird nichts verschickt. Ohne KI funktionieren diese Werkzeuge nur teilweise. Du kannst sie später beim Öffnen nachinstallieren.</li></ul>
+  <div class="sp"></div><div class="btns"><button class="btn big" id="aino">Ablehnen</button><button class="btn primary big" id="aiyes">${nd==='update'?'Aktualisieren':nd==='model'?'Modell laden':'Akzeptieren und installieren'}</button></div>`;return}
  if(S.phase==='ollama'){b.innerHTML=`<h1>KI wird installiert …</h1><p>${esc(S.text||'')}</p><div class="bar"><i style="width:${Math.round((S.done||0)*100)}%"></i></div><small class="muted">${Math.round((S.done||0)*100)} %</small><div class="sp"></div>`;return}
  if(S.phase==='start')b.innerHTML=`<h1>Creator Hub installieren</h1><p>Alle Werkzeuge für Content Creator an einem Ort.</p>
   <label class="opt"><input type="checkbox" id="desk" checked>Verknüpfung auf dem Desktop</label>${S.old?`<label class="opt"><input type="checkbox" id="keepold"><span>Projekte einer früheren Installation behalten</span>&nbsp;(${S.old})</label>`:''}<div class="where">Wird installiert nach: ${esc(S.dir)}</div><div class="sp"></div><button class="btn primary big" id="go">Installieren</button>`;

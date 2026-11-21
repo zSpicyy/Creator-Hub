@@ -22,3 +22,5 @@ func killTree(pid int) {
 }
 
 func alive(pid int) bool { return syscall.Kill(pid, 0) == nil }
+
+func hidden(c *exec.Cmd) *exec.Cmd { return c }

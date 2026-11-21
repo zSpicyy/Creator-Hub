@@ -26,13 +26,15 @@ func setupAI() { ollama.Setup(aiModel(), true) }
 
 // ensureAIStarted: KI starten, wenn sie installiert ist (StreamPilot geöffnet → KI an).
 func ensureAIStarted() {
-	if ollama.Installed(aiModel()) || ollama.Bin() != "" {
+	if ollama.Installed(aiModel()) {
 		_ = ollama.Start()
 	}
 }
 
 func aiState() map[string]any {
 	u := ollama.UserByID("streampilot")
-	return map[string]any{"ai": ai.Snapshot(), "aiReady": aiReady(), "installed": ollama.Installed(aiModel()),
-		"asked": ollama.Asked("streampilot"), "purpose": u.Purpose, "size": ollama.SizeText()}
+	st := ollama.Check(aiModel()) // zuerst prüfen, was auf dem PC schon da ist
+	return map[string]any{"ai": ai.Snapshot(), "aiReady": aiReady(), "installed": st.Need == "",
+		"asked": ollama.Asked("streampilot"), "purpose": u.Purpose, "size": ollama.SizeFor(st.Need),
+		"need": st.Need, "version": st.Version, "min": st.Min}
 }

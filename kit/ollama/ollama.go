@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -52,8 +53,174 @@ func UserByID(id string) *User {
 	return nil
 }
 
+// MinVersion: älteres Ollama kann die Modelle nicht sicher laden.
+const MinVersion = "0.5.0"
+
 // SizeText: ungefährer Download (Ollama plus Modell).
 func SizeText() string { return kit.T("etwa 3 GB", "about 3 GB") }
+
+// SizeFor: Download je nach Bedarf (nur Modell oder Programm plus Modell).
+func SizeFor(need string) string {
+	if need == "model" {
+		return kit.T("etwa 2 GB", "about 2 GB")
+	}
+	return SizeText()
+}
+
+// Status beschreibt, was auf diesem PC schon da ist.
+type Status struct {
+	Found   bool   `json:"found"`   // Ollama ist installiert (eigenes oder schon vorhandenes)
+	Own     bool   `json:"own"`     // von Creator Hub geladen
+	Version string `json:"version"` // installierte Version
+	Min     string `json:"min"`
+	Need    string `json:"need"` // "" alles da | model | update | install
+}
+
+var verRe = regexp.MustCompile(`(\d+)\.(\d+)\.(\d+)`)
+
+// Version fragt das installierte Ollama nach seiner Version (ohne es zu starten).
+var (
+	verMu    sync.Mutex
+	verCache = map[string]string{} // Pfad+Änderungszeit -> Version
+)
+
+func Version(bin string) string {
+	if bin == "" {
+		return ""
+	}
+	key := bin
+	if st, err := os.Stat(bin); err == nil {
+		key += st.ModTime().String()
+	}
+	verMu.Lock()
+	v, ok := verCache[key]
+	verMu.Unlock()
+	if ok {
+		return v
+	}
+	v = version(bin)
+	if v != "" {
+		verMu.Lock()
+		verCache[key] = v
+		verMu.Unlock()
+	}
+	return v
+}
+
+func version(bin string) string {
+	cmd := hidden(exec.Command(bin, "--version"))
+	done := make(chan []byte, 1)
+	go func() { out, _ := cmd.CombinedOutput(); done <- out }()
+	select {
+	case out := <-done:
+		all := verRe.FindAllString(string(out), -1)
+		if len(all) > 0 {
+			return all[len(all)-1]
+		}
+	case <-time.After(8 * time.Second):
+		if cmd.Process != nil {
+			cmd.Process.Kill()
+		}
+	}
+	return ""
+}
+
+func runningVersion() string {
+	c := &http.Client{Timeout: 2 * time.Second}
+	resp, err := c.Get(URL + "/api/version")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	var v struct{ Version string }
+	json.NewDecoder(resp.Body).Decode(&v)
+	return verRe.FindString(v.Version)
+}
+
+func verOK(v string) bool {
+	if v == "" {
+		return true // unbekannt: nicht unnötig neu laden
+	}
+	a, b := verRe.FindStringSubmatch(v), verRe.FindStringSubmatch(MinVersion)
+	for i := 1; i <= 3; i++ {
+		x, _ := strconv.Atoi(a[i])
+		y, _ := strconv.Atoi(b[i])
+		if x != y {
+			return x > y
+		}
+	}
+	return true
+}
+
+// modelOnDisk: Modell liegt schon im Modellordner (eigener oder der des vorhandenen Ollama).
+func modelOnDisk(model string) bool {
+	name, tag, _ := strings.Cut(model, ":")
+	if tag == "" {
+		tag = "latest"
+	}
+	dirs := []string{filepath.Join(Dir(), "models")}
+	if e := os.Getenv("OLLAMA_MODELS"); e != "" {
+		dirs = append(dirs, e)
+	}
+	if h, err := os.UserHomeDir(); err == nil {
+		dirs = append(dirs, filepath.Join(h, ".ollama", "models"))
+	}
+	if runtime.GOOS == "linux" {
+		dirs = append(dirs, "/usr/share/ollama/.ollama/models")
+	}
+	for _, d := range dirs {
+		if _, err := os.Stat(filepath.Join(d, "manifests", "registry.ollama.ai", "library", name, tag)); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+// Check prüft zuerst, was schon installiert ist, bevor irgendetwas gefragt oder geladen wird.
+func Check(model string) Status {
+	bin := Bin()
+	s := Status{Found: bin != "", Own: bin != "" && strings.HasPrefix(bin, Dir()), Min: MinVersion}
+	if !s.Found {
+		s.Need = "install"
+		return s
+	}
+	s.Version = Version(bin)
+	if !verOK(s.Version) {
+		s.Need = "update"
+		return s
+	}
+	stMu.Lock()
+	st := load()
+	stMu.Unlock()
+	have := modelOnDisk(model)
+	for _, x := range st.Models {
+		if x == model && s.Own {
+			have = true
+		}
+	}
+	if !have && Up() && HasModel(model) {
+		have = true
+	}
+	if !have {
+		s.Need = "model"
+	}
+	return s
+}
+
+// NeedAll: was für alle Werkzeuge zusammen fehlt (install vor update vor model).
+func NeedAll() Status {
+	var out Status
+	rank := map[string]int{"": 0, "model": 1, "update": 2, "install": 3}
+	first := true
+	for _, u := range Users() {
+		s := Check(u.Model)
+		if first || rank[s.Need] > rank[out.Need] {
+			out = s
+			first = false
+		}
+	}
+	return out
+}
 
 func Dir() string {
 	d, _ := os.UserConfigDir()
@@ -125,21 +292,8 @@ func markModel(m string) {
 	save(s)
 }
 
-// Installed: Ollama und das Modell sind fertig da (ohne die KI dafür zu starten).
-func Installed(model string) bool {
-	if Bin() == "" {
-		return false
-	}
-	stMu.Lock()
-	s := load()
-	stMu.Unlock()
-	for _, x := range s.Models {
-		if x == model {
-			return true
-		}
-	}
-	return Up() && HasModel(model)
-}
+// Installed: passendes Ollama und das Modell sind da (ohne die KI dafür zu starten).
+func Installed(model string) bool { return Check(model).Need == "" }
 
 // ---------------------------------------------------------------- Programm finden und starten
 
@@ -258,7 +412,11 @@ func Start() error {
 	defer runMu.Unlock()
 	cleanupOrphan()
 	if Up() {
-		return nil // läuft schon (für ein anderes Werkzeug oder ein selbst installiertes Ollama)
+		// läuft schon (für ein anderes Werkzeug oder ein selbst installiertes Ollama); zu alt?
+		if v := runningVersion(); v != "" && !verOK(v) {
+			return fmt.Errorf(kit.T("Auf deinem PC läuft gerade ein altes Ollama (Version %s). Beende es (Ollama-Symbol unten rechts, „Quit“), dann startet die neue Version.", "An old Ollama (version %s) is running on your PC. Quit it (Ollama icon in the tray, “Quit”) and the new version will start."), v)
+		}
+		return nil
 	}
 	bin := Bin()
 	if bin == "" {
@@ -346,7 +504,8 @@ func Setup(model string, keep bool) {
 	P.mu.Unlock()
 	defer func() { P.mu.Lock(); P.Running = false; P.mu.Unlock() }()
 	fail := func(err error) { P.mu.Lock(); P.Step, P.Error = "error", err.Error(); P.mu.Unlock() }
-	if Bin() == "" {
+	if n := Check(model).Need; n == "install" || n == "update" {
+		// zu altes Ollama bleibt unangetastet; die neue Version kommt in den eigenen Ordner und wird bevorzugt
 		if err := download(); err != nil {
 			fail(err)
 			return
