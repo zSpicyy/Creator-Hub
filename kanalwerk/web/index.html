@@ -27,7 +27,7 @@ header{display:flex;align-items:center;gap:18px;padding:12px 22px;background:var
 .brand{display:flex;align-items:center;gap:10px;font:700 18px/1 Bahnschrift,"Segoe UI",sans-serif;letter-spacing:.3px}
 .brand img{width:32px;height:32px}
 nav.tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;padding:2px}
-nav.tabs button{background:none;border:0;border-radius:999px;padding:8px 14px;color:var(--ink2);font-weight:600;white-space:nowrap}
+nav.tabs button{background:none;border:0;border-radius:999px;padding:7px 11px;font-size:14px;color:var(--ink2);font-weight:600;white-space:nowrap}
 nav.tabs button:hover{background:var(--rule2);color:var(--ink)}
 nav.tabs button.on{background:var(--ink);color:var(--sheet)}
 .hdr-r{display:flex;align-items:center;gap:8px}
@@ -109,13 +109,25 @@ td.r,th.r{text-align:right}
 .chart .gl{stroke:var(--rule2)}
 
 /* Kalender */
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;background:var(--rule)}
-.cal .wd{background:var(--sheet);padding:8px 10px;font-size:12px;font-weight:700;color:var(--mute);text-transform:none}
-.cal .day{background:var(--sheet);min-height:112px;padding:6px 7px;display:flex;flex-direction:column;gap:3px;cursor:pointer;position:relative}
-.cal .day:hover{background:var(--paper)}
-.cal .day.out{background:var(--paper);color:var(--mute)}
-.cal .day .n{font-weight:700;font-size:13px}
-.cal .day.today .n{background:var(--coral);color:#fff;border-radius:999px;padding:0 7px;align-self:flex-start}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;background:var(--rule)}
+.cal .wd{background:var(--paper);padding:9px 12px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.cal .wd.we{color:var(--mute)}
+.cal .day{background:var(--sheet);min-height:108px;padding:8px 9px;display:flex;flex-direction:column;gap:4px;cursor:pointer;position:relative;transition:background-color .12s}
+.cal .day.we{background:color-mix(in srgb,var(--sheet) 92%,var(--paper))}
+.cal .day:hover{background:color-mix(in srgb,var(--coral) 7%,var(--sheet))}
+.cal .day.out .n{color:var(--mute);opacity:.5;font-weight:500}
+.cal .day.out .ev{opacity:.6}
+.cal .day .add{margin-top:auto;font-size:12px;color:var(--coral);font-weight:600;opacity:0;transition:opacity .12s}
+.cal .day:hover .add{opacity:1}
+.cal .day .n{font-weight:700;font-size:13.5px}
+.calbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.calbar h2{margin:0;font-size:22px;min-width:200px}
+.navgrp{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;background:var(--sheet)}
+.navgrp button{border:0;background:none;padding:7px 14px;font-weight:600;color:var(--ink)}
+.navgrp button+button{border-left:1px solid var(--rule)}
+.navgrp button:hover{background:var(--rule2)}
+.calhint{color:var(--mute);font-size:13px;margin:-6px 0 12px}
+.cal .day.today{box-shadow:inset 0 0 0 2px var(--coral)}.cal .day.today .n{background:var(--coral);color:var(--coral-ink);border-radius:999px;padding:0 7px;align-self:flex-start}
 .ev{font-size:12px;border-radius:6px;padding:2px 6px;display:flex;gap:5px;align-items:center;background:var(--rule2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .ev b{font-weight:600}.ev.k-up{background:var(--coral-soft);color:var(--coral)}.ev.k-yt{background:#e5312b18}.ev.k-stream{background:#9147ff1c}.ev.k-idea{background:#139c931c}.ev.k-tw{background:#9147ff12}.ev.k-ig{background:#d6249f16}.ev.k-fb{background:#1877f216}.ev.k-tt{background:#11182712}
 .chipb{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:6px 13px;font-weight:600;color:var(--ink2)}.chipb.on{border-color:var(--ink);background:var(--sheet);color:var(--ink)}
