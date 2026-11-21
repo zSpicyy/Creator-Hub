@@ -47,7 +47,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
 /* Karten auf Startseiten: heben sich unter der Maus und bekommen einen Akzentrand */
 .preset,.tpl,.proj,.card,.tile{transition:transform .14s ease,border-color .14s ease,box-shadow .18s ease,background-color .14s ease}
 .preset,.tpl{box-shadow:var(--hi)}
-.preset:hover,.tpl:hover,.proj:hover,.card:hover,.tile:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 70%,var(--line));box-shadow:var(--lift),0 0 0 1px var(--glow-soft),0 12px 30px -16px var(--glow)}
+.preset:hover,.tpl:hover,.proj:hover,.card.tool:hover,.card[data-launch]:hover,.tile:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 70%,var(--line));box-shadow:var(--lift),0 0 0 1px var(--glow-soft),0 12px 30px -16px var(--glow)}
 .preset:active,.tpl:active{transform:translateY(0)}
 .preset .pv{transition:box-shadow .18s ease,background-color .18s ease}
 .preset:hover .pv{box-shadow:0 0 16px -2px var(--glow);background:color-mix(in srgb,var(--accent) 26%,transparent)}

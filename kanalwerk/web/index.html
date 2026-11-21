@@ -221,12 +221,15 @@ code{background:var(--rule2);padding:1px 6px;border-radius:5px;font-size:12.5px}
 .accode{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .btn.danger{color:var(--bad)}
 #accBtn.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+header{gap:14px!important}
+@media (max-width:1320px){.brand span.bt{display:none}nav.tabs button{padding:7px 9px!important;font-size:13.5px!important}}
+@media (max-width:1120px){#accTxt{font-size:0}#accTxt::before{content:"Konten";font-size:14px}html[lang=en] #accTxt::before{content:"Accounts"}}
 </style>
 <link rel="stylesheet" href="/kit/polish.css">
 </head>
 <body>
 <header>
- <div class="brand"><img src="/logo.svg" alt="">Social-Planer</div>
+ <div class="brand"><img src="/logo.svg" alt="Social-Planer"><span class="bt">Social-Planer</span></div>
  <nav class="tabs" id="tabs" aria-label="Bereiche"></nav>
  <div class="hdr-r">
   <button class="ibtn" id="refresh" title="Zahlen aktualisieren"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button>
