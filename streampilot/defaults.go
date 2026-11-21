@@ -213,6 +213,8 @@ var GeneralDefaults = map[string]any{
 	"queueOn":       true,
 	"soundOn":       true,
 	"goalOn":        true,
+	"autoOn":        true,
+	"replyOn":       true,
 	"tourDone":      false,
 	"srLimit":       2.0,
 	"voteNeeded":    5.0,

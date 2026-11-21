@@ -11,13 +11,14 @@
   tts:()=>({name:T('Vorlesen (TTS)','Text to speech'),...proxy('[data-act="tts"][data-k="enabled"]','.card')}),
   alerts:()=>({name:'Alerts',...proxy('[data-act="alOn"]','.line')}),
   mod:()=>({name:T('Chat-Schutz','Chat protection'),...proxy('[data-act="modOn"]','.line')}),
+  auto:()=>{const a=window.__atab?window.__atab():'timer';const k=a==='timer'?['timerOn',T('Timer-Nachrichten','Timed messages')]:a==='events'?['autoOn',T('Dank-Nachrichten','Thank-you messages')]:['replyOn',T('Auto-Antworten','Auto replies')];return{name:k[1],get:()=>G(k[0]),set:v=>setG(k[0],v)}},
   give:()=>({name:T('Gewinnspiele','Giveaways'),get:()=>G('giveOn'),set:v=>setG('giveOn',v)}),
   queue:()=>({name:T('Mitspieler-Warteschlange','Player queue'),get:()=>G('queueOn'),set:v=>setG('queueOn',v)}),
   sounds:()=>({name:'Sounds',get:()=>G('soundOn'),set:v=>setG('soundOn',v)}),
   goals:()=>({name:T('Ziel-Balken','Goal bars'),get:()=>G('goalOn'),set:v=>setG('goalOn',v)}),
-  cmd:()=>{const k={builtin:['cmdOn',T('Eingebaute Befehle','Built-in commands')],own:['ownOn',T('Eigene Befehle','Custom commands')],timer:['timerOn',T('Timer-Nachrichten','Timed messages')],extra:['extraOn',T('Zitate und Extras','Quotes and extras')]}[curTab()];
+  cmd:()=>{const k={builtin:['cmdOn',T('Eingebaute Befehle','Built-in commands')],own:['ownOn',T('Eigene Befehle','Custom commands')],extra:['extraOn',T('Zitate und Extras','Quotes and extras')]}[curTab()];
    return{name:k[1],get:()=>G(k[0]),set:v=>setG(k[0],v)}}};
- const navMark=()=>{const off={sr:!G('srFeat'),tts:S.tts&&!S.tts.enabled,alerts:!S.alertsOn,give:!G('giveOn'),queue:!G('queueOn'),sounds:!G('soundOn'),goals:!G('goalOn'),cmd:!G('cmdOn')&&!G('ownOn')&&!G('timerOn')&&!G('extraOn')};
+ const navMark=()=>{const off={sr:!G('srFeat'),tts:S.tts&&!S.tts.enabled,alerts:!S.alertsOn,give:!G('giveOn'),queue:!G('queueOn'),sounds:!G('soundOn'),goals:!G('goalOn'),auto:!G('timerOn')&&!G('autoOn')&&!G('replyOn'),cmd:!G('cmdOn')&&!G('ownOn')&&!G('extraOn')};
   document.querySelectorAll('nav [data-page], .nav [data-page], #nav [data-page]').forEach(a=>{a.querySelector('.feat-off-tag')?.remove();if(off[a.dataset.page]){const t=document.createElement('span');t.className='feat-off-tag';t.textContent=T('aus','off');a.appendChild(t)}})};
  const inject=()=>{navMark();const f=FEAT[page];const app=document.getElementById('app');if(!app)return;app.classList.remove('feat-off');
   const head=app.querySelector('.head');if(!f||!head)return;const F=f();const on=F.get();if(on===null)return;F.hide&&F.hide();

@@ -382,9 +382,13 @@ func (b *Bot) onMessage(m ChatMsg) {
 	if b.handleOwn(m, word, arg, level, uid) {
 		return
 	}
+	if !strings.ContainsRune(prefixChars, []rune(m.Text)[0]) {
+		b.autoReply(m)
+	}
 	if m.Tags["bits"] != "" {
 		if n, _ := strconv.Atoi(m.Tags["bits"]); n > 0 {
 			goalAdd("bits", n)
+			autoEvent("bits", map[string]string{"user": m.Display, "bits": m.Tags["bits"]})
 		}
 		if tts.Alert("bits", map[string]string{"user": m.Display, "login": m.Login, "bits": m.Tags["bits"], "message": m.Text}, m.Tags) {
 			return
@@ -688,11 +692,13 @@ func (b *Bot) onNotice(tags map[string]string, text string) {
 	case "sub":
 		vars["message"] = text
 		goalAdd("sub", 1)
+		autoEvent("sub", vars)
 		tts.Alert("sub", vars, tags)
 	case "resub":
 		vars["message"] = text
 		vars["months"] = tags["msg-param-cumulative-months"]
 		goalAdd("sub", 1)
+		autoEvent("resub", vars)
 		tts.Alert("resub", vars, tags)
 	case "submysterygift":
 		n, _ := strconv.Atoi(tags["msg-param-mass-gift-count"])
@@ -701,6 +707,7 @@ func (b *Bot) onNotice(tags map[string]string, text string) {
 		b.mu.Unlock()
 		vars["count"] = strconv.Itoa(n)
 		goalAdd("sub", n)
+		autoEvent("giftbomb", vars)
 		tts.Alert("giftbomb", vars, nil)
 	case "subgift", "anonsubgift":
 		b.mu.Lock()
@@ -712,12 +719,17 @@ func (b *Bot) onNotice(tags map[string]string, text string) {
 		b.mu.Unlock()
 		vars["target"] = tags["msg-param-recipient-display-name"]
 		goalAdd("sub", 1)
+		autoEvent("subgift", vars)
 		tts.Alert("subgift", vars, nil)
 	case "raid":
 		if n := tags["msg-param-displayName"]; n != "" {
 			vars["user"] = n
 		}
 		vars["viewers"] = tags["msg-param-viewerCount"]
+		if l := tags["msg-param-login"]; l != "" {
+			vars["login"] = l
+		}
+		autoEvent("raid", vars)
 		tts.Alert("raid", vars, nil)
 	default:
 		return
@@ -735,7 +747,19 @@ func (b *Bot) onEvent(typ string, ev map[string]any) {
 		follows.mu.Unlock()
 		logEvent("alert", "follow – %s", user)
 		goalAdd("follow", 1)
+		autoEvent("follow", map[string]string{"user": user})
 		tts.Alert("follow", map[string]string{"user": user, "login": str(ev, "user_login", "")}, nil)
+	case "stream.online":
+		setLive(true)
+		logEvent("ok", "Stream live")
+		go func() {
+			time.Sleep(20 * time.Second)
+			_, _, title := streamInfo(b.Channel)
+			autoEvent("start", map[string]string{"title": title})
+		}()
+	case "stream.offline":
+		setLive(false)
+		autoEvent("end", map[string]string{})
 	case "channel.channel_points_custom_reward_redemption.add":
 		reward := str(sub(ev, "reward"), "title", "")
 		text := strings.TrimSpace(str(ev, "user_input", ""))

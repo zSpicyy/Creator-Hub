@@ -120,6 +120,22 @@ func routes(mux *http.ServeMux) {
 		ownMu.Unlock()
 		writeJSON(w, d)
 	})
+	mux.HandleFunc("/api/auto", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var d AutoCfg
+			if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+				http.Error(w, `{"error":"bad"}`, 400)
+				return
+			}
+			autoMu.Lock()
+			autoSave(d)
+			autoMu.Unlock()
+		}
+		autoMu.Lock()
+		d := autoLoad()
+		autoMu.Unlock()
+		writeJSON(w, d)
+	})
 	mux.HandleFunc("/api/mod", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			var c ModCfg

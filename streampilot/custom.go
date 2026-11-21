@@ -30,6 +30,7 @@ type OwnTimer struct {
 	Minutes int    `json:"minutes"` // frühestens alle X Minuten
 	Lines   int    `json:"lines"`   // und erst nach mindestens Y Chat-Nachrichten
 	On      bool   `json:"on"`
+	Live    bool   `json:"live"` // nur während der Stream läuft
 }
 
 type Quote struct {
@@ -46,6 +47,7 @@ type OwnData struct {
 	Quotes   []Quote         `json:"quotes"`
 	Builtin  map[string]bool `json:"builtin"` // quote, addquote, delquote, so, permit
 	SoMsg    string          `json:"soMsg"`
+	TimerRnd bool            `json:"timerRnd"` // Timer in zufälliger Reihenfolge
 }
 
 var ownMu sync.Mutex
@@ -55,6 +57,10 @@ func ownDefault() OwnData {
 		Cmds: []OwnCmd{
 			{ID: "discord", Names: "discord, dc", Response: "Komm auf unseren Discord: https://discord.gg/DEINLINK", Level: LvlAll, Cooldown: 30, On: false},
 			{ID: "tode", Names: "tode, deaths", Response: "{channel} ist schon {count}-mal gestorben.", Level: LvlAll, Cooldown: 5, On: false},
+		},
+		Timers: []OwnTimer{
+			{ID: "follow", Msg: tr("Gefällt dir der Stream? Ein Follow hilft mir sehr und du verpasst keinen Stream mehr.", "Enjoying the stream? A follow helps a lot and you won't miss the next one."), Minutes: 30, Lines: 15, On: true, Live: true},
+			{ID: "cmds", Msg: tr("Mitmachen: !sr Songwunsch, !mitspielen zum Mitspielen, !sounds für Sounds.", "Join in: !sr for song requests, !join to play with me, !sounds for sounds."), Minutes: 45, Lines: 20, On: true, Live: true},
 		}}
 }
 
@@ -404,8 +410,12 @@ func (b *Bot) timerLoop() {
 		}
 		// immer nur ein Timer pro Runde, reihum
 		for k := 0; k < len(d.Timers); k++ {
-			t := d.Timers[(idx+k)%len(d.Timers)]
-			if !t.On || strings.TrimSpace(t.Msg) == "" {
+			j := (idx + k) % len(d.Timers)
+			if d.TimerRnd {
+				j = rand.Intn(len(d.Timers))
+			}
+			t := d.Timers[j]
+			if !t.On || strings.TrimSpace(t.Msg) == "" || (t.Live && !isLive(b.Channel)) {
 				continue
 			}
 			mins := max(1, t.Minutes)

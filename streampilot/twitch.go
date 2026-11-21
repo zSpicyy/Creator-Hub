@@ -610,10 +610,12 @@ func (e *EventSub) subscribe(session string) {
 	list := []s{
 		{"channel.follow", "2", map[string]string{"broadcaster_user_id": bid, "moderator_user_id": bid}, "moderator:read:followers"},
 		{"channel.channel_points_custom_reward_redemption.add", "1", map[string]string{"broadcaster_user_id": bid}, "channel:read:redemptions"},
+		{"stream.online", "1", map[string]string{"broadcaster_user_id": bid}, ""},
+		{"stream.offline", "1", map[string]string{"broadcaster_user_id": bid}, ""},
 	}
 	n := 0
 	for _, x := range list {
-		if !streamerAuth.Has(x.scope) {
+		if x.scope != "" && !streamerAuth.Has(x.scope) {
 			continue
 		}
 		_, err := helix("POST", "/eventsub/subscriptions", map[string]any{"type": x.typ, "version": x.ver, "condition": x.cond,
