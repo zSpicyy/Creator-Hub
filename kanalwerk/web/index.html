@@ -170,15 +170,22 @@ td.r,th.r{text-align:right}
 .lbtn{display:grid;grid-template-columns:1fr 1.4fr auto auto auto;gap:8px;align-items:center}
 
 /* Bericht */
-.sheet{background:#fff;color:#14233b;width:794px;min-height:1123px;margin:0 auto;padding:46px 54px;border-radius:6px;box-shadow:0 10px 40px #14233b22}
-.sheet h1{font-size:30px;margin:0}.sheet .sub{color:#6b778a;margin-top:4px}
-.sheet .kp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
-.sheet .kp div{border:1px solid #dfe5ee;border-radius:10px;padding:12px}
-.sheet .kp b{display:block;font:700 24px Bahnschrift,sans-serif}
-.sheet .kp span{font-size:12px;color:#6b778a}
-.sheet h2{font-size:17px;margin:26px 0 10px;border-bottom:2px solid #ff6b4a;padding-bottom:4px;display:inline-block}
-.sheet table td,.sheet table th{border-color:#e6ebf2;color:#14233b}
-@media print{header,.ph,.noprint{display:none!important}main{padding:0;overflow:visible}body{background:#fff;display:block}.sheet{box-shadow:none;width:auto;min-height:0;padding:0}@page{size:A4;margin:14mm}}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);padding:24px 26px}
+.sheet h1{font-size:24px;margin:0}.sheet .sub{color:var(--ink2);margin-top:2px}
+.sheet .kp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
+.sheet .kp div{border:1px solid var(--rule);background:var(--paper);border-radius:12px;padding:12px 14px}
+.sheet .kp b{display:block;font:700 26px Bahnschrift,sans-serif}
+.sheet .kp span{font-size:12.5px;color:var(--ink2)}
+.sheet h2{font-size:17px;margin:26px 0 10px}
+.sheet .foot{color:var(--mute);font-size:12px;margin-top:28px}
+@media (max-width:900px){.sheet .kp{grid-template-columns:repeat(2,1fr)}}
+/* Erst beim Drucken bzw. Speichern als PDF wird daraus ein DIN-A4-Blatt */
+@media print{header,.ph,.noprint,#kitOverlay,[id*=gear],[class*=gear],.wrap>:not(.sheet){display:none!important}main{padding:0;overflow:visible}body{background:#fff!important;color:#14233b!important;display:block}
+ .sheet{background:#fff!important;color:#14233b!important;border:0;box-shadow:none;width:auto;min-height:0;padding:0}
+ .sheet .kp div{background:#fff!important;border-color:#dfe5ee!important}.sheet .kp span,.sheet .sub,.sheet .foot{color:#6b778a!important}
+ .sheet h2{border-bottom:2px solid #ff6b4a;padding-bottom:4px;display:inline-block;color:#14233b}
+ .sheet table td,.sheet table th{border-color:#e6ebf2!important;color:#14233b!important}
+ @page{size:A4;margin:14mm}}
 
 /* Fenster */
 .modal{position:fixed;inset:0;background:#0b1424a6;display:grid;place-items:center;z-index:50;padding:20px}
