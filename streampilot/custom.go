@@ -59,8 +59,8 @@ func ownDefault() OwnData {
 			{ID: "tode", Names: "tode, deaths", Response: "{channel} ist schon {count}-mal gestorben.", Level: LvlAll, Cooldown: 5, On: false},
 		},
 		Timers: []OwnTimer{
-			{ID: "follow", Msg: tr("Gefällt dir der Stream? Ein Follow hilft mir sehr und du verpasst keinen Stream mehr.", "Enjoying the stream? A follow helps a lot and you won't miss the next one."), Minutes: 30, Lines: 15, On: true, Live: true},
-			{ID: "cmds", Msg: tr("Mitmachen: !sr Songwunsch, !mitspielen zum Mitspielen, !sounds für Sounds.", "Join in: !sr for song requests, !join to play with me, !sounds for sounds."), Minutes: 45, Lines: 20, On: true, Live: true},
+			{ID: "follow", Msg: tr("Gefällt dir der Stream? Ein Follow hilft mir sehr und du verpasst keinen Stream mehr.", "Enjoying the stream? A follow helps a lot and you won't miss the next one."), Minutes: 30, Lines: 15, On: false, Live: true},
+			{ID: "cmds", Msg: tr("Mitmachen: !sr Songwunsch, !mitspielen zum Mitspielen, !sounds für Sounds.", "Join in: !sr for song requests, !join to play with me, !sounds for sounds."), Minutes: 45, Lines: 20, On: false, Live: true},
 		}}
 }
 

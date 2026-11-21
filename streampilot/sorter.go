@@ -295,13 +295,17 @@ func runSort(ids []string, model string) {
 }
 
 // Gruppen bilden (gleiche Logik wie in der Vorschau im Fenster)
-func sortGroups(songs []SortSong, splitMood, chillMix bool, minSongs int) map[string][]string {
+// mode: "genre" (nur Genre), "mood" (nur Stimmung) oder "both" (Genre und Stimmung)
+func sortGroups(songs []SortSong, mode string, chillMix bool, minSongs int) map[string][]string {
 	created := cfg.Section("sortCreated")
 	g := map[string][]string{}
 	for _, s := range songs {
 		k := s.Genre
-		if splitMood {
+		switch mode {
+		case "both":
 			k = s.Genre + " – " + s.Mood
+		case "mood":
+			k = moodName(s.Mood)
 		}
 		g[k] = append(g[k], s.URI)
 	}
@@ -325,6 +329,16 @@ func sortGroups(songs []SortSong, splitMood, chillMix bool, minSongs int) map[st
 		}
 	}
 	return out
+}
+
+func moodName(m string) string {
+	switch m {
+	case "Chill":
+		return tr("Chill", "Chill")
+	case "Upbeat":
+		return tr("Flott", "Upbeat")
+	}
+	return tr("Mittel", "Medium")
 }
 
 func applySort(groups map[string][]string, prefix string) (int, error) {

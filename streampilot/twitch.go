@@ -341,6 +341,66 @@ type Chat struct {
 	last     time.Time
 	sendMu   sync.Mutex
 	Joined   bool
+	Err      string // letzter Grund, warum keine Verbindung zustande kam (für die Anzeige)
+}
+
+// check prüft den Zugang, bevor der Chat verbunden wird: gültig? richtige Rechte? Name?
+func (a *TwitchAuth) check() (string, error) {
+	for attempt := 0; attempt < 2; attempt++ {
+		tok, err := a.Access()
+		if err != nil {
+			return "", fmt.Errorf("%s", tr("Twitch-Anmeldung abgelaufen. Verbinde das Konto unter „Konten“ neu.", "Twitch sign-in expired. Reconnect the account under “Accounts”."))
+		}
+		req, _ := http.NewRequest("GET", "https://id.twitch.tv/oauth2/validate", nil)
+		req.Header.Set("Authorization", "OAuth "+tok)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("%s (%v)", tr("Twitch ist nicht erreichbar. Prüfe deine Internetverbindung.", "Twitch is not reachable. Check your internet connection."), err)
+		}
+		m := map[string]any{}
+		_ = json.NewDecoder(resp.Body).Decode(&m)
+		resp.Body.Close()
+		if resp.StatusCode == 401 && attempt == 0 {
+			if a.refresh() != nil {
+				return "", fmt.Errorf("%s", tr("Twitch-Anmeldung abgelaufen. Verbinde das Konto unter „Konten“ neu.", "Twitch sign-in expired. Reconnect the account under “Accounts”."))
+			}
+			continue
+		}
+		if resp.StatusCode != 200 {
+			return "", fmt.Errorf("Twitch %d", resp.StatusCode)
+		}
+		login := str(m, "login", "")
+		var scopes []string
+		for _, s := range asList(m["scopes"]) {
+			scopes = append(scopes, fmt.Sprint(s))
+		}
+		a.mu.Lock()
+		if login != "" {
+			a.tok.Login = login
+		}
+		a.tok.UserID = str(m, "user_id", a.tok.UserID)
+		if len(scopes) > 0 {
+			a.tok.Scope = scopes
+		}
+		a.mu.Unlock()
+		a.persist()
+		has := func(s string) bool {
+			for _, x := range scopes {
+				if x == s {
+					return true
+				}
+			}
+			return false
+		}
+		if !has("chat:read") && !has("user:read:chat") {
+			return "", fmt.Errorf("%s", tr("Dem Twitch-Konto fehlt das Recht, den Chat zu lesen. Verbinde es unter „Konten“ neu und bestätige alle Rechte.", "The Twitch account lacks permission to read chat. Reconnect it under “Accounts” and confirm all permissions."))
+		}
+		if login == "" {
+			return "", fmt.Errorf("Twitch: kein Benutzername")
+		}
+		return login, nil
+	}
+	return "", fmt.Errorf("Twitch: Anmeldung fehlgeschlagen")
 }
 
 func (c *Chat) Start() {
@@ -358,14 +418,25 @@ func (c *Chat) Stop() {
 }
 
 func (c *Chat) loop() {
+	wait := 5 * time.Second
 	for c.running {
+		start := time.Now()
 		err := c.session()
 		c.Joined = false
 		if !c.running {
 			return
 		}
-		logEvent("warn", "Chat disconnected (%v) – reconnecting …", err)
-		time.Sleep(5 * time.Second)
+		if err != nil {
+			c.Err = err.Error()
+		}
+		logEvent("warn", "%s %v", tr("Chat getrennt, neuer Versuch gleich:", "Chat disconnected, retrying soon:"), err)
+		// nach längerer Verbindung schnell neu verbinden, bei wiederholten Fehlern länger warten
+		if time.Since(start) > 2*time.Minute {
+			wait = 5 * time.Second
+		} else if wait < time.Minute {
+			wait *= 2
+		}
+		time.Sleep(wait)
 	}
 }
 
@@ -396,22 +467,38 @@ func (c *Chat) Say(text string) {
 }
 
 func (c *Chat) session() error {
+	login, err := c.auth.check()
+	if err != nil {
+		return err
+	}
+	if c.channel == "" {
+		c.channel = login
+	}
 	tok, err := c.auth.Access()
 	if err != nil {
 		return err
 	}
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 20 * time.Second}, "tcp", "irc.chat.twitch.tv:6697", &tls.Config{ServerName: "irc.chat.twitch.tv"})
 	if err != nil {
-		return err
+		return fmt.Errorf("%s (%v)", tr("Der Twitch-Chat ist nicht erreichbar. Prüfe Internet oder Firewall.", "Twitch chat is not reachable. Check your internet or firewall."), err)
 	}
 	c.mu.Lock()
 	c.conn = conn
 	c.mu.Unlock()
 	defer conn.Close()
 	_ = c.raw("PASS oauth:" + tok)
-	_ = c.raw("NICK " + c.auth.Login())
+	_ = c.raw("NICK " + strings.ToLower(login))
 	_ = c.raw("CAP REQ :twitch.tv/tags twitch.tv/commands")
 	_ = c.raw("JOIN #" + c.channel)
+	// kommt nach 15 Sekunden keine Beitritts-Bestätigung, stimmt etwas mit dem Kanal nicht
+	ch := c.channel
+	go func() {
+		time.Sleep(15 * time.Second)
+		if c.running && !c.Joined && c.channel == ch {
+			c.Err = fmt.Sprintf(tr("Der Bot kommt nicht in den Kanal #%s. Prüfe den Kanalnamen unter „Einstellungen“.", "The bot can't join #%s. Check the channel name under “Settings”."), ch)
+			logEvent("warn", "%s", c.Err)
+		}
+	}()
 	r := bufio.NewReaderSize(conn, 64*1024)
 	for c.running {
 		_ = conn.SetReadDeadline(time.Now().Add(7 * time.Minute))
@@ -448,8 +535,18 @@ func (c *Chat) handle(line string) error {
 		line = line[sp+1:]
 	}
 	if strings.Contains(line, "Login authentication failed") || strings.Contains(line, "Improperly formatted auth") {
-		_ = c.auth.refresh()
-		return errors.New("login refreshed")
+		if c.auth.refresh() != nil {
+			return errors.New(tr("Twitch hat die Anmeldung abgelehnt. Verbinde das Konto unter „Konten“ neu.", "Twitch rejected the sign-in. Reconnect the account under “Accounts”."))
+		}
+		return errors.New(tr("Anmeldung erneuert", "sign-in renewed"))
+	}
+	if strings.Contains(line, " NOTICE ") {
+		switch tags["msg-id"] {
+		case "msg_channel_suspended":
+			c.Err = tr("Dieser Twitch-Kanal ist gesperrt oder existiert nicht.", "This Twitch channel is suspended or does not exist.")
+		case "msg_banned":
+			c.Err = tr("Der Bot ist in diesem Kanal gebannt.", "The bot is banned in this channel.")
+		}
 	}
 	parts := strings.SplitN(line, " ", 4)
 	if len(parts) < 2 {
@@ -458,6 +555,7 @@ func (c *Chat) handle(line string) error {
 	switch parts[1] {
 	case "366":
 		c.Joined = true
+		c.Err = ""
 		logEvent("ok", "Connected to #%s as %s", c.channel, c.auth.Login())
 	case "RECONNECT":
 		return errors.New("reconnect requested")

@@ -131,7 +131,7 @@ var DefaultRepliesDE = map[string]string{
 
 // TTS-Grundeinstellungen
 var TTSDefaults = map[string]any{
-	"enabled":        true,
+	"enabled":        false,
 	"voice":          "de-DE-KatjaNeural", // Neural = natürliche Stimme, sonst Windows-Stimme
 	"rate":           0.0,                 // -10..10
 	"pitch":          0.0,                 // -10..10
@@ -162,8 +162,8 @@ type SourceDef struct {
 
 var TTSSources = []SourceDef{
 	{"chat", false, LvlAll, true, ""},
-	{"command", true, LvlAll, true, ""},
-	{"points", true, LvlAll, true, ""},
+	{"command", false, LvlAll, true, ""},
+	{"points", false, LvlAll, true, ""},
 }
 
 // Alerts: Standard = nur das vorlesen, was der Zuschauer selbst dazugeschrieben hat.
@@ -178,14 +178,14 @@ type AlertDef struct {
 }
 
 var Alerts = []AlertDef{
-	{"bits", true, "{message}", 1, "", true, "{user} {bits} {message}"},
-	{"sub", true, "{message}", 0, "", true, "{user} {message}"},
-	{"resub", true, "{message}", 0, "", true, "{user} {months} {message}"},
+	{"bits", false, "{message}", 1, "", true, "{user} {bits} {message}"},
+	{"sub", false, "{message}", 0, "", true, "{user} {message}"},
+	{"resub", false, "{message}", 0, "", true, "{user} {months} {message}"},
 	{"points", false, "{message}", 0, "", true, "{user} {reward} {message}"},
 	{"follow", false, "{user}", 0, "", false, "{user}"},
-	{"subgift", true, "{user} → {target}", 0, "", false, "{user} {target}"},
-	{"giftbomb", true, "{user}: {count}", 0, "", false, "{user} {count}"},
-	{"raid", true, "{user}: {viewers}", 1, "", false, "{user} {viewers}"},
+	{"subgift", false, "{user} → {target}", 0, "", false, "{user} {target}"},
+	{"giftbomb", false, "{user}: {count}", 0, "", false, "{user} {count}"},
+	{"raid", false, "{user}: {viewers}", 1, "", false, "{user} {viewers}"},
 }
 
 var DefaultBadWords = []string{"hurensohn", "wichser", "fotze", "missgeburt", "spast", "schwuchtel",
@@ -201,25 +201,27 @@ var EdgeVoices = []string{
 
 var GeneralDefaults = map[string]any{
 	"cmdPrefix":     "!",
-	"autoStart":     true,
+	"startMode":     "manual",
+	"stopOffline":   true,
+	"aiModel":       "",
 	"chatLang":      "",
-	"srOn":          true,
-	"srFeat":        true,
-	"cmdOn":         true,
-	"ownOn":         true,
-	"timerOn":       true,
-	"extraOn":       true,
-	"giveOn":        true,
-	"queueOn":       true,
-	"soundOn":       true,
-	"goalOn":        true,
-	"autoOn":        true,
-	"replyOn":       true,
+	"srOn":          false,
+	"srFeat":        false,
+	"cmdOn":         false,
+	"ownOn":         false,
+	"timerOn":       false,
+	"extraOn":       false,
+	"giveOn":        false,
+	"queueOn":       false,
+	"soundOn":       false,
+	"goalOn":        false,
+	"autoOn":        false,
+	"replyOn":       false,
 	"tourDone":      false,
 	"srLimit":       2.0,
 	"voteNeeded":    5.0,
 	"maxMinutes":    8.0,
-	"modsUnlimited": true,
+	"modsUnlimited": false,
 	"blocked":       []any{},
 }
 

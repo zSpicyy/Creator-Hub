@@ -28,7 +28,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .status{display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--bg);font-size:13px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .status.live{color:var(--text)}.status.live .dot{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
-.status.wait .dot{background:var(--warn)}
+.status.wait .dot{background:var(--warn)}.err-note{border-color:color-mix(in srgb,var(--danger) 50%,transparent)!important;margin-bottom:16px}.status.err{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,transparent)}.status.err .dot{background:var(--danger)}
 
 /* Navigation */
 nav{grid-area:nav;padding:14px 10px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:3px;overflow:auto}
@@ -133,7 +133,7 @@ code{font:12.5px Consolas,ui-monospace,monospace;background:var(--panel2);border
 .wl{display:grid;grid-template-columns:46px 1fr 34px;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
 .empty{color:var(--muted);padding:14px 0}
 .pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;max-height:300px;overflow:auto}
-.pl label{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer}
+.pl label{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer;min-width:0}.pl label small{margin-left:auto;color:var(--muted)}.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sort-mode{display:flex;width:100%}.sort-mode .btn{flex:1;justify-content:center}.ai-ok{border-color:color-mix(in srgb,var(--ok) 40%,var(--line))}.tag.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
 .pl label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .pl small{margin-left:auto;color:var(--muted)}
 table.st{width:100%;border-collapse:collapse}table.st td,table.st th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}table.st th{color:var(--muted);font-size:12px;font-weight:600}
@@ -220,12 +220,12 @@ en:{
  sp_wait:'Spotify opened in your browser. Confirm there.',channel:'Channel',channel_s:'Defaults to the streamer account.',
  set_t:'Settings',set_s:'How StreamPilot behaves.',look_t:'Look, language & updates',look_solo:'Use the gear at the bottom right. It has the same settings as Creator Hub.',look_hub:'Taken from Creator Hub. Change them there under Settings.',lang:'Language',theme:'Theme',accent:'Accent color',density:'Density',d_norm:'Normal',d_comp:'Compact',
  th_black:'Black',th_dark:'Dark',th_light:'Light',th_mocha:'Mocha',th_macchiato:'Macchiato',th_system:'System',
- autostart:'Start the bot automatically',autostart_s:'As soon as StreamPilot opens.',updates:'Updates',autoupd:'Check for updates automatically',version:'Version {v}',check:'Check now',
+ autostart:'Start the bot automatically',autostart_s:'As soon as StreamPilot opens.',start_mode:'When should the bot start?',start_mode_s:'The bot joins your chat and answers commands.',start_manual:'Only when I start it',start_app:'As soon as StreamPilot opens',start_live:'Automatically when I go live',stop_off:'Stop when the stream ends',stop_off_s:'Only if the bot was started by going live.',start_live_need:'For live detection, connect your streamer account under “Accounts”.',bot_err:'Not connected',updates:'Updates',autoupd:'Check for updates automatically',version:'Version {v}',check:'Check now',
  upd_none:'You\'re up to date.',upd_av:'Version {v} is available.',upd_inst:'Install & restart',upd_dl:'Installing …',upd_err:'Update failed: {e}',upd_check:'Checking …',
  data_t:'Your data',data_s:'Settings and logins are stored separately from the program, so updates never log you out.',
  sort_t:'Playlist sorter',sort_s:'Sorts your playlists by genre and mood with a local AI (Ollama) and creates matching playlists.',
  sort_pl:'Your playlists',sort_model:'AI model',sort_no_ollama:'Ollama not found. Install it from ollama.com and run “ollama pull qwen2.5:7b”.',sort_run:'Sort songs',sort_apply:'Create / extend playlists',
- sort_split:'Split genres by mood',sort_chill:'Extra “Chill Mix” playlist',sort_min:'Songs for a new playlist',sort_prefix:'Name prefix',sort_forget:'Forget created playlists',
+ sort_split:'Split genres by mood',ai_t:'Set up the AI',ai_s:'The sorter uses a small AI that runs on your own PC (Ollama). StreamPilot downloads and starts it for you, once, about 3 to 4 GB.',ai_go:'Set up AI now',ai_retry:'Try again',ai_dl:'Downloading AI program …',ai_unpack:'Unpacking …',ai_start:'Starting AI …',ai_model_dl:'Downloading AI model …',ai_ready:'AI is ready',ai_ready_s:'Runs locally on your PC, nothing is sent anywhere.',ai_wait:'Waiting for the AI setup',sort_pick:'Choose at least one playlist',sort_none:'No playlists found.',sort_how:'Sort by',sm_genre:'Genre',sm_mood:'Mood',sm_both:'Genre and mood',sm_hint_genre:'One playlist per genre, e.g. “Hip-Hop”, “Rock”.',sm_hint_mood:'Three playlists: Chill, Medium and Upbeat.',sm_hint_both:'One playlist per genre and mood, e.g. “Rock – Chill”.',sort_min_s:'Smaller groups go into “Other”.',sort_prefix_s:'Goes in front of every new playlist name.',sort_chill:'Extra “Chill Mix” playlist',sort_min:'Songs for a new playlist',sort_prefix:'Name prefix',sort_forget:'Forget created playlists',
  st_load:'Loading songs …',st_genres:'Reading artist genres …',st_ai:'AI is sorting …',st_done:'Done. Check the result and create the playlists.',sort_song:'Song',sort_genre:'Genre',sort_mood:'Mood',
  m_Chill:'Chill',m_Medium:'Medium',m_Upbeat:'Upbeat',sort_need_sp:'Connect Spotify first.',sort_done:'{n} songs sorted into {p} playlists.',
  e_twitch_missing:'Connect Twitch first (Accounts).',saved:'Saved',err:'Error: {e}',reply_ph:'Default',
@@ -273,12 +273,12 @@ de:{
  sp_wait:'Spotify hat sich im Browser geöffnet. Bestätige dort.',channel:'Kanal',channel_s:'Standard ist das Streamer-Konto.',
  set_t:'Einstellungen',set_s:'So verhält sich StreamPilot.',look_t:'Aussehen, Sprache & Updates',look_solo:'Über das Zahnrad unten rechts. Es hat dieselben Einstellungen wie der Creator Hub.',look_hub:'Kommen aus dem Creator Hub. Ändere sie dort unter Einstellungen.',lang:'Sprache',theme:'Design',accent:'Akzentfarbe',density:'Dichte',d_norm:'Normal',d_comp:'Kompakt',
  th_black:'Schwarz',th_dark:'Dunkel',th_light:'Hell',th_mocha:'Mocha',th_macchiato:'Macchiato',th_system:'System',
- autostart:'Bot automatisch starten',autostart_s:'Sobald StreamPilot geöffnet wird.',updates:'Updates',autoupd:'Automatisch nach Updates suchen',version:'Version {v}',check:'Jetzt prüfen',
+ autostart:'Bot automatisch starten',autostart_s:'Sobald StreamPilot geöffnet wird.',start_mode:'Wann startet der Bot?',start_mode_s:'Der Bot geht in deinen Chat und beantwortet Befehle.',start_manual:'Nur wenn ich ihn starte',start_app:'Sobald StreamPilot geöffnet ist',start_live:'Automatisch, wenn ich live gehe',stop_off:'Beim Stream-Ende stoppen',stop_off_s:'Nur, wenn der Bot durchs Live-Gehen gestartet wurde.',start_live_need:'Für die Live-Erkennung verbinde unter „Konten“ dein Streamer-Konto.',bot_err:'Keine Verbindung',updates:'Updates',autoupd:'Automatisch nach Updates suchen',version:'Version {v}',check:'Jetzt prüfen',
  upd_none:'Du hast die neueste Version.',upd_av:'Version {v} ist verfügbar.',upd_inst:'Installieren & neu starten',upd_dl:'Wird installiert …',upd_err:'Update fehlgeschlagen: {e}',upd_check:'Prüfe …',
  data_t:'Deine Daten',data_s:'Einstellungen und Logins liegen getrennt vom Programm, Updates loggen dich deshalb nie aus.',
  sort_t:'Playlist-Sortierer',sort_s:'Sortiert deine Playlists mit lokaler KI (Ollama) nach Genre und Stimmung und legt passende Playlists an.',
  sort_pl:'Deine Playlists',sort_model:'KI-Modell',sort_no_ollama:'Ollama nicht gefunden. Installiere es von ollama.com und führe „ollama pull qwen2.5:7b“ aus.',sort_run:'Songs sortieren',sort_apply:'Playlists erstellen / ergänzen',
- sort_split:'Genres nach Stimmung aufteilen',sort_chill:'Extra-Playlist „Chill Mix“',sort_min:'Songs für neue Playlist',sort_prefix:'Namens-Vorsilbe',sort_forget:'Erstellte Playlists vergessen',
+ sort_split:'Genres nach Stimmung aufteilen',ai_t:'KI einrichten',ai_s:'Der Sortierer nutzt eine kleine KI, die auf deinem eigenen PC läuft (Ollama). StreamPilot lädt und startet sie für dich, einmalig, rund 3 bis 4 GB.',ai_go:'KI jetzt einrichten',ai_retry:'Nochmal versuchen',ai_dl:'Lade KI-Programm …',ai_unpack:'Entpacke …',ai_start:'Starte KI …',ai_model_dl:'Lade KI-Modell …',ai_ready:'KI ist bereit',ai_ready_s:'Läuft auf deinem PC, es wird nichts verschickt.',ai_wait:'Warte auf die KI-Einrichtung',sort_pick:'Wähle mindestens eine Playlist',sort_none:'Keine Playlists gefunden.',sort_how:'Sortieren nach',sm_genre:'Genre',sm_mood:'Stimmung',sm_both:'Genre und Stimmung',sm_hint_genre:'Eine Playlist pro Genre, z. B. „Hip-Hop“, „Rock“.',sm_hint_mood:'Drei Playlists: Chill, Mittel und Flott.',sm_hint_both:'Eine Playlist pro Genre und Stimmung, z. B. „Rock – Chill“.',sort_min_s:'Kleinere Gruppen landen in „Other“.',sort_prefix_s:'Steht vor jedem neuen Playlist-Namen.',sort_chill:'Extra-Playlist „Chill Mix“',sort_min:'Songs für neue Playlist',sort_prefix:'Namens-Vorsilbe',sort_forget:'Erstellte Playlists vergessen',
  st_load:'Lade Songs …',st_genres:'Lese Künstler-Genres …',st_ai:'KI sortiert …',st_done:'Fertig. Prüfe das Ergebnis und erstelle die Playlists.',sort_song:'Song',sort_genre:'Genre',sort_mood:'Stimmung',
  m_Chill:'Chill',m_Medium:'Mittel',m_Upbeat:'Flott',sort_need_sp:'Verbinde zuerst Spotify.',sort_done:'{n} Songs in {p} Playlists einsortiert.',
  e_twitch_missing:'Verbinde zuerst Twitch (Konten).',saved:'Gespeichert',err:'Fehler: {e}',reply_ph:'Standard',
@@ -304,7 +304,7 @@ document.addEventListener('kit-theme',e=>{const l=e.detail&&e.detail.lang==='de'
 const NAV=[['grp','grp_stream'],['live','live'],['sr','music'],['cmd','cmd'],['tts','tts'],['alerts','alert'],['grp','grp_setup'],['acc','user'],['set','gear'],['grp','grp_extra'],['sort','sort']];
 function renderNav(){$('#nav').innerHTML=NAV.map(([k,i])=>k==='grp'?`<div class="grp">${t(i)}</div>`:`<button data-page="${k}" class="ch-item ${page===k?'on':''}">${ic(i)}${t('nav_'+k)}${k==='sort'?`<span class="beta">${t('beta')}</span>`:''}</button>`).join('')}
 function renderTop(){const b=S.bot||{};const p=$('#pill');p.className='status '+(b.running?(b.joined?'live':'wait'):'');
- $('#pillTxt').textContent=b.running?(b.joined?t('bot_live',{c:b.channel}):t('bot_conn')):t('bot_off');
+ $('#pillTxt').textContent=b.running?(b.joined?t('bot_live',{c:b.channel}):b.chatErr?t('bot_err'):t('bot_conn')):t('bot_off');p.title=b.chatErr||'';if(b.chatErr&&!b.joined)p.classList.add('err');
  const bb=$('#botBtn');bb.className='btn '+(b.running?'':'primary');bb.innerHTML=b.running?ic('stop')+t('bot_stop'):ic('play')+t('bot_start');bb.dataset.act=b.running?'botStop':'botStart'}
 function render(){applyTheme();renderNav();renderTop();const f=PAGES[page]||PAGES.live;$('#app').innerHTML=f();after[page]&&after[page]()}
 const after={};
@@ -463,12 +463,14 @@ function showCode(which,code,uri){modal(`<div class="mh"><div style="flex:1"><h3
  <p class="muted">${t('code_s',{w:t(which==='bot'?'code_bot':'code_streamer')})}</p><div class="code-box">${esc(code)}</div>${which==='bot'?`<p class="muted" style="font-size:13px">${t('code_tip')}</p>`:''}
  <div style="display:flex;gap:8px;align-items:center"><span class="muted" style="flex:1">${t('waiting')}</span><button class="btn" data-act="open" data-u="${esc(uri)}">${ic('ext')}${t('open_again')}</button></div>`);loginBox={which}}
 
+{const live0=PAGES.live;PAGES.live=()=>{const h=live0();const b=S.bot||{};if(!b.running||b.joined||!b.chatErr)return h;const k=h.indexOf('</div></div>')+12;return h.slice(0,k)+`<div class="note err-note"><b>${t('bot_err')}:</b> ${esc(b.chatErr)}</div>`+h.slice(k)}}
 /* ---------------------------------------------------------------- Einstellungen */
 PAGES.set=()=>{const s=S.settings;
  return`<div class="head"><div><h1>${t('set_t')}</h1><p>${t('set_s')}</p></div></div>
  <div class="cards c2">
  <div class="card">
-  <div class="line"><div>${t('autostart')}<small>${t('autostart_s')}</small></div>${sw(s.autoStart,'set',`data-k="autoStart"`)}</div>
+  <div class="line"><div>${t('start_mode')}<small>${t('start_mode_s')}</small></div><select data-set="startMode">${[['manual',t('start_manual')],['app',t('start_app')],['live',t('start_live')]].map(([v,n])=>`<option value="${v}" ${s.startMode===v?'selected':''}>${n}</option>`).join('')}</select></div>
+  ${s.startMode==='live'?`<div class="line"><div>${t('stop_off')}<small>${t('stop_off_s')}</small></div>${sw(s.stopOffline,'set',`data-k="stopOffline"`)}</div>${S.accounts.streamer&&S.accounts.streamer.connected?'':`<p class="note" style="margin:6px 0 0">${t('start_live_need')}</p>`}`:''}
   <div class="line"><div>${t('chat_lang')}</div><select data-set="chatLang"><option value="" ${!s.chatLang?'selected':''}>${t('same_app')}</option><option value="en" ${s.chatLang==='en'?'selected':''}>English</option><option value="de" ${s.chatLang==='de'?'selected':''}>Deutsch</option></select></div>
   <div class="line"><div>${t('look_t')}<small>${t(S.solo?'look_solo':'look_hub')}</small></div></div>
  </div>
@@ -477,27 +479,44 @@ PAGES.set=()=>{const s=S.settings;
  </div></div>`};
 
 /* ---------------------------------------------------------------- Playlist-Sortierer */
-let SO=null,sortSel=new Set(),sortOpt={splitMood:true,chillMix:true,minSongs:3,prefix:''};
-PAGES.sort=()=>{if(!S.accounts.spotify.connected)return`<div class="head"><div><h1>${t('sort_t')}</h1><p>${t('sort_s')}</p></div></div><div class="note">${t('sort_need_sp')} <button class="btn sm primary" data-page="acc">${t('go_acc')}</button></div>`;
- if(!SO)return`<div class="head"><div><h1>${t('sort_t')}</h1><p>${t('sort_s')}</p></div></div><div class="empty">…</div>`;
- const j=SO.job||{};const songs=j.songs||[];const models=SO.models||[];
+let SO=null,sortSel=new Set(),sortOpt={mode:'genre',chillMix:false,minSongs:3,prefix:''};
+try{const o=JSON.parse(localStorage.getItem('sp-sortopt')||'null');if(o)sortOpt={...sortOpt,...o};delete sortOpt.splitMood}catch(e){}
+const saveSortOpt=()=>{try{localStorage.setItem('sp-sortopt',JSON.stringify(sortOpt))}catch(e){}};
+const gb=n=>(n/1e9).toFixed(n>=1e10?0:1).replace('.',lang==='de'?',':'.')+' GB';
+function aiCard(){const a=SO.ai||{},ready=SO.aiReady;
+ if(ready)return `<div class="card ai-ok"><div class="line" style="border:0;padding:0"><div><b>${t('ai_ready')}</b><small>${t('ai_ready_s')}</small></div><span class="tag ok">✓</span></div></div>`;
+ const steps={download:t('ai_dl'),unpack:t('ai_unpack'),start:t('ai_start'),model:t('ai_model_dl')};
+ const pct=Math.round((a.pct||0)*100);
+ return `<div class="card ai-setup"><h3 style="margin:0 0 4px">${t('ai_t')}</h3><p class="sub" style="margin:0 0 12px">${t('ai_s')}</p>
+  ${a.running?`<div class="muted" style="font-size:13px;margin-bottom:6px">${steps[a.step]||'…'}${a.total?` · ${gb(a.done)} / ${gb(a.total)}`:''}</div><div class="bar"><i style="width:${pct}%"></i></div>`
+   :a.error?`<p class="bad" style="margin:0 0 10px">${esc(a.error)}</p><button class="btn primary" data-act="aiSetup">${t('ai_retry')}</button>`
+   :`<button class="btn primary" data-act="aiSetup">${t('ai_go')}</button>`}</div>`}
+PAGES.sort=()=>{const head=`<div class="head"><div><h1>${t('sort_t')} <span class="tag">${t('beta')}</span></h1><p>${t('sort_s')}</p></div>${SO&&SO.created?`<span class="sp"></span><button class="btn ghost" data-act="sortForget">${t('sort_forget')}</button>`:''}</div>`;
+ if(!S.accounts.spotify.connected)return head+`<div class="note">${t('sort_need_sp')} <button class="btn sm primary" data-page="acc">${t('go_acc')}</button></div>`;
+ if(!SO)return head+`<div class="empty">…</div>`;
+ const j=SO.job||{};const songs=j.songs||[];const ready=SO.aiReady;
  const step=j.running?({load:t('st_load'),genres:t('st_genres'),ai:t('st_ai')}[j.step]||'…'):(songs.length?t('st_done'):'');
- const pct=j.total?Math.round(j.done/j.total*100):0;
- return`<div class="head"><div><h1>${t('sort_t')} <span class="tag">${t('beta')}</span></h1><p>${t('sort_s')}</p></div><span class="sp"></span>${SO.created?`<button class="btn ghost" data-act="sortForget">${t('sort_forget')}</button>`:''}</div>
- ${models.length?'':`<div class="note">${t('sort_no_ollama')}</div>`}
- <div class="cards c2" style="margin-bottom:16px">
- <div class="card"><h3>${t('sort_pl')}</h3><p class="sub">&nbsp;</p><div class="pl">${(SO.playlists||[]).map(p=>`<label><input type="checkbox" data-pl="${p.id}" ${sortSel.has(p.id)?'checked':''}>${esc(p.name)}<small>${p.count||''}</small></label>`).join('')}</div></div>
- <div class="card"><div class="line"><div>${t('sort_model')}</div><select id="sortModel">${models.map(m=>`<option>${esc(m)}</option>`).join('')}</select></div>
-  <div class="line"><div>${t('sort_split')}</div>${sw(sortOpt.splitMood,'sortOpt',`data-k="splitMood"`)}</div>
-  <div class="line"><div>${t('sort_chill')}</div>${sw(sortOpt.chillMix,'sortOpt',`data-k="chillMix"`)}</div>
-  <div class="line"><div>${t('sort_min')}</div><input type="number" min="1" value="${sortOpt.minSongs}" id="sortMin"></div>
-  <div class="line"><div>${t('sort_prefix')}</div><input id="sortPrefix" value="${esc(sortOpt.prefix)}" style="width:120px"></div>
-  <div class="line"><button class="btn primary" data-act="sortRun" ${j.running||!models.length?'disabled':''}>${t('sort_run')}</button><button class="btn" data-act="sortApply" ${j.running||!songs.length?'disabled':''}>${t('sort_apply')}</button><span class="muted">${step}</span></div>
+ const pct=j.total?Math.round(j.done/j.total*100):0;const pls=SO.playlists||[];
+ return head+aiCard()+`
+ <div class="cards c2" style="margin:16px 0">
+ <div class="card"><div class="line" style="border:0;padding:0 0 8px"><h3 style="margin:0">${t('sort_pl')}</h3><span class="muted" style="font-size:12.5px">${sortSel.size} / ${pls.length}</span></div>
+  ${pls.length?`<div class="pl">${pls.map(p=>`<label class="${sortSel.has(p.id)?'on':''}"><input type="checkbox" data-pl="${p.id}" ${sortSel.has(p.id)?'checked':''}><span class="ell">${esc(p.name)}</span><small>${p.count||''}</small></label>`).join('')}</div>`:`<p class="muted">${SO.error?esc(SO.error):t('sort_none')}</p>`}</div>
+ <div class="card"><h3 style="margin:0 0 6px">${t('sort_how')}</h3>
+  <div class="seg sort-mode">${[['genre',t('sm_genre')],['mood',t('sm_mood')],['both',t('sm_both')]].map(([k,n])=>`<button class="btn ${sortOpt.mode===k?'on':''}" data-act="sortMode" data-m="${k}">${n}</button>`).join('')}</div>
+  <p class="muted" style="font-size:12.5px;margin:8px 0 4px">${t('sm_hint_'+sortOpt.mode)}</p>
+  ${sortOpt.mode!=='mood'?`<div class="line"><div>${t('sort_chill')}</div>${sw(sortOpt.chillMix,'sortOpt',`data-k="chillMix"`)}</div>`:''}
+  <div class="line"><div>${t('sort_min')}<small>${t('sort_min_s')}</small></div><input type="number" min="1" value="${sortOpt.minSongs}" id="sortMin" style="width:80px"></div>
+  <div class="line"><div>${t('sort_prefix')}<small>${t('sort_prefix_s')}</small></div><input id="sortPrefix" value="${esc(sortOpt.prefix)}" style="width:140px" placeholder="AI · "></div>
+  <div class="line" style="border:0;gap:8px;padding-top:12px"><button class="btn primary" data-act="sortRun" ${j.running||!ready||!sortSel.size?'disabled':''}>${t('sort_run')}</button><button class="btn" data-act="sortApply" ${j.running||!songs.length?'disabled':''}>${t('sort_apply')}</button><span class="muted" style="font-size:13px">${!ready?t('ai_wait'):!sortSel.size?t('sort_pick'):step}</span></div>
   ${j.running?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}${j.error?`<p class="bad">${esc(j.error)}</p>`:''}
  </div></div>
- ${songs.length?`<div class="card"><table class="st"><tr><th>${t('sort_song')}</th><th>${t('sort_genre')}</th><th>${t('sort_mood')}</th></tr>${songs.map((s,i)=>`<tr><td><b>${esc(s.name)}</b> <span class="muted">${esc((s.artists||[]).join(', '))}</span></td><td><input value="${esc(s.genre)}" data-sg="${i}" style="width:160px"></td><td><select data-sm="${i}">${['Chill','Medium','Upbeat'].map(m=>`<option value="${m}" ${s.mood===m?'selected':''}>${t('m_'+m)}</option>`).join('')}</select></td></tr>`).join('')}</table></div>`:''}`};
+ ${songs.length?`<div class="card"><table class="st"><tr><th>${t('sort_song')}</th><th>${t('sort_genre')}</th><th>${t('sort_mood')}</th></tr>${songs.map((s,i)=>`<tr><td><b>${esc(s.name)}</b> <span class="muted">${esc((s.artists||[]).join(', '))}</span></td><td><input value="${esc(s.genre)}" data-sg="${i}" style="width:170px"></td><td><select data-sm="${i}">${['Chill','Medium','Upbeat'].map(m=>`<option value="${m}" ${s.mood===m?'selected':''}>${t('m_'+m)}</option>`).join('')}</select></td></tr>`).join('')}</table></div>`:''}`};
 after.sort=()=>{if(!SO&&S.accounts.spotify.connected)loadSort()};
-async function loadSort(){try{SO=await api('/api/sort/info')}catch(e){SO={models:[],playlists:[],job:{}}}if(page==='sort')render()}
+async function loadSort(){try{SO=await api('/api/sort/info')}catch(e){SO={models:[],playlists:[],job:{},ai:{}}}if(page==='sort')render();
+ // KI fehlt: automatisch einrichten (einmalig)
+ if(SO&&!SO.aiReady&&!(SO.ai||{}).running&&!(SO.ai||{}).error){const r=await api('/api/ai/setup',{}).catch(()=>null);if(r){SO.ai=r.ai;SO.aiReady=r.aiReady;if(page==='sort')render()}}
+ if(SO&&(SO.ai||{}).running)aiPoll()}
+let aiT;function aiPoll(){clearInterval(aiT);aiT=setInterval(async()=>{const r=await api('/api/ai/state').catch(()=>null);if(!r||!SO)return;SO.ai=r.ai;SO.aiReady=r.aiReady;if(page==='sort'&&!document.querySelector('#app input:focus'))render();if(!r.ai.running)clearInterval(aiT)},1500)}
 let sortT=null;function watchSort(){clearInterval(sortT);sortT=setInterval(async()=>{const j=await api('/api/sort/job');if(SO)SO.job=j;if(page==='sort')render();if(!j.running)clearInterval(sortT)},1200)}
 
 /* ---------------------------------------------------------------- Ereignisse */
@@ -545,19 +564,21 @@ document.addEventListener('click',async e=>{
   case 'twLogout':S=await api('/api/twitch/logout',{which:b.dataset.w});render();break;
   case 'twEditApp':$('#twApp').hidden=false;b.closest('.line').hidden=true;break;
   case 'close':closeModal();break;
-  case 'sortOpt':sortOpt[k]=!sortOpt[k];render();break;
-  case 'sortRun':await api('/api/sort/run',{ids:[...sortSel],model:$('#sortModel').value});SO.job={running:true};render();watchSort();break;
-  case 'sortApply':{sortOpt.minSongs=+$('#sortMin').value||3;sortOpt.prefix=$('#sortPrefix').value;const r=await api('/api/sort/apply',sortOpt);toast(t('sort_done',{n:r.added,p:r.playlists}));SO=null;loadSort();break}
+  case 'sortOpt':sortOpt[k]=!sortOpt[k];saveSortOpt();render();break;
+  case 'sortMode':sortOpt.mode=b.dataset.m;saveSortOpt();render();break;
+  case 'aiSetup':{const r=await api('/api/ai/setup',{});SO.ai=r.ai;SO.aiReady=r.aiReady;render();aiPoll();break}
+  case 'sortRun':await api('/api/sort/run',{ids:[...sortSel]});SO.job={running:true};render();watchSort();break;
+  case 'sortApply':{sortOpt.minSongs=+$('#sortMin').value||3;sortOpt.prefix=$('#sortPrefix').value;saveSortOpt();const r=await api('/api/sort/apply',sortOpt);toast(t('sort_done',{n:r.added,p:r.playlists}));SO=null;loadSort();break}
   case 'sortForget':await api('/api/sort/forget',{});SO=null;loadSort();break;
  }}catch(x){toast(errMsg(x))}});
 document.addEventListener('change',async e=>{const el=e.target;
  try{
- if(el.dataset.set){let v=el.type==='number'?+el.value:el.value;S=await api('/api/settings',{[el.dataset.set]:v});if(el.dataset.set==='accent')render();else if(['spotifyClientId','twitchClientId'].includes(el.dataset.set))render();toast(t('saved'))}
+ if(el.dataset.set){let v=el.type==='number'?+el.value:el.value;S=await api('/api/settings',{[el.dataset.set]:v});if(el.dataset.set==='accent')render();else if(['spotifyClientId','twitchClientId','startMode'].includes(el.dataset.set))render();toast(t('saved'))}
  else if(el.dataset.tts){const k=el.dataset.tts;let v=el.type==='number'||el.type==='range'?+el.value:el.value;S=await api('/api/tts',{[k]:v});toast(t('saved'))}
  else if(el.dataset.src){S=await api('/api/tts/source',{key:el.dataset.src,field:el.dataset.f,value:el.dataset.f==='level'?+el.value:el.value});render()}
  else if(el.dataset.al){const f=el.dataset.f;S=await api('/api/alerts',{key:el.dataset.al,field:f,value:f==='min'?+el.value:el.value});render()}
  else if(el.dataset.act==='cmdLevel'){S=await api('/api/command',{key:el.dataset.k,level:+el.value});render()}
- else if(el.dataset.pl){el.checked?sortSel.add(el.dataset.pl):sortSel.delete(el.dataset.pl)}
+ else if(el.dataset.pl){el.checked?sortSel.add(el.dataset.pl):sortSel.delete(el.dataset.pl);render()}
  else if(el.dataset.sg!==undefined){const j=await api('/api/sort/edit',{i:+el.dataset.sg,genre:el.value});SO.job=j}
  else if(el.dataset.sm!==undefined){const j=await api('/api/sort/edit',{i:+el.dataset.sm,mood:el.value});SO.job=j}
  }catch(x){toast(errMsg(x))}});

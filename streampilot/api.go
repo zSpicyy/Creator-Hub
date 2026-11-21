@@ -40,6 +40,7 @@ func generalSettings() map[string]any {
 	for _, k := range []string{"spotifyClientId", "twitchClientId", "channel"} {
 		out[k] = str(snap, k, "")
 	}
+	out["startMode"] = startMode()
 	return out
 }
 
@@ -84,7 +85,7 @@ func stateJSON() map[string]any {
 		"tts":      t,
 		"sources":  srcs,
 		"alerts":   alerts,
-		"alertsOn": boolean(storedAl, "enabled", true),
+		"alertsOn": boolean(storedAl, "enabled", false),
 		"ttsQueue": tts.Len(),
 		"lang":     kit.Lang(),
 		"solo":     solo.Standalone(),
@@ -399,7 +400,7 @@ func routes(mux *http.ServeMux) {
 			if running {
 				StopBot()
 			}
-			if running || gBool("autoStart") {
+			if running || startMode() == "app" {
 				_ = StartBot()
 			}
 		}()
@@ -431,7 +432,8 @@ func routes(mux *http.ServeMux) {
 
 	// ---- Playlist-Sortierer
 	mux.HandleFunc("/api/sort/info", func(w http.ResponseWriter, r *http.Request) {
-		out := map[string]any{"models": ollamaModels(), "job": sortJob.Snapshot(), "created": len(cfg.Section("sortCreated"))}
+		go ensureAIStarted()
+		out := map[string]any{"models": ollamaModels(), "ai": ai.Snapshot(), "aiReady": aiReady(), "aiModel": aiModel(), "job": sortJob.Snapshot(), "created": len(cfg.Section("sortCreated"))}
 		if spotify.Connected() {
 			if pl, err := myPlaylists(); err == nil {
 				out["playlists"] = pl
@@ -440,6 +442,14 @@ func routes(mux *http.ServeMux) {
 			}
 		}
 		writeJSON(w, out)
+	})
+	mux.HandleFunc("/api/ai/setup", func(w http.ResponseWriter, r *http.Request) {
+		go setupAI()
+		time.Sleep(200 * time.Millisecond)
+		writeJSON(w, map[string]any{"ai": ai.Snapshot(), "aiReady": aiReady()})
+	})
+	mux.HandleFunc("/api/ai/state", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, map[string]any{"ai": ai.Snapshot(), "aiReady": aiReady()})
 	})
 	mux.HandleFunc("/api/sort/job", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, sortJob.Snapshot()) })
 	mux.HandleFunc("/api/sort/run", func(w http.ResponseWriter, r *http.Request) {
@@ -450,7 +460,11 @@ func routes(mux *http.ServeMux) {
 				ids = append(ids, s)
 			}
 		}
-		go runSort(ids, str(b, "model", ""))
+		if !aiReady() {
+			writeErr(w, 400, tr("Die KI ist noch nicht bereit. Warte, bis die Einrichtung fertig ist.", "The AI is not ready yet. Wait until setup has finished."))
+			return
+		}
+		go runSort(ids, aiModel())
 		writeJSON(w, map[string]any{})
 	})
 	mux.HandleFunc("/api/sort/edit", func(w http.ResponseWriter, r *http.Request) {
@@ -473,7 +487,12 @@ func routes(mux *http.ServeMux) {
 		sortJob.mu.Lock()
 		songs := append([]SortSong{}, sortJob.Songs...)
 		sortJob.mu.Unlock()
-		groups := sortGroups(songs, boolean(b, "splitMood", true), boolean(b, "chillMix", true), int(num(b, "minSongs", 3)))
+		mode := str(b, "mode", "")
+		if mode == "" {
+			mode = map[bool]string{true: "both", false: "genre"}[boolean(b, "splitMood", false)]
+		}
+		chill := boolean(b, "chillMix", false) && mode != "mood"
+		groups := sortGroups(songs, mode, chill, int(num(b, "minSongs", 3)))
 		n, err := applySort(groups, str(b, "prefix", ""))
 		if err != nil {
 			writeErr(w, 400, err.Error())

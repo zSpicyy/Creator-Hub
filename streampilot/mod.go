@@ -43,10 +43,10 @@ type ModCfg struct {
 }
 
 func modDefault() ModCfg {
-	return ModCfg{On: true, Links: ModRule{true, "escalate"}, Allow: []string{"twitch.tv", "clips.twitch.tv", "spotify.com", "youtube.com", "youtu.be"}, PermitSec: 60,
+	return ModCfg{On: false, Links: ModRule{true, "escalate"}, Allow: []string{"twitch.tv", "clips.twitch.tv", "spotify.com", "youtube.com", "youtu.be"}, PermitSec: 60,
 		Caps: ModRule{true, "delete"}, CapsMin: 12, CapsPct: 75, Spam: ModRule{true, "escalate"}, RepeatMax: 12, Emotes: ModRule{false, "delete"}, EmoteMax: 15,
 		Words: ModRule{true, "timeout"}, Length: ModRule{false, "delete"}, LengthMax: 400, SubsOK: false, VIPsOK: true, Timeout: 600, Warn: true,
-		First: true, FirstMsg: ""}
+		First: false, FirstMsg: ""}
 }
 
 func modLoad() ModCfg {

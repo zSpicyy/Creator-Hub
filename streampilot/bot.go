@@ -182,6 +182,9 @@ func botStatus() map[string]any {
 	}
 	st["running"] = b.running
 	st["joined"] = b.chat != nil && b.chat.Joined
+	if b.chat != nil {
+		st["chatErr"] = b.chat.Err
+	}
 	st["alerts"] = b.events != nil && b.events.OK
 	st["as"] = b.As
 	st["channel"] = b.Channel
@@ -209,7 +212,7 @@ func StartBot() error {
 	if !auth.Connected() {
 		return errors.New("twitch_missing")
 	}
-	channel := strings.ToLower(strings.TrimPrefix(cfg.Str("channel", ""), "#"))
+	channel := cleanChannel(cfg.Str("channel", ""))
 	if channel == "" {
 		channel = streamerAuth.Login()
 	}
@@ -237,6 +240,17 @@ func StartBot() error {
 	bot = b
 	logEvent("ok", "Bot started")
 	return nil
+}
+
+// cleanChannel macht aus Eingaben wie „https://twitch.tv/Name“ oder „#Name“ den reinen Kanalnamen.
+func cleanChannel(s string) string {
+	s = strings.TrimSpace(strings.ToLower(s))
+	s = strings.TrimSuffix(s, "/")
+	if i := strings.LastIndex(s, "/"); i >= 0 {
+		s = s[i+1:]
+	}
+	s = strings.TrimPrefix(strings.TrimPrefix(s, "#"), "@")
+	return s
 }
 
 func StopBot() {

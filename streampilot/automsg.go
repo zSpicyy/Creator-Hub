@@ -40,16 +40,16 @@ func autoDefault() AutoCfg {
 	return AutoCfg{
 		Events: map[string]AutoEvent{
 			"follow":   e(false, "Danke fürs Folgen, {user}!", "Thanks for the follow, {user}!"),
-			"sub":      e(true, "Danke für dein Abo, {user}! Willkommen im Team.", "Thanks for subscribing, {user}! Welcome to the team."),
-			"resub":    e(true, "{user} ist seit {months} Monaten dabei. Danke für die Treue!", "{user} has been subscribed for {months} months. Thanks for sticking around!"),
-			"subgift":  e(true, "Danke, {user}, für das Abo an {target}!", "Thanks, {user}, for gifting a sub to {target}!"),
-			"giftbomb": e(true, "{user} verschenkt {count} Abos! Vielen Dank!", "{user} is gifting {count} subs! Thank you so much!"),
-			"raid":     {On: true, Msg: tr("Willkommen, Raider! Danke {user} für den Raid mit {viewers} Zuschauern.", "Welcome, raiders! Thanks {user} for the raid with {viewers} viewers."), Min: 1},
-			"bits":     {On: true, Msg: tr("Danke für {bits} Bits, {user}!", "Thanks for {bits} bits, {user}!"), Min: 1},
+			"sub":      e(false, "Danke für dein Abo, {user}! Willkommen im Team.", "Thanks for subscribing, {user}! Welcome to the team."),
+			"resub":    e(false, "{user} ist seit {months} Monaten dabei. Danke für die Treue!", "{user} has been subscribed for {months} months. Thanks for sticking around!"),
+			"subgift":  e(false, "Danke, {user}, für das Abo an {target}!", "Thanks, {user}, for gifting a sub to {target}!"),
+			"giftbomb": e(false, "{user} verschenkt {count} Abos! Vielen Dank!", "{user} is gifting {count} subs! Thank you so much!"),
+			"raid":     {On: false, Msg: tr("Willkommen, Raider! Danke {user} für den Raid mit {viewers} Zuschauern.", "Welcome, raiders! Thanks {user} for the raid with {viewers} viewers."), Min: 1},
+			"bits":     {On: false, Msg: tr("Danke für {bits} Bits, {user}!", "Thanks for {bits} bits, {user}!"), Min: 1},
 			"start":    e(false, "Der Stream ist live! Heute: {title}", "The stream is live! Today: {title}"),
 			"end":      e(false, "Danke fürs Zuschauen! Bis zum nächsten Mal.", "Thanks for watching! See you next time."),
 		},
-		RaidSO:  true,
+		RaidSO:  false,
 		ReplyOn: true,
 		Replies: []AutoReply{
 			{ID: "discord", Words: "discord", Reply: tr("@{user} unseren Discord findest du mit !discord", "@{user} you can find our Discord with !discord"), Cooldown: 120, On: false},

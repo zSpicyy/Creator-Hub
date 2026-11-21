@@ -44,9 +44,10 @@ func main() {
 			}
 		}
 	}()
-	if gBool("autoStart") && (botAuth.Connected() || streamerAuth.Connected()) && twitchClientID() != "" {
+	if startMode() == "app" && (botAuth.Connected() || streamerAuth.Connected()) && twitchClientID() != "" {
 		go func() { time.Sleep(500 * time.Millisecond); _ = StartBot() }()
 	}
+	go liveLoop()
 	solo.Enable(a, solo.Config{Tool: "StreamPilot", Title: "StreamPilot", TitleEN: "StreamPilot", Logo: "streampilot", Color: "#7c4dff"})
 	web, _ := fs.Sub(webFS, "web")
 	startOverlay(web)

@@ -4,7 +4,7 @@
  const setG=async(k,v)=>{S=await api('/api/settings',{[k]:v});render()};
  // proxy: vorhandenen Schalter auf der Seite benutzen und dessen Zeile ausblenden
  const proxy=(sel,hideUp)=>({get:()=>{const el=document.querySelector(sel);return el?el.classList.contains('on'):null},
-  set:()=>{const el=document.querySelector(sel);el&&el.click()},hide:()=>{const el=document.querySelector(sel);const box=el&&el.closest(hideUp);if(box)box.style.display='none'}});
+  set:()=>{const el=document.querySelector(sel);el&&el.click()},hide:()=>{const el=document.querySelector(sel);const box=el&&el.closest(hideUp);if(box){box.style.display='none';const card=box.closest('.card');if(card&&card!==box&&![...card.children].some(c=>c.style.display!=='none'&&c.offsetParent!==null))card.style.display='none'}}});
  const curTab=()=>{const b=document.querySelector('.sp-tab.on');return b?b.dataset.sptab:'builtin'};
  const FEAT={
   sr:()=>({name:T('Songwünsche','Song requests'),get:()=>G('srFeat'),set:v=>setG('srFeat',v)}),
@@ -19,7 +19,7 @@
   cmd:()=>{const k={builtin:['cmdOn',T('Eingebaute Befehle','Built-in commands')],own:['ownOn',T('Eigene Befehle','Custom commands')],extra:['extraOn',T('Zitate und Extras','Quotes and extras')]}[curTab()];
    return{name:k[1],get:()=>G(k[0]),set:v=>setG(k[0],v)}}};
  const navMark=()=>{const off={sr:!G('srFeat'),tts:S.tts&&!S.tts.enabled,alerts:!S.alertsOn,give:!G('giveOn'),queue:!G('queueOn'),sounds:!G('soundOn'),goals:!G('goalOn'),auto:!G('timerOn')&&!G('autoOn')&&!G('replyOn'),cmd:!G('cmdOn')&&!G('ownOn')&&!G('extraOn')};
-  document.querySelectorAll('nav [data-page], .nav [data-page], #nav [data-page]').forEach(a=>{a.querySelector('.feat-off-tag')?.remove();if(off[a.dataset.page]){const t=document.createElement('span');t.className='feat-off-tag';t.textContent=T('aus','off');a.appendChild(t)}})};
+  document.querySelectorAll('nav [data-page], .nav [data-page], #nav [data-page]').forEach(a=>{a.querySelector('.feat-off-tag')?.remove();if(off[a.dataset.page]){const t=document.createElement('span');t.className='feat-off-tag';t.title=T('ausgeschaltet','switched off');a.appendChild(t)}})};
  const inject=()=>{navMark();const f=FEAT[page];const app=document.getElementById('app');if(!app)return;app.classList.remove('feat-off');
   const head=app.querySelector('.head');if(!f||!head)return;const F=f();const on=F.get();if(on===null)return;F.hide&&F.hide();
   const box=document.createElement('div');box.className='feat-sw'+(on?' on':'');
@@ -33,7 +33,7 @@
  const st=document.createElement('style');st.textContent=`.feat-sw{margin-left:auto;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:var(--card,#ffffff0d);border:1px solid var(--line,#ffffff1a);font-weight:700}
  .feat-sw span{min-width:28px;text-align:right;color:var(--muted)}.feat-sw.on span{color:#3ddc84}.head .sp+.feat-sw{margin-left:0}
  .feat-note{margin:0 0 16px;padding:12px 14px;border-radius:12px;background:#f0a33a1f;border:1px solid #f0a33a66;font-size:14px}
- .feat-off-tag{margin-left:auto;font-size:11px;padding:1px 6px;border-radius:6px;background:#ffffff14;color:var(--muted)}
+ .feat-off-tag{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.55;font-size:0;flex:none}
  #app.feat-off>:not(.head):not(.sp-tabs):not(.feat-note){opacity:.4;pointer-events:none;filter:grayscale(.6)}`;document.head.appendChild(st);
  if(typeof S!=='undefined'&&S&&S.bot!==undefined)render();
 })();
