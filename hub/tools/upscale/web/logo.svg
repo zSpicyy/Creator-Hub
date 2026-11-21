@@ -7,5 +7,10 @@
 <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#g)"/>
 <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#r)"/>
 <rect x="11" y="11" width="234" height="234" rx="53" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3"/>
-<g filter="url(#s)" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"><rect x="52" y="132" width="64" height="64" rx="10"/><rect x="104" y="52" width="100" height="100" rx="14" stroke-dasharray="1 0"/><path d="M92 120 L148 84 M120 84 H148 V112"/></g>
+<g filter="url(#s)" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#fff">
+<rect x="84" y="84" width="88" height="88" rx="14" stroke-width="13"/>
+<path d="M96 160 l24 -26 16 16 12 -12 14 22" stroke-width="10"/>
+<circle cx="146" cy="110" r="9" fill="#fff" stroke="none"/>
+<path d="M50 82 V50 H82 M174 50 H206 V82 M206 174 V206 H174 M82 206 H50 V174" stroke-width="15"/>
+</g>
 </svg>

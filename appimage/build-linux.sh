@@ -16,8 +16,8 @@ gzip -9 -c video/dist/linux/Videoschnitt > hub/payload/linux/Videoschnitt.gz
 gzip -9 -c mp3cutter/dist/linux/MP3-Schneider > hub/payload/linux/MP3-Schneider.gz
 (cd streampilot && CGO_ENABLED=0 go build -trimpath -ldflags "$LD" -o dist/linux/StreamPilot .)
 gzip -9 -c streampilot/dist/linux/StreamPilot > hub/payload/linux/StreamPilot.gz
-(cd kanalwerk && CGO_ENABLED=0 go build -trimpath -ldflags "$LD" -o dist/linux/Social-Planer .)
-gzip -9 -c kanalwerk/dist/linux/Social-Planer > hub/payload/linux/Social-Planer.gz
+# Social-Planer ist vorerst „Kommt bald“: (cd kanalwerk && CGO_ENABLED=0 go build -trimpath -ldflags "$LD" -o dist/linux/Social-Planer .)
+# Social-Planer ist vorerst „Kommt bald“: gzip -9 -c kanalwerk/dist/linux/Social-Planer > hub/payload/linux/Social-Planer.gz
 (cd hub && CGO_ENABLED=0 go build -trimpath -ldflags "$LD" -o ../hub-dist-umw/linux/Dateityp-Umwandler ./cmd/umwandler)
 gzip -9 -c hub-dist-umw/linux/Dateityp-Umwandler > hub/payload/linux/Dateityp-Umwandler.gz
 [ -f macos/icons/Motion-Design-256.png ] || python3 macos/make-icons.py macos/icons
@@ -25,7 +25,7 @@ cp macos/icons/Dateityp-Umwandler-256.png hub/payload/linux/Dateityp-Umwandler.p
 cp macos/icons/Videoschnitt-256.png hub/payload/linux/Videoschnitt.png
 cp macos/icons/MP3-Schneider-256.png hub/payload/linux/MP3-Schneider.png
 cp macos/icons/StreamPilot-256.png hub/payload/linux/StreamPilot.png
-cp macos/icons/Social-Planer-256.png hub/payload/linux/Social-Planer.png
+# Social-Planer ist vorerst „Kommt bald“: cp macos/icons/Social-Planer-256.png hub/payload/linux/Social-Planer.png
 cp macos/icons/Bildbearbeitung-256.png hub/payload/linux/Bildbearbeitung.png
 cp macos/icons/Motion-Design-256.png hub/payload/linux/Motion-Design.png
 A=$R/appimage/AppDir; rm -rf $A; mkdir -p $A/usr/bin $A/usr/share/icons/hicolor/256x256/apps $A/usr/share/applications

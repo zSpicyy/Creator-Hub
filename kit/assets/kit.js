@@ -26,7 +26,16 @@ const Kit=(()=>{
  K.applyTheme=async()=>{try{const t=await (await fetch('/kit/theme',{cache:'no-store'})).json();const key=JSON.stringify(t);if(key===last)return;last=key;
   let th=t.theme;if(th==='system')th=matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
   const r=document.documentElement;r.dataset.theme=th;r.dataset.density=t.density;r.style.setProperty('--accent',t.accent);r.style.setProperty('--accent-ink',ink(t.accent));r.style.setProperty('--accent-soft',t.accent+'26');
-  document.dispatchEvent(new CustomEvent('kit-theme',{detail:t}))}catch(e){}};
+  document.dispatchEvent(new CustomEvent('kit-theme',{detail:t}));
+  // Sprache im Hub geändert: neu laden, damit alles in der neuen Sprache erscheint (offene Projekte nur auf Wunsch)
+  const nl=t.lang==='de'?'de':'en';if(nl!==K.lang)K.langChanged(nl)}catch(e){}};
+ K.langChanged=nl=>{
+  const ed=document.getElementById('editor');const busy=(ed&&!ed.hidden)||(typeof App!=='undefined'&&App&&(App.P||App.dirty))||(typeof E!=='undefined'&&E&&E.proj)||(typeof P!=='undefined'&&P&&P.id)||(typeof K.busy==='function'&&K.busy());
+  if(!busy){location.reload();return}
+  if(document.getElementById('kitLang'))return;const d=document.createElement('div');d.id='kitLang';
+  d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px #0006;font-size:14px';
+  d.innerHTML=(nl==='de'?'Die Sprache wurde geändert.':'The language was changed.')+' <button class="btn primary" type="button">'+(nl==='de'?'Jetzt übernehmen':'Apply now')+'</button><button class="btn" type="button" aria-label="'+(nl==='de'?'Später':'Later')+'">'+(nl==='de'?'Später':'Later')+'</button>';
+  const [a,b]=d.querySelectorAll('button');a.onclick=()=>location.reload();b.onclick=()=>d.remove();document.body.appendChild(d)};
  K.applyTheme();setInterval(()=>{if(!document.hidden)K.applyTheme()},2000);
  // Lebenszeichen an das Programm (unter Linux erkennt es so, dass das Fenster geschlossen wurde)
  if(!K.embedded){const alive=()=>fetch('/kit/alive',{cache:'no-store'}).catch(()=>{});alive();setInterval(alive,3000)}window.addEventListener('focus',K.applyTheme);

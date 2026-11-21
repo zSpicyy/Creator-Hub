@@ -119,26 +119,14 @@ h1,h2,h3,.ch-brand,.brand,.num{font-family:Bahnschrift,"DIN Alternate","Segoe UI
 /* Kopfleiste: ruhig, ohne Verlauf */
 .ch-top{background:var(--panel)!important;padding:12px 22px!important}
 .ch-top::after{display:none}
-/* Navigation: Reiter oben statt Spalte links */
-.ch-shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto minmax(0,1fr)!important;grid-template-areas:"top" "nav" "main"!important}
-.ch-nav{flex-direction:row!important;align-items:center;flex-wrap:nowrap;gap:4px!important;padding:8px 20px!important;border-right:0!important;border-bottom:1px solid var(--line);background:var(--panel)!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-height:0}
-.ch-nav::-webkit-scrollbar{display:none}
-.ch-nav .ch-item{width:auto!important;flex:none;border-radius:999px!important;padding:7px 15px!important;white-space:nowrap;font-weight:600}
-.ch-nav .ch-item::before{display:none!important}
-.ch-nav .ch-item:hover{background:var(--panel2)!important;color:var(--text)!important}
-.ch-nav .ch-item.on,.ch-nav .ch-item[aria-current=true]{background:var(--text)!important;color:var(--panel)!important;box-shadow:none!important}
-.ch-nav .ch-item.on svg,.ch-nav .ch-item[aria-current=true] svg{color:var(--panel)!important}
-.ch-nav>small,.ch-nav>p{display:none}
-.ch-nav input,.ch-nav select{width:auto!important;min-width:180px}
-.ch-nav .btn{width:auto!important;flex:none}
-.ch-main{padding:26px 28px 48px!important}
-.ch-main h2{font-size:22px!important}
-body:has(>nav.ch-nav):not(:has(>.hist)){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto minmax(0,1fr)!important;grid-template-areas:"top" "nav" "main"!important}
-.ch-nav form{display:flex;gap:6px;align-items:center;margin:0 0 0 auto}
-.ch-nav #plist{display:flex;gap:4px}
-.ch-nav #plist{flex-direction:row!important;flex:0 1 auto!important;overflow-x:auto;overflow-y:hidden}
-.ch-nav .pj{width:auto!important;border-radius:999px!important;padding:6px 14px!important;white-space:nowrap;font-weight:600}
-.ch-nav .pj small{display:none}
-.ch-nav .pj[aria-current=true]{background:var(--text)!important;color:var(--panel)!important}
-.ch-nav #nf{display:flex!important;border-top:0!important;padding:0!important;margin:0 0 0 auto!important}
-.ch-nav #nf .err:empty{display:none}
+/* Navigation als Reiter oben (Hub, StreamPilot). Projektübersichten behalten die Seitenleiste links wie der Freisteller. */
+.ch-nav.navtop{flex-direction:row!important;align-items:center;flex-wrap:nowrap;gap:4px!important;padding:8px 20px!important;border-right:0!important;border-bottom:1px solid var(--line);background:var(--panel)!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-height:0}
+.ch-nav.navtop::-webkit-scrollbar{display:none}
+.ch-nav.navtop .ch-item{width:auto!important;flex:none;border-radius:999px!important;padding:7px 15px!important;white-space:nowrap;font-weight:600}
+.ch-nav.navtop .ch-item::before{display:none!important}
+.ch-nav.navtop .ch-item:hover{background:var(--panel2)!important;color:var(--text)!important}
+.ch-nav.navtop .ch-item.on,.ch-nav.navtop .ch-item[aria-current=true]{background:var(--text)!important;color:var(--panel)!important;box-shadow:none!important}
+.ch-nav.navtop .ch-item.on svg,.ch-nav.navtop .ch-item[aria-current=true] svg{color:var(--panel)!important}
+.ch-nav.navtop>small,.ch-nav.navtop>p{display:none}
+.ch-nav.navtop input,.ch-nav.navtop select{width:auto!important;min-width:180px}
+.ch-nav.navtop .btn{width:auto!important;flex:none}

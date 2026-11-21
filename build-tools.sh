@@ -17,8 +17,8 @@ MP3-Schneider|mp3cutter|.|MP3 Schneider|MP3 Splitter||mp3|#f0663a
 Dateityp-Umwandler|hub|./cmd/umwandler|Dateityp-Umwandler|File Converter|ffmpeg|convert|#1fc4b8
 Upscaler|hub|./cmd/upscaler|Upscaler|Upscaler|ai:upscale|upscale|#33c97c
 Freisteller|hub|./cmd/freisteller|Freisteller|Background Remover|ai:cutout|cutout|#e0449a
-StreamPilot|streampilot|.|StreamPilot|StreamPilot||streampilot|#7c4dff
-Social-Planer|kanalwerk|.|Social-Planer|Social-Planer||kanalwerk|#ff6b4a"
+StreamPilot|streampilot|.|StreamPilot|StreamPilot||streampilot|#7c4dff"
+# Social-Planer ist vorerst „Kommt bald“ und wird nicht mitgebaut: Social-Planer|kanalwerk|.|Social-Planer|Social-Planer||kanalwerk|#ff6b4a
 [ -n "$ONLY" ] && LIST=$(echo "$LIST" | grep "^$ONLY|")
 GOOS= GOARCH= go build -C appimage -o /tmp/aibuild ./cmd/build
 echo "$LIST" | while IFS='|' read N DIR PKG T TE NEED LOGO COL; do
