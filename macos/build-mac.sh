@@ -22,11 +22,11 @@ for A in arm64 amd64; do
   gzip -9 -c mp3cutter/dist/darwin-$A/MP3-Schneider > $P/MP3-Schneider.gz
   (cd streampilot && go build -trimpath -ldflags "$LD" -o dist/darwin-$A/StreamPilot .)
   gzip -9 -c streampilot/dist/darwin-$A/StreamPilot > $P/StreamPilot.gz
-  (cd kanalwerk && go build -trimpath -ldflags "$LD" -o dist/darwin-$A/Kanalwerk .)
-  gzip -9 -c kanalwerk/dist/darwin-$A/Kanalwerk > $P/Kanalwerk.gz
+  (cd kanalwerk && go build -trimpath -ldflags "$LD" -o dist/darwin-$A/Sendeplan .)
+  gzip -9 -c kanalwerk/dist/darwin-$A/Sendeplan > $P/Sendeplan.gz
   (cd hub && go build -trimpath -ldflags "$LD" -o ../hub-dist-umw/darwin-$A/Dateityp-Umwandler ./cmd/umwandler)
   gzip -9 -c hub-dist-umw/darwin-$A/Dateityp-Umwandler > $P/Dateityp-Umwandler.gz
-  cp $M/icons/Videoschnitt.icns $M/icons/MP3-Schneider.icns $M/icons/Bildbearbeitung.icns $M/icons/Dateityp-Umwandler.icns $M/icons/Motion-Design.icns $M/icons/StreamPilot.icns $M/icons/Kanalwerk.icns $P/
+  cp $M/icons/Videoschnitt.icns $M/icons/MP3-Schneider.icns $M/icons/Bildbearbeitung.icns $M/icons/Dateityp-Umwandler.icns $M/icons/Motion-Design.icns $M/icons/StreamPilot.icns $M/icons/Sendeplan.icns $P/
   B=$M/build/$A/"Creator Hub.app"; rm -rf "$M/build/$A"; mkdir -p "$B/Contents/MacOS" "$B/Contents/Resources"
   (cd hub && go build -trimpath -ldflags "$LD" -o "$B/Contents/MacOS/Creator-Hub" .)
   cp $M/icons/hub.icns "$B/Contents/Resources/icon.icns"

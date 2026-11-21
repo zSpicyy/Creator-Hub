@@ -118,10 +118,10 @@ type Theme struct {
 	Density string `json:"density"`
 }
 
-var accents = map[string]string{"indigo": "#7c6cff", "blau": "#4c8dff", "türkis": "#25b8c9", "grün": "#3fbf7f", "gelb": "#e0b43a", "orange": "#f08a3c", "rot": "#e5584f", "pink": "#e5629f", "violett": "#9a78f0"}
+var accents = map[string]string{"koralle": "#ff6b4a", "indigo": "#7c6cff", "blau": "#4c8dff", "türkis": "#25b8c9", "grün": "#3fbf7f", "gelb": "#e0b43a", "orange": "#f08a3c", "rot": "#e5584f", "pink": "#e5629f", "violett": "#9a78f0"}
 
 func ReadTheme() Theme {
-	t := Theme{Lang: "en", Theme: "black", Accent: "#7c6cff", Density: "normal"}
+	t := Theme{Lang: "en", Theme: "light", Accent: "#ff6b4a", Density: "normal"}
 	d, _ := os.UserConfigDir()
 	b, err := os.ReadFile(filepath.Join(d, "CreatorHub", "einstellungen.json"))
 	if err != nil {

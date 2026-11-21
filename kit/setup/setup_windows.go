@@ -91,7 +91,7 @@ func ToolShortcuts(exe, title string) {
 }
 
 // Namen der Werkzeug-Verknüpfungen (beide Sprachen), zum Entfernen beim Deinstallieren
-var toolLinks = []string{"Videoschnitt", "Video Editor", "MP3 Schneider", "MP3 Splitter", "Bildbearbeitung", "Image Editor", "Dateityp-Umwandler", "File Converter", "Motion Design", "Motion Design", "StreamPilot", "StreamPilot", "Kanalwerk", "Kanalwerk"}
+var toolLinks = []string{"Videoschnitt", "Video Editor", "MP3 Schneider", "MP3 Splitter", "Bildbearbeitung", "Image Editor", "Dateityp-Umwandler", "File Converter", "Motion Design", "Motion Design", "StreamPilot", "StreamPilot", "Kanalwerk", "Kanalwerk", "Sendeplan", "Sendeplan"}
 
 func RegisterUninstall(exe string, sizeKB uint32) error {
 	k, _, err := registry.CreateKey(registry.CURRENT_USER, uninstKey, registry.SET_VALUE)
@@ -170,13 +170,13 @@ func HasDesktopShortcut() bool {
 // StopRunning beendet laufende Teile von Creator Hub (auch unsichtbar hängende ältere Versionen),
 // damit der Installer die Dateien ersetzen kann. /T beendet auch ihre Hilfsprogramme (ffmpeg, Browserfenster).
 func StopRunning() {
-	for _, n := range []string{ExeName, "Videoschnitt.exe", "MP3-Schneider.exe", "Bildbearbeitung.exe", "Motion-Design.exe", "StreamPilot.exe", "Kanalwerk.exe"} {
+	for _, n := range []string{ExeName, "Videoschnitt.exe", "MP3-Schneider.exe", "Bildbearbeitung.exe", "Motion-Design.exe", "StreamPilot.exe", "Kanalwerk.exe", "Sendeplan.exe"} {
 		c := exec.Command("taskkill", "/F", "/T", "/IM", n)
 		c.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 		c.Run()
 	}
 	// Übrig gebliebene Browser-Hintergrundprozesse unserer Fenster (WebView2) beenden, sonst bleiben neue Fenster weiß
-	ps := `Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Where-Object { $_.CommandLine -match 'CreatorHub|Videoschnitt|MP3-Schneider|Bildbearbeitung|Motion-Design|MotionDesign|StreamPilot|Kanalwerk|Creator Hub' -and $_.CommandLine -notmatch 'CreatorHubSetup' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+	ps := `Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Where-Object { $_.CommandLine -match 'CreatorHub|Videoschnitt|MP3-Schneider|Bildbearbeitung|Motion-Design|MotionDesign|StreamPilot|Kanalwerk|Sendeplan|Creator Hub' -and $_.CommandLine -notmatch 'CreatorHubSetup' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
 	c := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", ps)
 	c.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 	c.Run()
@@ -185,7 +185,7 @@ func StopRunning() {
 // StopTools schließt die eigenständigen Werkzeuge (für ein Update): erst freundlich,
 // damit sie speichern können, nach ein paar Sekunden hart samt ffmpeg.
 func StopTools() {
-	names := []string{"Videoschnitt.exe", "MP3-Schneider.exe", "Bildbearbeitung.exe", "Motion-Design.exe", "StreamPilot.exe", "Kanalwerk.exe"}
+	names := []string{"Videoschnitt.exe", "MP3-Schneider.exe", "Bildbearbeitung.exe", "Motion-Design.exe", "StreamPilot.exe", "Kanalwerk.exe", "Sendeplan.exe"}
 	run := func(args ...string) {
 		c := exec.Command("taskkill", args...)
 		c.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}

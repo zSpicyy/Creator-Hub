@@ -58,7 +58,7 @@ func getLogin(n string) string {
 func loopLogin(net_ string, port int, path, state, authURL string, onCode func(q url.Values) error) error {
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
-		return fmt.Errorf("%s %d %s", tr("Die lokale Adresse für die Anmeldung (Port", "The local sign-in address (port"), port, tr(") ist belegt. Schließe andere Kanalwerk-Fenster.", ") is in use. Close other Kanalwerk windows."))
+		return fmt.Errorf("%s %d %s", tr("Die lokale Adresse für die Anmeldung (Port", "The local sign-in address (port"), port, tr(") ist belegt. Schließe andere Sendeplan-Fenster.", ") is in use. Close other Sendeplan windows."))
 	}
 	setLogin(net_, "waiting")
 	srv := &http.Server{}
@@ -77,7 +77,7 @@ func loopLogin(net_ string, port int, path, state, authURL string, onCode func(q
 			res = err.Error()
 		}
 		setLogin(net_, res)
-		msg := tr("Fertig! Du kannst dieses Fenster schließen und zu Kanalwerk zurückkehren.", "Done! You can close this window and go back to Kanalwerk.")
+		msg := tr("Fertig! Du kannst dieses Fenster schließen und zu Sendeplan zurückkehren.", "Done! You can close this window and go back to Sendeplan.")
 		if res != "ok" {
 			msg = res
 		}

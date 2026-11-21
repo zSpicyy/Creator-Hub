@@ -8,7 +8,7 @@ export GOPROXY=off GOFLAGS=-mod=mod CGO_ENABLED=0
 REPO=$(tr -d ' \n' < release/github-repo.txt 2>/dev/null || true)
 LD="-s -w -X kit/setup.Version=$V -X kit/update.GitHubRepo=$REPO"
 O=${OUT:-$R/tools-dist}; W=$O.build; rm -rf $O $W; mkdir -p $O $W
-[ -f macos/icons/Kanalwerk.icns ] || python3 macos/make-icons.py macos/icons
+[ -f macos/icons/Sendeplan.icns ] || python3 macos/make-icons.py macos/icons
 # Name | Quelle (Ordner und Paket) | Titel | englischer Titel | was es nachlädt | Logo | Farbe
 LIST="Videoschnitt|video|.|Videoschnitt|Video Editor|ffmpeg|video|#8a5ef0
 Bildbearbeitung|image|.|Bildbearbeitung|Image Editor||image|#3f78f0
@@ -18,7 +18,7 @@ Dateityp-Umwandler|hub|./cmd/umwandler|Dateityp-Umwandler|File Converter|ffmpeg|
 Upscaler|hub|./cmd/upscaler|Upscaler|Upscaler|ai:upscale|upscale|#33c97c
 Freisteller|hub|./cmd/freisteller|Freisteller|Background Remover|ai:cutout|cutout|#e0449a
 StreamPilot|streampilot|.|StreamPilot|StreamPilot||streampilot|#7c4dff
-Kanalwerk|kanalwerk|.|Kanalwerk|Kanalwerk||kanalwerk|#ff6b4a"
+Sendeplan|kanalwerk|.|Sendeplan|Sendeplan||kanalwerk|#ff6b4a"
 [ -n "$ONLY" ] && LIST=$(echo "$LIST" | grep "^$ONLY|")
 GOOS= GOARCH= go build -C appimage -o /tmp/aibuild ./cmd/build
 echo "$LIST" | while IFS='|' read N DIR PKG T TE NEED LOGO COL; do
