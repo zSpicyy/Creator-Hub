@@ -72,7 +72,7 @@ func ytStartLogin() (string, error) {
 		ytLogin.state = res
 		ytLogin.Unlock()
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		msg := tr("Fertig! Du kannst dieses Fenster schließen und zu Sendeplan zurückkehren.", "Done! You can close this window and go back to Sendeplan.")
+		msg := tr("Fertig! Du kannst dieses Fenster schließen und zu Social-Planer zurückkehren.", "Done! You can close this window and go back to Social-Planer.")
 		if res != "ok" {
 			msg = res
 		}

@@ -1,6 +1,6 @@
 package main
 
-// Alle Daten von Sendeplan liegen in einer Datei (daten.json) im eigenen Konfigurationsordner
+// Alle Daten von Social-Planer liegen in einer Datei (daten.json) im eigenen Konfigurationsordner
 // und bleiben bei Updates erhalten.
 
 import (

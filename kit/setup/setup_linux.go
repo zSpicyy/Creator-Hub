@@ -158,6 +158,7 @@ func StopTools() {
 		exec.Command("pkill", sig, "-x", "StreamPilot").Run()
 		exec.Command("pkill", sig, "-x", "Kanalwerk").Run()
 		exec.Command("pkill", sig, "-x", "Sendeplan").Run()
+		exec.Command("pkill", sig, "-x", "Social-Planer").Run()
 		exec.Command("pkill", sig, "-x", "Bildbearbeitung").Run()
 		exec.Command("pkill", sig, "-x", "Motion-Design").Run()
 		if sig == "-TERM" {

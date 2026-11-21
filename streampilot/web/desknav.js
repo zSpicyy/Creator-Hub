@@ -1,4 +1,4 @@
-// StreamPilot – Navigation oben wie in Sendeplan: Bereiche als Reiter, darunter die Seiten des Bereichs.
+// StreamPilot – Navigation oben wie in Social-Planer: Bereiche als Reiter, darunter die Seiten des Bereichs.
 (()=>{const groups=()=>{const out=[];let g=null;for(const [k,i] of NAV){if(k==='grp'){g={label:i,items:[]};out.push(g)}else{if(!g){g={label:'',items:[]};out.push(g)}g.items.push([k,i])}}return out.filter(x=>x.items.length)};
  window.renderNav=function(){const gs=groups();const cur=gs.find(g=>g.items.some(([k])=>k===page))||gs[0];
   const top=gs.map(g=>`<button type="button" class="ch-item grp-tab ${g===cur?'on':''}" data-gp="${g.items[0][0]}">${t(g.label)}</button>`).join('');

@@ -124,7 +124,7 @@ func uploadLoop() {
 					}
 					continue
 				}
-				// TikTok und Instagram können nicht selbst zum Termin veröffentlichen: Sendeplan lädt dann zum Termin hoch.
+				// TikTok und Instagram können nicht selbst zum Termin veröffentlichen: Social-Planer lädt dann zum Termin hoch.
 				if (n == "tt" || n == "ig") && u.PublishAt > time.Now().Unix() {
 					setT(u.ID, n, func(t *TState) { t.Note = tr("wird zum Termin hochgeladen", "uploads at the scheduled time") })
 					continue

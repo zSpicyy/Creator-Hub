@@ -107,7 +107,7 @@ header.bar{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 5%,
 main#app{background:radial-gradient(900px 340px at 18% -120px,color-mix(in srgb,var(--accent) 11%,transparent),transparent 70%)}
 .main-btn:disabled{filter:saturate(.4) brightness(.8);box-shadow:none}
 
-/* ===== Schreibtisch-Design (wie Sendeplan) für alle Creator-Hub-Programme =====
+/* ===== Schreibtisch-Design (wie Social-Planer) für alle Creator-Hub-Programme =====
    Ruhige Flächen, kräftige Überschriften (Bahnschrift), Reiter oben als Pillen, Akzentfarbe aus dem Hub. */
 body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
 h1,h2,h3,.ch-brand,.brand,.num{font-family:Bahnschrift,"DIN Alternate","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;letter-spacing:.1px}

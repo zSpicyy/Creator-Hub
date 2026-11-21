@@ -4,7 +4,7 @@ import io, struct, sys, os
 from playwright.sync_api import sync_playwright
 from PIL import Image
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
-logos = {'hub': '/home/claude/hub/web/logos/hub.svg', 'Videoschnitt': '/home/claude/hub/web/logos/video.svg', 'MP3-Schneider': '/home/claude/hub/web/logos/mp3.svg', 'Bildbearbeitung': '/home/claude/hub/web/logos/image.svg', 'Dateityp-Umwandler': '/home/claude/hub/web/logos/convert.svg', 'Motion-Design': '/home/claude/hub/web/logos/motion.svg', 'Upscaler': '/home/claude/hub/web/logos/upscale.svg', 'Freisteller': '/home/claude/hub/web/logos/cutout.svg', 'StreamPilot': '/home/claude/hub/web/logos/streampilot.svg', 'Sendeplan': '/home/claude/hub/web/logos/kanalwerk.svg'}
+logos = {'hub': '/home/claude/hub/web/logos/hub.svg', 'Videoschnitt': '/home/claude/hub/web/logos/video.svg', 'MP3-Schneider': '/home/claude/hub/web/logos/mp3.svg', 'Bildbearbeitung': '/home/claude/hub/web/logos/image.svg', 'Dateityp-Umwandler': '/home/claude/hub/web/logos/convert.svg', 'Motion-Design': '/home/claude/hub/web/logos/motion.svg', 'Upscaler': '/home/claude/hub/web/logos/upscale.svg', 'Freisteller': '/home/claude/hub/web/logos/cutout.svg', 'StreamPilot': '/home/claude/hub/web/logos/streampilot.svg', 'Social-Planer': '/home/claude/hub/web/logos/kanalwerk.svg'}
 def render(svg):
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1024, 'height': 1024})

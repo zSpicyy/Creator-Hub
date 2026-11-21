@@ -12,8 +12,8 @@ gzip -9 -c video/dist/Videoschnitt.exe > hub/payload/windows/Videoschnitt.exe.gz
 gzip -9 -c mp3cutter/dist/MP3-Schneider.exe > hub/payload/windows/MP3-Schneider.exe.gz
 (cd streampilot && GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LD" -o dist/StreamPilot.exe .)
 gzip -9 -c streampilot/dist/StreamPilot.exe > hub/payload/windows/StreamPilot.exe.gz
-(cd kanalwerk && GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LD" -o dist/Sendeplan.exe .)
-gzip -9 -c kanalwerk/dist/Sendeplan.exe > hub/payload/windows/Sendeplan.exe.gz
+(cd kanalwerk && GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LD" -o dist/Social-Planer.exe .)
+gzip -9 -c kanalwerk/dist/Social-Planer.exe > hub/payload/windows/Social-Planer.exe.gz
 (cd image && GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LD" -o dist/Bildbearbeitung.exe .)
 gzip -9 -c image/dist/Bildbearbeitung.exe > hub/payload/windows/Bildbearbeitung.exe.gz
 (cd motion && GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LD" -o dist/Motion-Design.exe .)

@@ -116,7 +116,7 @@ func announceLive(title, game string, test bool) []string {
 	return errs
 }
 
-// announceLoop prüft alle 5 Minuten, solange Sendeplan offen ist.
+// announceLoop prüft alle 5 Minuten, solange Social-Planer offen ist.
 func announceLoop() {
 	time.Sleep(20 * time.Second)
 	for {
