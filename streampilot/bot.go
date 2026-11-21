@@ -219,6 +219,7 @@ func StartBot() error {
 	if channel == "" {
 		channel = auth.Login()
 	}
+	channel = cleanChannel(channel)
 	b := &Bot{running: true, votes: map[string]bool{}, giftSkip: map[string]int{}, As: auth.Login(), Channel: channel}
 	b.chat = &Chat{auth: auth, channel: channel, onMsg: b.onMessage, onNotice: b.onNotice}
 	b.chat.Start()

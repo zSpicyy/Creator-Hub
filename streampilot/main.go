@@ -48,6 +48,7 @@ func main() {
 		go func() { time.Sleep(500 * time.Millisecond); _ = StartBot() }()
 	}
 	go liveLoop()
+	go ensureAIStarted() // KI läuft, solange StreamPilot offen ist
 	solo.Enable(a, solo.Config{Tool: "StreamPilot", Title: "StreamPilot", TitleEN: "StreamPilot", Logo: "streampilot", Color: "#7c4dff"})
 	web, _ := fs.Sub(webFS, "web")
 	startOverlay(web)

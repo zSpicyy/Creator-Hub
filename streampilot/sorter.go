@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const ollamaURL = "http://localhost:11434"
+const ollamaURL = "http://127.0.0.1:11434"
 
 type SortSong struct {
 	URI     string   `json:"uri"`

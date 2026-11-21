@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"kit"
+	"kit/ollama"
 	"kit/setup"
 	"kit/solo"
 	"net/http"
@@ -444,12 +445,17 @@ func routes(mux *http.ServeMux) {
 		writeJSON(w, out)
 	})
 	mux.HandleFunc("/api/ai/setup", func(w http.ResponseWriter, r *http.Request) {
+		ollama.Answer("streampilot", true)
 		go setupAI()
 		time.Sleep(200 * time.Millisecond)
-		writeJSON(w, map[string]any{"ai": ai.Snapshot(), "aiReady": aiReady()})
+		writeJSON(w, aiState())
+	})
+	mux.HandleFunc("/api/ai/decline", func(w http.ResponseWriter, r *http.Request) {
+		ollama.Answer("streampilot", false)
+		writeJSON(w, aiState())
 	})
 	mux.HandleFunc("/api/ai/state", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, map[string]any{"ai": ai.Snapshot(), "aiReady": aiReady()})
+		writeJSON(w, aiState())
 	})
 	mux.HandleFunc("/api/sort/job", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, sortJob.Snapshot()) })
 	mux.HandleFunc("/api/sort/run", func(w http.ResponseWriter, r *http.Request) {

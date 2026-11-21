@@ -83,6 +83,7 @@ body.tool-open #toolframe{display:block}
 .card .row{display:flex;align-items:center;gap:12px}
 .card .gl{display:none;width:40px;height:40px;flex:none}.list .card .gl{display:block}.card .gl img{width:100%;height:100%}
 .card h3{margin:0;font-size:15px}
+.ai-need{font-size:12px!important;color:#f0a33a!important;margin-top:-4px!important}.aiq-logo{margin:-20px -20px 16px;height:110px;border-radius:14px 14px 0 0;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#3a3a44,#121216 72%)}.aiq-logo img{height:70px;filter:drop-shadow(0 0 18px #ffffff55)}#aiq>div{overflow:hidden}.aiq-list{margin:0 0 14px;padding:0;list-style:none;display:grid;gap:8px}.aiq-list li{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}.aiq-list small{display:block;color:var(--muted)}.aiq-bar{height:6px;border-radius:9px;background:var(--panel2);overflow:hidden;margin:4px 0 14px}.aiq-bar i{display:block;height:100%;background:var(--accent)}.aiq-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 8px;margin-left:auto;white-space:nowrap}
 .card p{margin:0;color:var(--muted);flex:1}
 .card .foot{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
@@ -180,6 +181,7 @@ input[type=text],input[type=email],input[type=number]{background:var(--bg);borde
 <div class="updpop" id="updpop" hidden></div>
 
 <div class="modal" id="ow"><div id="owIn"></div></div>
+<div class="modal" id="aiq"><div id="aiqIn"></div></div>
 <iframe id="toolframe" title="Werkzeug"></iframe>
 <script src="/kit/i18n.js"></script>
 <script src="/kit/kit.js"></script>
@@ -219,8 +221,9 @@ function applyTheme(){const s=S.settings;let th=s.theme;if(th==='system')th=matc
 async function saveSettings(){await api('/api/settings',S.settings);applyTheme();render()}
 
 let openId=null,waiting={};
-async function launch(id,files){const t=tool(id);if(!t)return;
+async function launch(id,files,noAI){const t=tool(id);if(!t)return;
  if(t.kind==='soon')return toast(`${t.name} ist noch in Arbeit.`);
+ if(t.ai&&!t.aiReady&&!noAI)return aiAsk(id,files);
  if(!t.installed){waiting[id]=files||[];if(!t.installing){try{await api('/api/install?id='+id,{})}catch(e){return toast(e.message)}}return load()}
  try{await api('/api/launch?id='+id,{files:files||[]})}catch(e){return toast(e.message)}
  if(t.kind==='hub'){openId=id;const f=$('#toolframe');f.onload=()=>{if(openId!==id)return;f.onload=null;document.body.classList.add('tool-open');if(files&&files.length){setTimeout(()=>{try{f.contentWindow.Kit._drop(files,'drop')}catch(e){}},300)}};f.src='/t/'+id+'/'}
@@ -262,7 +265,7 @@ function viewTools(){
  const q=$('#q').value.trim();
  const cats=[...new Set(S.tools.map(t=>t.category))].sort((a,b)=>a.localeCompare(b,'de'));
  let list=sorted(S.tools.filter(t=>matches(t,q)&&(!cat||t.category===cat)));
- const grid=list.map(t=>`<div class="card tool" data-launch="${t.id}" style="--c:${COLORS[t.id]||'var(--accent)'}"><div class="pv" style="--c:${COLORS[t.id]}">${LOGO(t.id)}${instOverlay(t)}</div><div class="row"><span class="gl">${LOGO(t.id)}</span><h3>${esc(t.name)}</h3><span class="tag">${esc(t.category)}</span></div><p>${esc(t.desc)}</p>
+ const grid=list.map(t=>`<div class="card tool" data-launch="${t.id}" style="--c:${COLORS[t.id]||'var(--accent)'}"><div class="pv" style="--c:${COLORS[t.id]}">${LOGO(t.id)}${instOverlay(t)}</div><div class="row"><span class="gl">${LOGO(t.id)}</span><h3>${esc(t.name)}</h3><span class="tag">${esc(t.category)}</span></div><p>${esc(t.desc)}</p>${t.ai&&!t.aiReady?`<p class="ai-need" title="${esc(t.ai)}">${AT('Braucht KI · ohne KI funktioniert ein Teil dieses Werkzeugs nicht','Needs AI · part of this tool does not work without it')}</p>`:''}
   ${t.installed?`<div class="foot"><button class="btn primary" data-launch="${t.id}">${t.running?'Anzeigen':'Öffnen'}</button></div>`:t.kind!=='soon'&&!t.installing?`<div class="foot"><button class="btn" data-launch="${t.id}">${t.error?'Nochmal versuchen':'Installieren'}</button></div>`:''}</div>`).join('');
  return updBanner()+`<div class="head"><h2>Werkzeuge</h2><span>${list.length} von ${S.tools.length}</span></div>
  <div class="cats"><button class="cat ${cat?'':'on'}" data-cat="">Alle</button>${cats.map(c=>`<button class="cat ${cat===c?'on':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
@@ -434,6 +437,33 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-up]'
  if(d==='at'||d==='atS'){const v=($(d==='at'?'#uptime':'#upTimeS').value||'').split(':');if(v.length<2)return;const t=new Date();t.setHours(+v[0],+v[1],0,0);if(t<=new Date())t.setDate(t.getDate()+1);at=Math.floor(t/1000)}
  upPlanOpen=false;await loadUp('do=plan&at='+at+'&exit='+exit);toast(exit?'Das Update wird beim Beenden des Hubs installiert.':'Update geplant: '+upWhen(at)+'.')});
 setTimeout(()=>loadUp(),1500);setInterval(()=>loadUp(),20000);
+
+// ---- KI (Ollama): Abfrage beim ersten Start und beim Öffnen eines Werkzeugs, das sie braucht
+let aiPend=null,aiT=null;
+const AT=(de,en)=>S&&S.settings&&S.settings.lang==='en'?en:de;
+const AISTEP=()=>({download:AT('Lade KI-Programm …','Downloading AI program …'),unpack:AT('Entpacke …','Unpacking …'),start:AT('Starte KI …','Starting AI …'),model:AT('Lade KI-Modell …','Downloading AI model …')});
+async function aiAsk(id,files){aiPend=id?{id,files}:null;const r=await api('/api/ai/state').catch(()=>null);if(r)aiShow(r)}
+function aiShow(r){const a=r.ai||{},m=$('#aiq');const one=aiPend&&r.tools.find(x=>x.id===aiPend.id);const list=one?[one]:r.tools.filter(x=>!x.ready);
+ let h;
+ if(a.running)h=`<h3>${AT('KI wird installiert','Installing the AI')}</h3><p>${AISTEP()[a.step]||'…'}${a.total?` · ${(a.done/1e9).toFixed(2).replace('.',AT(',','.'))} / ${(a.total/1e9).toFixed(2).replace('.',AT(',','.'))} GB`:''}</p><div class="aiq-bar"><i style="width:${Math.round((a.pct||0)*100)}%"></i></div><div class="aiq-row"><button class="btn" data-aq="bg">${AT('Im Hintergrund weiter','Continue in background')}</button></div>`;
+ else if(!list.length||a.step==='ready'&&list.every(x=>x.ready))h=`<h3>${AT('KI ist bereit','AI is ready')}</h3><p>${aiPend?AT('Das Werkzeug startet jetzt.','The tool starts now.'):AT('Alle Werkzeuge mit KI funktionieren jetzt.','All tools that use AI work now.')}</p><div class="aiq-row"><button class="btn primary" data-aq="done">${aiPend?AT('Öffnen','Open'):AT('Fertig','Done')}</button></div>`;
+ else h=`<h3>${one?AT('KI für '+esc(one.name)+' installieren?','Install the AI for '+esc(one.name)+'?'):AT('Lokale KI mit installieren?','Also install the local AI?')}</h3>
+  <p>${one?AT('Dieses Werkzeug braucht eine kleine KI (Ollama), die nur auf deinem PC läuft.','This tool needs a small AI (Ollama) that runs only on your PC.'):AT('Diese Werkzeuge brauchen eine kleine KI (Ollama), die nur auf deinem PC läuft:','These tools need a small AI (Ollama) that runs only on your PC:')}</p>
+  <ul class="aiq-list">${list.map(x=>`<li><b>${esc(x.name)}</b><small>${esc(x.purpose)}</small></li>`).join('')}</ul>
+  <p>${AT('Einmaliger Download, ','One-time download, ')}${esc(r.size)}. ${AT('Die KI startet nur, wenn du ein Werkzeug öffnest, das sie braucht, und schließt sich automatisch, sobald du es wieder schließt. Es wird nichts verschickt.','The AI only starts when you open a tool that needs it and closes automatically as soon as you close it again. Nothing is sent anywhere.')}${aiPend?'':AT(' Ohne KI funktionieren diese Werkzeuge nur teilweise. Du kannst sie später jederzeit beim Öffnen nachinstallieren.',' Without it these tools only partly work. You can install it later at any time when opening them.')}</p>
+  ${a.error?`<p style="color:#ff6b6b">${esc(a.error)}</p>`:''}
+  <div class="aiq-row"><button class="btn" data-aq="no">${aiPend?AT('Ohne KI öffnen','Open without AI'):AT('Ablehnen','Decline')}</button><button class="btn primary" data-aq="yes">${a.error?AT('Nochmal versuchen','Try again'):aiPend?AT('Installieren und öffnen','Install and open'):AT('Akzeptieren und installieren','Accept and install')}</button></div>`;
+ $('#aiqIn').innerHTML='<div class="aiq-logo"><img src="/logos/ollama.svg" alt="Ollama"></div>'+h;m.classList.add('show')}
+function aiOpenPending(){const p=aiPend;aiPend=null;if(p)launch(p.id,p.files,true)}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-aq]');if(!b)return;const q=b.dataset.aq,m=$('#aiq');
+ if(q==='bg'){m.classList.remove('show');return}
+ if(q==='done'){m.classList.remove('show');await load();return aiOpenPending()}
+ if(q==='no'){m.classList.remove('show');if(!aiPend)await api('/api/ai/decline',{}).catch(()=>{});await load();return aiOpenPending()}
+ const r=await api('/api/ai/setup',{}).catch(err=>{toast(err.message)});if(r)aiShow(r);
+ clearInterval(aiT);aiT=setInterval(async()=>{const y=await api('/api/ai/state').catch(()=>null);if(!y)return;if(m.classList.contains('show'))aiShow(y);
+  if(!(y.ai||{}).running){clearInterval(aiT);await load();if(!m.classList.contains('show')&&y.ai.step==='ready'){toast(AT('Die KI ist installiert.','The AI is installed.'));aiOpenPending()}}},1500)});
+// beim allerersten Start fragen
+setTimeout(async()=>{const r=await api('/api/ai/state').catch(()=>null);if(r&&!r.asked&&!(r.ai||{}).running)aiShow(r)},1200);
 </script>
 </body>
 </html>

@@ -18,6 +18,7 @@ import (
 
 	"kit"
 	"kit/ai"
+	"kit/ollama"
 	"kit/setup"
 )
 
@@ -28,15 +29,19 @@ var webFS embed.FS
 var hubGz []byte
 
 type state struct {
-	Phase   string  `json:"phase"` // start | copy | ai | done | error
-	Text    string  `json:"text"`
-	Done    float64 `json:"done"`
-	Error   string  `json:"error"`
-	AINote  string  `json:"aiNote"`
-	Dir     string  `json:"dir"`
-	Version string  `json:"version"`
-	Old     int     `json:"old"` // Projekte einer früheren Installation (nur bei Neuinstallation)
+	Phase   string        `json:"phase"` // start | copy | ai | done | error
+	Text    string        `json:"text"`
+	Done    float64       `json:"done"`
+	Error   string        `json:"error"`
+	AINote  string        `json:"aiNote"`
+	Dir     string        `json:"dir"`
+	Version string        `json:"version"`
+	Old     int           `json:"old"`     // Projekte einer früheren Installation (nur bei Neuinstallation)
+	AITools []ollama.User `json:"aiTools"` // Werkzeuge, die Ollama brauchen (Abfrage nach dem Kopieren)
+	AISize  string        `json:"aiSize"`
 }
+
+var aiAnswer = make(chan bool, 1)
 
 var (
 	mu sync.Mutex
@@ -132,12 +137,62 @@ func installMode(desktop, withAI bool) {
 			})
 			if !a.Loading {
 				if a.Error != "" {
-					set(func(s *state) { s.AINote = "Die KI konnte gerade nicht geladen werden (" + a.Error + "). Sie wird beim ersten Öffnen des Upscalers nachgeladen." })
+					set(func(s *state) {
+						s.AINote = "Die KI konnte gerade nicht geladen werden (" + a.Error + "). Sie wird beim ersten Öffnen des Upscalers nachgeladen."
+					})
 				}
 				break
 			}
 		}
-		return nil
+		// Lokale KI (Ollama) für Werkzeuge, die sie brauchen: nachfragen
+		need := []ollama.User{}
+		for _, u := range ollama.Users() {
+			if !ollama.Installed(u.Model) {
+				need = append(need, u)
+			}
+		}
+		if len(need) == 0 {
+			return nil
+		}
+		set(func(s *state) { s.Phase, s.AITools, s.AISize = "askai", need, ollama.SizeText() })
+		yes := <-aiAnswer
+		ollama.Answer("*", yes)
+		if !yes {
+			return nil
+		}
+		set(func(s *state) { s.Phase, s.Text, s.Done = "ollama", "Lade KI-Programm …", 0 })
+		done := make(chan bool)
+		go func() {
+			for _, u := range need {
+				ollama.Setup(u.Model, false) // die KI startet später nur zusammen mit dem Werkzeug
+				if ollama.P.Snapshot()["step"] == "error" {
+					break
+				}
+			}
+			close(done)
+		}()
+		steps := map[string]string{"download": "Lade KI-Programm …", "unpack": "Entpacke …", "start": "Starte KI …", "model": "Lade KI-Modell …", "ready": "Fertig"}
+		for {
+			select {
+			case <-done:
+				if e, _ := ollama.P.Snapshot()["error"].(string); e != "" {
+					set(func(s *state) {
+						s.AINote = "Die KI für " + need[0].Name + " ließ sich gerade nicht laden (" + e + "). Sie wird beim Öffnen des Werkzeugs noch einmal angeboten."
+					})
+					ollama.Answer("*", false)
+				}
+				return nil
+			case <-time.After(300 * time.Millisecond):
+				p := ollama.P.Snapshot()
+				set(func(s *state) {
+					st, _ := p["step"].(string)
+					if steps[st] != "" {
+						s.Text = steps[st]
+					}
+					s.Done, _ = p["pct"].(float64)
+				})
+			}
+		}
 	}()
 	set(func(s *state) {
 		if err != nil {
@@ -215,6 +270,20 @@ func main() {
 			go install(rq.Desktop)
 		}
 		mu.Unlock()
+		kit.JSON(w, map[string]bool{"ok": true})
+	})
+	k.Mux.HandleFunc("/api/ai", func(w http.ResponseWriter, r *http.Request) {
+		var rq struct{ Yes bool }
+		json.NewDecoder(io.LimitReader(r.Body, 256)).Decode(&rq)
+		mu.Lock()
+		ok := st.Phase == "askai"
+		if ok {
+			st.Phase = "ollama"
+		}
+		mu.Unlock()
+		if ok {
+			aiAnswer <- rq.Yes
+		}
 		kit.JSON(w, map[string]bool{"ok": true})
 	})
 	k.Mux.HandleFunc("/api/launch", func(w http.ResponseWriter, r *http.Request) {

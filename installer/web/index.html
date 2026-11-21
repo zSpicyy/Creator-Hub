@@ -10,6 +10,10 @@ body{display:block;overflow:hidden}
 .wrap{height:100vh;display:flex;flex-direction:column}
 .pv{height:190px;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,#4c8dff 55%,transparent),color-mix(in srgb,#4c8dff 14%,var(--panel2)) 72%)}
 .pv img{width:112px;height:112px;filter:drop-shadow(0 8px 18px #1d3d8a)}
+.pv.ol{height:130px;background:radial-gradient(circle at 50% 45%,#3a3a44,#121216 72%)}.pv.ol img{width:auto;height:84px;filter:drop-shadow(0 0 22px #ffffff55)}
+.ail{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}.ail li{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}.ail small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.facts{margin:0 0 14px;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.55}
+.btns{display:flex;gap:10px;justify-content:flex-end}.body{overflow:auto}
 .body{flex:1;padding:24px 30px;display:flex;flex-direction:column}
 h1{margin:0 0 6px;font-size:22px}p{color:var(--muted);margin:0 0 16px}
 .opt{display:flex;align-items:center;gap:10px;margin:4px 0 18px;cursor:pointer}
@@ -20,13 +24,18 @@ h1{margin:0 0 6px;font-size:22px}p{color:var(--muted);margin:0 0 16px}
 </style>
 </head>
 <body>
-<div class="wrap"><div class="pv"><img src="logo.svg" alt=""></div><div class="body" id="b"></div></div>
+<div class="wrap"><div class="pv" id="pv"><img id="pvi" src="logo.svg" alt=""></div><div class="body" id="b"></div></div>
 <script src="/kit/i18n.js"></script>
 <script src="/kit/kit.js"></script>
 <script>
 const {$,esc,api}=Kit;let S=null,t=null;
-function view(){const b=$('#b');
- if(S.phase==='start')b.innerHTML=`<h1>Creator Hub installieren</h1><p>Alle Werkzeuge für Content Creator an einem Ort. Die KI wird automatisch mit eingerichtet.</p>
+function view(){const b=$('#b');const ol=S.phase==='askai'||S.phase==='ollama';$('#pv').classList.toggle('ol',ol);$('#pvi').src=ol?'ollama.svg':'logo.svg';$('#pvi').alt=ol?'Ollama':'';
+ if(S.phase==='askai'){b.innerHTML=`<h1>Lokale KI (Ollama) mit installieren?</h1><p>Diese Werkzeuge brauchen eine kleine KI, die nur auf deinem PC läuft:</p>
+  <ul class="ail">${(S.aiTools||[]).map(x=>`<li><b>${esc(x.name)}</b><small>${esc(x.purpose)}</small></li>`).join('')}</ul>
+  <ul class="facts"><li><span>Einmaliger Download:</span> <b>${esc(S.aiSize||'')}</b></li><li>Die KI startet nur, wenn du eines dieser Werkzeuge öffnest, und schließt sich automatisch, sobald du es wieder schließt.</li><li>Es wird nichts verschickt. Ohne KI funktionieren diese Werkzeuge nur teilweise. Du kannst sie später beim Öffnen nachinstallieren.</li></ul>
+  <div class="sp"></div><div class="btns"><button class="btn big" id="aino">Ablehnen</button><button class="btn primary big" id="aiyes">Akzeptieren und installieren</button></div>`;return}
+ if(S.phase==='ollama'){b.innerHTML=`<h1>KI wird installiert …</h1><p>${esc(S.text||'')}</p><div class="bar"><i style="width:${Math.round((S.done||0)*100)}%"></i></div><small class="muted">${Math.round((S.done||0)*100)} %</small><div class="sp"></div>`;return}
+ if(S.phase==='start')b.innerHTML=`<h1>Creator Hub installieren</h1><p>Alle Werkzeuge für Content Creator an einem Ort.</p>
   <label class="opt"><input type="checkbox" id="desk" checked>Verknüpfung auf dem Desktop</label>${S.old?`<label class="opt"><input type="checkbox" id="keepold"><span>Projekte einer früheren Installation behalten</span>&nbsp;(${S.old})</label>`:''}<div class="where">Wird installiert nach: ${esc(S.dir)}</div><div class="sp"></div><button class="btn primary big" id="go">Installieren</button>`;
  else if(S.phase==='copy'||S.phase==='ai')b.innerHTML=`<h1>Wird installiert …</h1><p>${esc(S.text)}</p><div class="bar"><i style="width:${Math.round(S.done*100)}%"></i></div><small class="muted">${Math.round(S.done*100)} %</small><div class="sp"></div>`;
  else if(S.phase==='done')b.innerHTML=`<h1>Fertig</h1><p>Creator Hub ist installiert. Du findest ihn im Startmenü${$('#desk')?'':''}.</p>${S.aiNote?`<div class="note">${esc(S.aiNote)}</div>`:''}<div class="sp"></div><button class="btn primary big" id="launch">Creator Hub starten</button>`;
@@ -34,6 +43,7 @@ function view(){const b=$('#b');
 async function load(){S=await api('api/state');view()}
 document.addEventListener('click',async e=>{
  if(e.target.closest('#go')){const d=$('#desk');const ko=$('#keepold');await api('api/install',{desktop:d?d.checked:true,keepOld:ko?ko.checked:false});clearInterval(t);t=setInterval(async()=>{await load();if(S.phase==='done'||S.phase==='error')clearInterval(t)},400);return}
+ if(e.target.closest('#aiyes')||e.target.closest('#aino')){await api('api/ai',{yes:!!e.target.closest('#aiyes')});return load()}
  if(e.target.closest('#launch'))return api('api/launch',{});
 });
 load();

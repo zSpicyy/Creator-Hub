@@ -407,8 +407,20 @@ func trackCmd(c *exec.Cmd) {
 	cmdList[c] = true
 }
 
+var atExit []func()
+
+// AtExit merkt sich etwas, das beim Schließen des Werkzeugs passieren soll (z. B. die KI beenden).
+func AtExit(f func()) { cmdMu.Lock(); atExit = append(atExit, f); cmdMu.Unlock() }
+
 // KillHelpers beendet alle noch laufenden Hilfsprogramme.
 func KillHelpers() {
+	cmdMu.Lock()
+	fs := atExit
+	atExit = nil
+	cmdMu.Unlock()
+	for _, f := range fs {
+		f()
+	}
 	cmdMu.Lock()
 	defer cmdMu.Unlock()
 	for c := range cmdList {

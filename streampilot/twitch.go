@@ -16,6 +16,14 @@ import (
 	"time"
 )
 
+// Adressen (für Tests austauschbar)
+var (
+	ircAddr     = "irc.chat.twitch.tv:6697"
+	ircTLS      = &tls.Config{ServerName: "irc.chat.twitch.tv"}
+	validateURL = "https://id.twitch.tv/oauth2/validate"
+	tokenURL    = "https://id.twitch.tv/oauth2/token"
+)
+
 const botScopes = "chat:read chat:edit"
 const streamerScopes = "chat:read chat:edit moderator:read:followers channel:read:redemptions moderator:manage:chat_messages moderator:manage:banned_users moderator:manage:shoutouts"
 
@@ -163,7 +171,7 @@ func (a *TwitchAuth) validate() error {
 	if err != nil {
 		return err
 	}
-	req, _ := http.NewRequest("GET", "https://id.twitch.tv/oauth2/validate", nil)
+	req, _ := http.NewRequest("GET", validateURL, nil)
 	req.Header.Set("Authorization", "OAuth "+tok)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -198,7 +206,7 @@ func (a *TwitchAuth) refresh() error {
 	}
 	rt := a.tok.Refresh
 	a.mu.Unlock()
-	b, st, err := postForm("https://id.twitch.tv/oauth2/token", url.Values{"client_id": {twitchClientID()},
+	b, st, err := postForm(tokenURL, url.Values{"client_id": {twitchClientID()},
 		"grant_type": {"refresh_token"}, "refresh_token": {rt}})
 	if err != nil {
 		return err
@@ -351,7 +359,7 @@ func (a *TwitchAuth) check() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("%s", tr("Twitch-Anmeldung abgelaufen. Verbinde das Konto unter „Konten“ neu.", "Twitch sign-in expired. Reconnect the account under “Accounts”."))
 		}
-		req, _ := http.NewRequest("GET", "https://id.twitch.tv/oauth2/validate", nil)
+		req, _ := http.NewRequest("GET", validateURL, nil)
 		req.Header.Set("Authorization", "OAuth "+tok)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -474,11 +482,12 @@ func (c *Chat) session() error {
 	if c.channel == "" {
 		c.channel = login
 	}
+	c.channel = cleanChannel(c.channel) // Twitch nimmt nur kleingeschriebene Kanalnamen
 	tok, err := c.auth.Access()
 	if err != nil {
 		return err
 	}
-	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 20 * time.Second}, "tcp", "irc.chat.twitch.tv:6697", &tls.Config{ServerName: "irc.chat.twitch.tv"})
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 20 * time.Second}, "tcp", ircAddr, ircTLS)
 	if err != nil {
 		return fmt.Errorf("%s (%v)", tr("Der Twitch-Chat ist nicht erreichbar. Prüfe Internet oder Firewall.", "Twitch chat is not reachable. Check your internet or firewall."), err)
 	}

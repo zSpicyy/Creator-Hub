@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/fs"
 	"kit"
+	"kit/ollama"
 	"kit/setup"
 	"kit/update"
 	"net/http"
@@ -42,6 +43,8 @@ type Tool struct {
 	Error      string   `json:"error"`
 	Running    bool     `json:"running"`
 	Last       int64    `json:"last"`
+	AI         string   `json:"ai,omitempty"` // wofür das Werkzeug die KI (Ollama) braucht
+	AIReady    bool     `json:"aiReady"`      // KI ist installiert
 }
 
 var tools = []Tool{
@@ -193,6 +196,9 @@ func (a *App) toolList() []Tool {
 				t.Installing, t.Progress, t.Error = st.Installing, st.Progress, st.Error
 			}
 			_, t.Running = a.running[t.ID]
+		}
+		if u := ollama.UserByID(t.ID); u != nil {
+			t.AI, t.AIReady = u.Purpose, ollama.Installed(u.Model)
 		}
 		for _, h := range a.history {
 			if h.Tool == t.ID && h.Start > t.Last {
@@ -493,6 +499,39 @@ func (a *App) routes(mux *http.ServeMux) {
 			}
 		}
 		writeJSON(w, update.Get())
+	})
+	// ---- KI (Ollama) für Werkzeuge, die sie brauchen
+	aiState := func() map[string]any {
+		need, asked := []map[string]any{}, true
+		for _, u := range ollama.Users() {
+			ok := ollama.Installed(u.Model)
+			need = append(need, map[string]any{"id": u.ID, "name": u.Name, "purpose": u.Purpose, "ready": ok})
+			if !ok && !ollama.Asked(u.ID) {
+				asked = false
+			}
+		}
+		return map[string]any{"tools": need, "asked": asked, "size": ollama.SizeText(), "ai": ollama.P.Snapshot()}
+	}
+	mux.HandleFunc("/api/ai/state", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, aiState()) })
+	mux.HandleFunc("/api/ai/decline", func(w http.ResponseWriter, r *http.Request) {
+		ollama.Answer("*", false)
+		writeJSON(w, aiState())
+	})
+	mux.HandleFunc("/api/ai/setup", func(w http.ResponseWriter, r *http.Request) {
+		ollama.Answer("*", true)
+		go func() {
+			// alle benötigten Modelle nacheinander; der Hub selbst braucht die KI nicht, sie wird danach beendet
+			for _, u := range ollama.Users() {
+				if !ollama.Installed(u.Model) {
+					ollama.Setup(u.Model, false)
+					if ollama.P.Snapshot()["step"] == "error" {
+						return
+					}
+				}
+			}
+		}()
+		time.Sleep(200 * time.Millisecond)
+		writeJSON(w, aiState())
 	})
 	mux.HandleFunc("/api/install", func(w http.ResponseWriter, r *http.Request) {
 		if err := a.install(r.URL.Query().Get("id")); err != nil {
