@@ -27,20 +27,20 @@ var DefaultCommands = []CmdDef{
 	{"wrongsong", "wrongsong", LvlAll, true, "music"},
 	{"voteskip", "voteskip", LvlAll, true, "music"},
 	{"skip", "skip", LvlMod, true, "music"},
-	{"lastsong", "lastsong", LvlAll, false, "music"},
-	{"mysongs", "mysongs", LvlAll, false, "music"},
-	{"srhelp", "srhelp", LvlAll, false, "music"},
-	{"sron", "sron", LvlMod, false, "mod"},
-	{"sroff", "sroff", LvlMod, false, "mod"},
-	{"volume", "volume", LvlMod, false, "mod"},
-	{"srblock", "srblock", LvlMod, false, "mod"},
-	{"srunblock", "srunblock", LvlMod, false, "mod"},
-	{"clearqueue", "clearqueue", LvlMod, false, "mod"},
+	{"lastsong", "lastsong", LvlAll, true, "music"},
+	{"mysongs", "mysongs", LvlAll, true, "music"},
+	{"srhelp", "srhelp", LvlAll, true, "music"},
+	{"sron", "sron", LvlMod, true, "mod"},
+	{"sroff", "sroff", LvlMod, true, "mod"},
+	{"volume", "volume", LvlMod, true, "mod"},
+	{"srblock", "srblock", LvlMod, true, "mod"},
+	{"srunblock", "srunblock", LvlMod, true, "mod"},
+	{"clearqueue", "clearqueue", LvlMod, true, "mod"},
 	{"tts", "tts", LvlAll, true, "tts"},
 	{"ttsskip", "ttsskip", LvlMod, true, "tts"},
-	{"ttsclear", "ttsclear", LvlMod, false, "tts"},
-	{"ttson", "ttson", LvlMod, false, "tts"},
-	{"ttsoff", "ttsoff", LvlMod, false, "tts"},
+	{"ttsclear", "ttsclear", LvlMod, true, "tts"},
+	{"ttson", "ttson", LvlMod, true, "tts"},
+	{"ttsoff", "ttsoff", LvlMod, true, "tts"},
 }
 
 var DefaultRepliesEN = map[string]string{
@@ -131,7 +131,7 @@ var DefaultRepliesDE = map[string]string{
 
 // TTS-Grundeinstellungen
 var TTSDefaults = map[string]any{
-	"enabled":        false,
+	"enabled":        true,
 	"voice":          "de-DE-KatjaNeural", // Neural = natürliche Stimme, sonst Windows-Stimme
 	"rate":           0.0,                 // -10..10
 	"pitch":          0.0,                 // -10..10
@@ -140,13 +140,13 @@ var TTSDefaults = map[string]any{
 	"nameFormat":     "{user}: {text}",
 	"maxChars":       200.0,
 	"maxQueue":       15.0,
-	"cooldown":       0.0,
+	"cooldown":       10.0,
 	"pauseMs":        400.0,
 	"links":          true,
 	"emotes":         true,
 	"ignoreCommands": true,
 	"collapse":       true,
-	"ignoredUsers":   "nightbot, streamelements, streamlabs, moobot, fossabot, wizebot, soundalerts",
+	"ignoredUsers":   "nightbot, streamelements, streamlabs, moobot, fossabot, wizebot, soundalerts, sery_bot, botrixoficial, kofistreambot",
 	"filterOn":       true,
 	"blockWhole":     false,
 	"replacements":   "gg=good game, afk=a f k, brb=be right back",
@@ -183,9 +183,9 @@ var Alerts = []AlertDef{
 	{"resub", true, "{message}", 0, "", true, "{user} {months} {message}"},
 	{"points", false, "{message}", 0, "", true, "{user} {reward} {message}"},
 	{"follow", false, "{user}", 0, "", false, "{user}"},
-	{"subgift", false, "{user} → {target}", 0, "", false, "{user} {target}"},
-	{"giftbomb", false, "{user}: {count}", 0, "", false, "{user} {count}"},
-	{"raid", false, "{user}: {viewers}", 1, "", false, "{user} {viewers}"},
+	{"subgift", true, "{user} → {target}", 0, "", false, "{user} {target}"},
+	{"giftbomb", true, "{user}: {count}", 0, "", false, "{user} {count}"},
+	{"raid", true, "{user}: {viewers}", 1, "", false, "{user} {viewers}"},
 }
 
 var DefaultBadWords = []string{"hurensohn", "wichser", "fotze", "missgeburt", "spast", "schwuchtel",
@@ -209,6 +209,11 @@ var GeneralDefaults = map[string]any{
 	"ownOn":         true,
 	"timerOn":       true,
 	"extraOn":       true,
+	"giveOn":        true,
+	"queueOn":       true,
+	"soundOn":       true,
+	"goalOn":        true,
+	"tourDone":      false,
 	"srLimit":       2.0,
 	"voteNeeded":    5.0,
 	"maxMinutes":    8.0,

@@ -31,6 +31,7 @@ func main() {
 	botAuth.Load()
 	streamerAuth.Load()
 	routes(a.Mux)
+	comRoutes(a.Mux)
 
 	go func() {
 		if spotify.Connected() && spotify.Name() == "" {
@@ -48,6 +49,7 @@ func main() {
 	}
 	solo.Enable(a, solo.Config{Tool: "StreamPilot", Title: "StreamPilot", TitleEN: "StreamPilot", Logo: "streampilot", Color: "#7c4dff"})
 	web, _ := fs.Sub(webFS, "web")
+	startOverlay(web)
 	a.Run(web)
 	StopBot()
 }

@@ -84,7 +84,7 @@ func stateJSON() map[string]any {
 		"tts":      t,
 		"sources":  srcs,
 		"alerts":   alerts,
-		"alertsOn": boolean(storedAl, "enabled", false),
+		"alertsOn": boolean(storedAl, "enabled", true),
 		"ttsQueue": tts.Len(),
 		"lang":     kit.Lang(),
 		"solo":     solo.Standalone(),

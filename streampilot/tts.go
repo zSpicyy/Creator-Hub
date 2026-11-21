@@ -215,7 +215,7 @@ func (q *TTSQueue) Handle(source, login, display string, level int, uid, text st
 // Alert: liest standardmäßig nur die Nachricht des Zuschauers vor.
 func (q *TTSQueue) Alert(kind string, vars map[string]string, tags map[string]string) bool {
 	a := alertCfg(kind)
-	if !a.On || !boolean(cfg.Section("alerts"), "enabled", false) {
+	if !a.On || !boolean(cfg.Section("alerts"), "enabled", true) {
 		return false
 	}
 	c := ttsCfg()

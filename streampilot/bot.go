@@ -376,10 +376,16 @@ func (b *Bot) onMessage(m ChatMsg) {
 			}
 		}
 	}
+	if b.handleCommunity(m, word, arg, level, uid) {
+		return
+	}
 	if b.handleOwn(m, word, arg, level, uid) {
 		return
 	}
 	if m.Tags["bits"] != "" {
+		if n, _ := strconv.Atoi(m.Tags["bits"]); n > 0 {
+			goalAdd("bits", n)
+		}
 		if tts.Alert("bits", map[string]string{"user": m.Display, "login": m.Login, "bits": m.Tags["bits"], "message": m.Text}, m.Tags) {
 			return
 		}
@@ -681,10 +687,12 @@ func (b *Bot) onNotice(tags map[string]string, text string) {
 	switch kind {
 	case "sub":
 		vars["message"] = text
+		goalAdd("sub", 1)
 		tts.Alert("sub", vars, tags)
 	case "resub":
 		vars["message"] = text
 		vars["months"] = tags["msg-param-cumulative-months"]
+		goalAdd("sub", 1)
 		tts.Alert("resub", vars, tags)
 	case "submysterygift":
 		n, _ := strconv.Atoi(tags["msg-param-mass-gift-count"])
@@ -692,6 +700,7 @@ func (b *Bot) onNotice(tags map[string]string, text string) {
 		b.giftSkip[tags["login"]] += n
 		b.mu.Unlock()
 		vars["count"] = strconv.Itoa(n)
+		goalAdd("sub", n)
 		tts.Alert("giftbomb", vars, nil)
 	case "subgift", "anonsubgift":
 		b.mu.Lock()
@@ -702,6 +711,7 @@ func (b *Bot) onNotice(tags map[string]string, text string) {
 		}
 		b.mu.Unlock()
 		vars["target"] = tags["msg-param-recipient-display-name"]
+		goalAdd("sub", 1)
 		tts.Alert("subgift", vars, nil)
 	case "raid":
 		if n := tags["msg-param-displayName"]; n != "" {
@@ -724,12 +734,14 @@ func (b *Bot) onEvent(typ string, ev map[string]any) {
 		follows.m[str(ev, "user_id", "")] = followHit{true, time.Now()}
 		follows.mu.Unlock()
 		logEvent("alert", "follow – %s", user)
+		goalAdd("follow", 1)
 		tts.Alert("follow", map[string]string{"user": user, "login": str(ev, "user_login", "")}, nil)
 	case "channel.channel_points_custom_reward_redemption.add":
 		reward := str(sub(ev, "reward"), "title", "")
 		text := strings.TrimSpace(str(ev, "user_input", ""))
 		want := strings.ToLower(strings.TrimSpace(str(ttsCfg(), "rewardName", "")))
 		logEvent("alert", "points – %s → %s", user, reward)
+		soundForReward(reward)
 		if text != "" && (want == "" || want == strings.ToLower(reward)) {
 			lvl := LvlAll
 			if str(ev, "user_id", "") == str(ev, "broadcaster_user_id", "-") {
