@@ -105,6 +105,8 @@ func toolTitleOf(name string) string {
 		return "Motion Design"
 	case "StreamPilot":
 		return "StreamPilot"
+	case "Kanalwerk":
+		return "Kanalwerk"
 	}
 	return name
 }

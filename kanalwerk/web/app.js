@@ -1,0 +1,340 @@
+// Kanalwerk – Oberfläche
+let S=null,page=(location.hash.slice(1)||'home'),lang='de';
+const T=(de,en)=>lang==='en'?en:de;
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtN=n=>(+n||0).toLocaleString(lang==='en'?'en-US':'de-DE');
+const short=n=>{n=+n||0;const a=Math.abs(n);return a>=1e6?(n/1e6).toFixed(a>=1e7?0:1).replace('.',lang==='en'?'.':',')+' Mio':a>=1e4?(n/1e3).toFixed(a>=1e5?0:1).replace('.',lang==='en'?'.':',')+(lang==='en'?'K':' Tsd.'):fmtN(n)};
+const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fmtDT=t=>new Date(t*1000).toLocaleString(lang==='en'?'en-GB':'de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const fmtD=t=>new Date(t*1000).toLocaleDateString(lang==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+const thumbEl=(u,st='')=>u?`<img class="thumb" style="${st}" src="${esc(u)}" alt="" onerror="this.style.visibility='hidden'">`:`<div class="thumb" style="${st}"></div>`;
+const ic=p=>`<svg class="i" viewBox="0 0 24 24">${p}</svg>`;
+let tt;function toast(m){const x=$('#toast');x.textContent=m;x.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>x.classList.remove('show'),3600)}
+async function api(u,b){const r=await fetch(u,b===undefined?{cache:'no-store'}:{method:'POST',body:JSON.stringify(b)});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||('Fehler '+r.status));return j}
+const isoDur=d=>{const m=/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(d||'');if(!m)return'';const h=+m[1]||0,mi=+m[2]||0,s=+m[3]||0;return(h?h+':'+String(mi).padStart(2,'0'):mi)+':'+String(s).padStart(2,'0')};
+
+const TABS=()=>[['home',T('Übersicht','Overview')],['cal',T('Kalender','Calendar')],['up',T('Hochladen','Upload')],['stats',T('Statistik','Statistics')],['best',T('Beste Zeiten','Best times')],['cmp',T('Vergleich','Compare')],['link',T('Link-Seite','Link page')],['rep',T('Bericht','Report')],['ann',T('Ankündigungen','Announcements')]];
+function renderTabs(){$('#tabs').innerHTML=TABS().map(([k,n])=>`<button data-tab="${k}" class="${page===k?'on':''}" ${page===k?'aria-current="page"':''}>${n}</button>`).join('');
+ const av=[];if(S.yt.connected)av.push(S.yt.avatar?`<span style="background:var(--yt)"><img src="${esc(S.yt.avatar)}" alt=""></span>`:`<span style="background:var(--yt)">YT</span>`);
+ if(S.tw.connected)av.push(S.tw.avatar?`<span style="background:var(--tw)"><img src="${esc(S.tw.avatar)}" alt=""></span>`:`<span style="background:var(--tw)">TW</span>`);
+ $('#accAv').innerHTML=av.join('');$('#accAv').style.marginRight=av.length?'8px':'0';$('#accTxt').textContent=av.length?T('Konten','Accounts'):T('Konten verbinden','Connect accounts');
+ $('#refresh').title=T('Zahlen aktualisieren','Refresh numbers');$('#mode').title=T('Hell oder dunkel','Light or dark')}
+const ph=(t,p,r='')=>`<div class="ph"><div><h1>${t}</h1>${p?`<p>${p}</p>`:''}</div><span class="sp"></span>${r}</div>`;
+const needs=(what)=>{const yt=S.yt.connected,tw=S.tw.connected;if(what==='yt'&&!yt||what==='tw'&&!tw||what==='any'&&!yt&&!tw)return `<div class="empty"><p style="margin:0 0 10px">${what==='tw'?T('Verbinde dein Twitch-Konto, dann erscheinen hier deine Zahlen.','Connect your Twitch account to see your numbers here.'):what==='yt'?T('Verbinde deinen YouTube-Kanal, dann geht es hier los.','Connect your YouTube channel to get started here.'):T('Verbinde YouTube oder Twitch, dann erscheinen hier deine Zahlen.','Connect YouTube or Twitch to see your numbers here.')}</p><button class="btn pri" data-act="accounts">${T('Konten verbinden','Connect accounts')}</button></div>`;return''};
+
+// ---------------------------------------------------------------- Diagramme (SVG)
+function lineChart(series,{h=200,labels=[],fmt=short,area=true}={}){const W=760,P={l:46,r:12,t:12,b:24};const all=series.flatMap(s=>s.v);if(!all.length)return `<div class="empty">${T('Noch keine Daten.','No data yet.')}</div>`;
+ let mn=Math.min(0,...all),mx=Math.max(...all);if(mx===mn)mx=mn+1;const n=Math.max(...series.map(s=>s.v.length));const x=i=>P.l+(n<2?0:i*(W-P.l-P.r)/(n-1)),y=v=>P.t+(1-(v-mn)/(mx-mn))*(h-P.t-P.b);
+ let g='';for(let k=0;k<=4;k++){const v=mn+(mx-mn)*k/4,yy=y(v);g+=`<line class="gl" x1="${P.l}" x2="${W-P.r}" y1="${yy}" y2="${yy}"/><text x="${P.l-6}" y="${yy+4}" text-anchor="end">${fmt(Math.round(v))}</text>`}
+ const step=Math.max(1,Math.ceil(n/7));labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+=`<text x="${x(i)}" y="${h-6}" text-anchor="middle">${esc(l)}</text>`});
+ series.forEach(s=>{if(!s.v.length)return;const pts=s.v.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  if(area&&series.length===1)g+=`<polygon points="${x(0)},${y(mn)} ${pts} ${x(s.v.length-1)},${y(mn)}" fill="${s.c}" opacity=".12"/>`;
+  g+=`<polyline points="${pts}" fill="none" stroke="${s.c}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const l=s.v.length-1;g+=`<circle cx="${x(l)}" cy="${y(s.v[l])}" r="4" fill="${s.c}"/>`});
+ return `<svg class="chart" viewBox="0 0 ${W} ${h}" role="img">${g}</svg>`}
+function barChart(vals,{h=160,labels=[],c='var(--coral)',neg='var(--bad)'}={}){const W=760,P={l:40,r:8,t:10,b:22};if(!vals.length)return `<div class="empty">${T('Noch keine Daten.','No data yet.')}</div>`;
+ const mx=Math.max(1,...vals.map(Math.abs)),hasNeg=vals.some(v=>v<0),z=hasNeg?P.t+(h-P.t-P.b)/2:h-P.b,sc=(hasNeg?(h-P.t-P.b)/2:h-P.t-P.b)/mx,bw=(W-P.l-P.r)/vals.length;
+ let g=`<line class="gl" x1="${P.l}" x2="${W-P.r}" y1="${z}" y2="${z}"/><text x="${P.l-6}" y="${P.t+8}" text-anchor="end">${short(mx)}</text>`;
+ vals.forEach((v,i)=>{const bh=Math.abs(v)*sc;g+=`<rect x="${P.l+i*bw+bw*.15}" y="${v>=0?z-bh:z}" width="${Math.max(1,bw*.7)}" height="${Math.max(v?1:0,bh)}" rx="2" fill="${v>=0?c:neg}"><title>${esc(labels[i]||'')}: ${fmtN(v)}</title></rect>`});
+ const step=Math.max(1,Math.ceil(vals.length/7));labels.forEach((l,i)=>{if(i%step===0)g+=`<text x="${P.l+i*bw+bw/2}" y="${h-5}" text-anchor="middle">${esc(l)}</text>`});
+ return `<svg class="chart" viewBox="0 0 ${W} ${h}" role="img">${g}</svg>`}
+const dLbl=s=>{const [y,m,d]=s.split('-');return d+'.'+m+'.'};
+
+// ---------------------------------------------------------------- Kennzahlen
+const sum=(a,f)=>a.reduce((x,y)=>x+f(y),0);
+function snapDelta(key,days){const sn=S.snaps;if(sn.length<2)return null;const last=sn[sn.length-1];const cut=dayKey(new Date(Date.now()-days*864e5));let base=sn.find(s=>s.day>=cut)||sn[0];if(base===last)return null;return last[key]-base[key]}
+const delta=(v,suffix='')=>v==null?'':`<span class="d ${v>0?'up':v<0?'down':''}">${v>0?'+':''}${fmtN(v)}${suffix}</span>`;
+function last28(){const d=S.days.slice(-28),p=S.days.slice(-56,-28);return{views:sum(d,x=>x.views),pviews:sum(p,x=>x.views),subs:sum(d,x=>x.subsIn-x.subsOut),min:sum(d,x=>x.minutes)}}
+
+// ---------------------------------------------------------------- Seiten
+const PAGES={};
+PAGES.home=()=>{const yt=S.yt.connected,tw=S.tw.connected,l=last28(),now=Date.now()/1000;
+ const items=calItems().filter(i=>i.at>now-3600).sort((a,b)=>a.at-b.at).slice(0,6);
+ const top=[...S.videos].filter(v=>v.privacy==='public').sort((a,b)=>b.views-a.views)[0];
+ const queue=S.uploads.filter(u=>u.status!=='done');
+ const greet=new Date().getHours()<11?T('Guten Morgen','Good morning'):new Date().getHours()<18?T('Hallo','Hello'):T('Guten Abend','Good evening');
+ const setup=(!yt||!tw)?`<div class="card" style="margin-bottom:16px"><h3>${T('Los geht’s','Getting started')}</h3><div class="list">
+  ${[[yt,T('YouTube-Kanal verbinden','Connect YouTube channel'),T('Für Uploads, Statistik, beste Zeiten und Video-Ankündigungen.','For uploads, statistics, best times and video announcements.')],[tw,T('Twitch verbinden','Connect Twitch'),T('Für Follower, Streams und Live-Ankündigungen.','For followers, streams and live announcements.')]].map(([ok,t,d])=>`<div class="li"><span class="pill ${ok?'ok':''}">${ok?'✓':'–'}</span><div style="flex:1"><b>${t}</b><div class="muted small">${d}</div></div>${ok?'':`<button class="btn sm" data-act="accounts">${T('Verbinden','Connect')}</button>`}</div>`).join('')}</div></div>`:'';
+ const k=(lbl,dot,num,d)=>`<div class="card kpi"><span class="lbl"><i class="dot ${dot}"></i>${lbl}</span><span class="num">${num}</span>${d||'<span class="d">&nbsp;</span>'}</div>`;
+ return ph(greet+(S.yt.channel||S.tw.name?', '+esc(S.yt.channel||S.tw.name):''),T('Dein Kanal auf einen Blick: was ansteht, wie es läuft und was gerade gut ankommt.','Your channel at a glance: what’s coming up, how it’s going and what’s doing well.'),S.fetched?`<span class="muted small">${T('Stand','Updated')}: ${fmtDT(S.fetched)}</span>`:'')+setup+`
+ <div class="grid g4" style="margin-bottom:16px">
+  ${k(T('YouTube-Abos','YouTube subscribers'),'yt',yt?short(S.stats.ytSubs):'–',yt?delta(l.subs,' '+T('in 28 Tagen','in 28 days')):'')}
+  ${k(T('Aufrufe (28 Tage)','Views (28 days)'),'yt',yt?short(l.views):'–',yt&&l.pviews?delta(l.views-l.pviews,' '+T('zum Vormonat','vs. before')):'')}
+  ${k(T('Twitch-Follower','Twitch followers'),'tw',tw?short(S.stats.twFollowers):'–',tw?delta(snapDelta('twFollowers',28),' '+T('in 28 Tagen','in 28 days')):'')}
+  ${k(T('Geplante Uploads','Scheduled uploads'),'co',fmtN(queue.length+S.videos.filter(v=>v.publishAt>now).length),`<span class="d">${T('in der Warteschlange und bei YouTube','queued and on YouTube')}</span>`)}
+ </div>
+ <div class="grid g-side">
+  <div class="card"><h3>${T('Aufrufe pro Tag','Views per day')} <small>${T('letzte 28 Tage','last 28 days')}</small></h3>${yt?lineChart([{v:S.days.slice(-28).map(d=>d.views),c:'var(--coral)'}],{labels:S.days.slice(-28).map(d=>dLbl(d.day))}):needs('yt')}</div>
+  <div class="stack">
+   <div class="card"><div class="row" style="margin-bottom:8px"><h3 style="margin:0">${T('Als Nächstes','Coming up')}</h3><span class="sp"></span><button class="btn sm ghost" data-tab="cal">${T('Kalender','Calendar')}</button></div>
+    ${items.length?`<div class="list">${items.map(i=>`<div class="li"><i class="dot ${i.dot}"></i><div style="flex:1;min-width:0"><div class="ell"><b>${esc(i.title)}</b></div><div class="muted small">${fmtDT(i.at)} · ${i.kindName}</div></div></div>`).join('')}</div>`:`<div class="empty small">${T('Nichts geplant. Plane ein Video unter „Hochladen“ oder trag einen Stream in den Kalender ein.','Nothing planned. Schedule a video under “Upload” or add a stream to the calendar.')}</div>`}</div>
+   ${top?`<div class="card"><h3>${T('Bestes Video','Top video')} <small>${T('nach Aufrufen','by views')}</small></h3><div class="row">${thumbEl(top.thumb)}<div style="min-width:0"><div style="font-weight:700;line-height:1.3">${esc(top.title)}</div><div class="muted small">${fmtN(top.views)} ${T('Aufrufe','views')} · ${fmtN(top.likes)} Likes</div></div></div></div>`:''}
+  </div>
+ </div>`};
+
+// Kalender
+let calMode='month',calRef=new Date();calRef.setDate(1);let weekRef=new Date();
+function calItems(){const out=[];
+ S.events.forEach(e=>out.push({at:e.at,title:e.title,kind:'k-'+e.kind,dot:e.kind==='stream'?'tw':e.kind==='idea'?'te':'co',kindName:({stream:'Stream',idea:T('Idee','Idea'),video:'Video',other:T('Termin','Event')})[e.kind]||'',ev:e}));
+ S.uploads.filter(u=>u.status!=='done').forEach(u=>out.push({at:u.publishAt||u.created,title:u.title,kind:'k-up',dot:'co',kindName:T('Upload geplant','Upload scheduled'),up:u}));
+ S.videos.forEach(v=>{if(v.publishAt&&v.privacy!=='public')out.push({at:v.publishAt,title:v.title,kind:'k-up',dot:'co',kindName:T('Bei YouTube geplant','Scheduled on YouTube'),vid:v});else if(v.privacy==='public')out.push({at:v.published,title:v.title,kind:'k-yt',dot:'yt',kindName:T('Veröffentlicht','Published'),vid:v})});
+ S.vods.forEach(v=>out.push({at:v.created,title:v.title,kind:'k-tw',dot:'tw',kindName:T('Stream (VOD)','Stream (VOD)'),vod:v}));
+ return out}
+PAGES.cal=()=>{const items=calItems();const lg=`<div class="legend"><span><i class="dot co"></i>${T('Geplanter Upload','Scheduled upload')}</span><span><i class="dot yt"></i>${T('Veröffentlicht','Published')}</span><span><i class="dot tw"></i>Stream</span><span><i class="dot te"></i>${T('Idee','Idea')}</span></div>`;
+ const head=ph(T('Kalender','Calendar'),T('Alle Uploads, Streams und Ideen an einem Ort. Klick auf einen Tag, um etwas einzutragen.','All uploads, streams and ideas in one place. Click a day to add something.'),`<div class="seg"><button class="${calMode==='month'?'on':''}" data-calmode="month">${T('Monat','Month')}</button><button class="${calMode==='week'?'on':''}" data-calmode="week">${T('Woche','Week')}</button></div><button class="btn pri" data-act="evNew">+ ${T('Eintrag','Entry')}</button>`);
+ if(calMode==='week')return head+weekView(items,lg);
+ const y=calRef.getFullYear(),m=calRef.getMonth();const first=new Date(y,m,1);const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+ const wd=(lang==='en'?'Mon Tue Wed Thu Fri Sat Sun':'Mo Di Mi Do Fr Sa So').split(' ');const tk=dayKey(new Date());let cells='';
+ for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=dayKey(d);const its=items.filter(it=>dayKey(new Date(it.at*1000))===k).sort((a,b)=>a.at-b.at);
+  cells+=`<div class="day ${d.getMonth()!==m?'out':''} ${k===tk?'today':''}" data-day="${k}"><span class="n">${d.getDate()}</span>${its.slice(0,4).map((it,j)=>`<span class="ev ${it.kind}" data-item="${k}|${j}" title="${esc(it.title)}"><b>${new Date(it.at*1000).toLocaleTimeString(lang==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'})}</b>${esc(it.title)}</span>`).join('')}${its.length>4?`<span class="muted small">+${its.length-4}</span>`:''}</div>`}
+ return head+`<div class="row" style="margin-bottom:12px"><button class="btn sm" data-calnav="-1">‹</button><h2 style="margin:0;font-size:20px;min-width:180px;text-align:center">${first.toLocaleDateString(lang==='en'?'en-GB':'de-DE',{month:'long',year:'numeric'})}</h2><button class="btn sm" data-calnav="1">›</button><button class="btn sm ghost" data-calnav="0">${T('Heute','Today')}</button><span class="sp"></span>${lg}</div>
+ <div class="cal">${wd.map(w=>`<div class="wd">${w}</div>`).join('')}${cells}</div>`};
+function weekView(items,lg){const mon=new Date(weekRef);mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));const heat=S.heatYT;const useHeat=heat.n>=5;
+ const days=[...Array(7)].map((_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d});
+ let g=`<div></div>${days.map(d=>`<div class="hd">${d.toLocaleDateString(lang==='en'?'en-GB':'de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}</div>`).join('')}`;
+ for(let h=6;h<24;h++){g+=`<div class="h">${String(h).padStart(2,'0')}:00</div>`;days.forEach((d,di)=>{const v=useHeat?heat.grid[di][h]:0;const it=items.find(x=>{const t=new Date(x.at*1000);return dayKey(t)===dayKey(d)&&t.getHours()===h});
+  g+=`<div class="c" data-slot="${dayKey(d)}T${String(h).padStart(2,'0')}:00" style="background:${v>0?`color-mix(in srgb,var(--coral) ${Math.round(v*38)}%,transparent)`:'transparent'}">${it?`<span class="ev ${it.kind}" title="${esc(it.title)}">${esc(it.title)}</span>`:''}</div>`})}
+ return `<div class="row" style="margin-bottom:12px"><button class="btn sm" data-weeknav="-7">‹</button><h2 style="margin:0;font-size:18px;min-width:240px;text-align:center">${days[0].toLocaleDateString(lang==='en'?'en-GB':'de-DE',{day:'2-digit',month:'short'})} – ${days[6].toLocaleDateString(lang==='en'?'en-GB':'de-DE',{day:'2-digit',month:'short',year:'numeric'})}</h2><button class="btn sm" data-weeknav="7">›</button><button class="btn sm ghost" data-weeknav="0">${T('Heute','Today')}</button><span class="sp"></span>${lg}</div>
+ <p class="muted small" style="margin:-4px 0 10px">${useHeat?T('Je kräftiger eine Stunde eingefärbt ist, desto besser liefen deine Videos, die zu dieser Zeit erschienen sind.','The stronger an hour is shaded, the better your videos published at that time performed.'):T('Sobald genug Videos da sind (mindestens 5), färbt Kanalwerk die besten Uhrzeiten hier ein.','Once there are enough videos (at least 5), Kanalwerk shades the best hours here.')}</p>
+ <div class="week">${g}</div>`}
+function evModal(e,day){e=e||{id:'',title:'',kind:'stream',at:0,note:''};const dt=e.at?new Date(e.at*1000):new Date((day||dayKey(new Date()))+'T'+(day&&day.includes('T')?'':'18:00'));
+ const v=new Date(dt.getTime()-dt.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+ modal(`<h2>${e.id?T('Eintrag bearbeiten','Edit entry'):T('Neuer Eintrag','New entry')}</h2><div class="stack" style="margin-top:12px">
+  <label class="f">${T('Titel','Title')}<input id="evT" value="${esc(e.title)}" placeholder="${T('z. B. Minecraft-Stream mit Zuschauern','e.g. Minecraft stream with viewers')}"></label>
+  <div class="grid g2"><label class="f">${T('Art','Type')}<select id="evK">${[['stream','Stream'],['video','Video'],['idea',T('Idee','Idea')],['other',T('Termin','Event')]].map(([k,n])=>`<option value="${k}" ${e.kind===k?'selected':''}>${n}</option>`).join('')}</select></label>
+  <label class="f">${T('Wann','When')}<input type="datetime-local" id="evA" value="${v}"></label></div>
+  <label class="f">${T('Notiz','Note')}<textarea id="evN" rows="3">${esc(e.note)}</textarea></label>
+  <div class="row">${e.id?`<button class="btn ghost" data-act="evDel" data-id="${e.id}" style="color:var(--bad)">${T('Löschen','Delete')}</button>`:''}<span class="sp"></span><button class="btn" data-act="close">${T('Abbrechen','Cancel')}</button><button class="btn pri" data-act="evSave" data-id="${e.id}">${T('Speichern','Save')}</button></div></div>`);
+ setTimeout(()=>$('#evT').focus(),30)}
+function itemModal(it){if(it.ev)return evModal(it.ev);const v=it.vid,u=it.up,o=it.vod;
+ modal(`<h2>${esc(it.title)}</h2><p class="muted">${it.kindName} · ${fmtDT(it.at)}</p>${v?`${v.thumb?`<img src="${esc(v.thumb)}" style="width:100%;border-radius:12px" alt="">`:''}<p>${fmtN(v.views)} ${T('Aufrufe','views')} · ${fmtN(v.likes)} Likes · ${fmtN(v.comments)} ${T('Kommentare','comments')}</p><button class="btn" data-open="https://youtu.be/${esc(v.id)}">${T('Auf YouTube öffnen','Open on YouTube')}</button>`:''}
+ ${u?`<p>${T('Status','Status')}: ${upStatus(u)}</p><button class="btn" data-tab="up">${T('Zur Warteschlange','Go to queue')}</button>`:''}${o?`${o.thumb?`<img src="${esc(o.thumb)}" style="width:100%;border-radius:12px" alt="">`:''}<p>${fmtN(o.views)} ${T('Aufrufe','views')} · ${esc(o.dur)}</p><button class="btn" data-open="https://www.twitch.tv/videos/${esc(o.id)}">${T('Auf Twitch öffnen','Open on Twitch')}</button>`:''}
+ <div class="row" style="margin-top:14px"><span class="sp"></span><button class="btn" data-act="close">${T('Schließen','Close')}</button></div>`)}
+
+// Hochladen
+let UF={file:'',thumb:'',title:'',desc:'',tags:'',category:'20',privacy:'public',when:'now',at:'',kids:false};
+try{const x=JSON.parse(localStorage.getItem('kw-upform')||'null');if(x)UF={...UF,...x}}catch(e){}
+const saveUF=()=>{try{localStorage.setItem('kw-upform',JSON.stringify(UF))}catch(e){}};
+const CATS=()=>[['20','Gaming'],['24',T('Unterhaltung','Entertainment')],['22',T('Menschen & Blogs','People & Blogs')],['10',T('Musik','Music')],['27',T('Bildung','Education')],['28',T('Wissenschaft & Technik','Science & Tech')],['23','Comedy'],['26',T('Praktische Tipps & Styling','Howto & Style')],['1',T('Film & Animation','Film & Animation')],['17','Sport']];
+const upStatus=u=>u.status==='done'?`<span class="pill ok">${u.publishAt?T('Hochgeladen, erscheint ','Uploaded, goes live ')+fmtDT(u.publishAt):T('Hochgeladen','Uploaded')}</span>`:u.status==='error'?`<span class="pill err">${T('Fehler','Error')}</span>`:u.status==='uploading'?`<span class="pill run">${Math.round(u.progress*100)} %</span>`:`<span class="pill">${S.yt.connected?T('Wartet','Waiting'):T('Wartet auf YouTube-Verbindung','Waiting for YouTube connection')}</span>`;
+PAGES.up=()=>{const base=f=>f?f.split(/[\\/]/).pop():'';const img=UF.thumb?`/api/img?p=${encodeURIComponent(UF.thumb)}`:'';
+ return ph(T('Hochladen','Upload'),T('Video mit Titel, Beschreibung, Tags und Thumbnail zu YouTube hochladen, sofort oder zu einem festen Termin.','Upload a video with title, description, tags and thumbnail to YouTube, right away or at a set time.'))+(S.yt.connected?'':`<div class="note" style="margin-bottom:16px">${T('YouTube ist noch nicht verbunden. Du kannst Uploads schon vorbereiten, sie starten, sobald der Kanal verbunden ist.','YouTube is not connected yet. You can prepare uploads now; they start once the channel is connected.')} <button class="btn sm" data-act="accounts" style="margin-left:6px">${T('Verbinden','Connect')}</button></div>`)+`
+ <div class="grid g-side"><div class="card stack">
+  <div class="drop"><div class="ic">${ic('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>')}</div><div style="flex:1;min-width:0"><b>${T('Videodatei','Video file')}</b><div class="muted small ell">${UF.file?esc(UF.file):T('MP4, MOV, MKV oder WEBM, zum Beispiel aus dem Videoschnitt','MP4, MOV, MKV or WEBM, e.g. from the video editor')}</div></div><button class="btn" data-act="pickVideo">${UF.file?T('Ändern','Change'):T('Auswählen','Choose')}</button></div>
+  <div class="drop"><div class="ic">${ic('<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 8"/>')}</div><div style="flex:1;min-width:0"><b>Thumbnail</b> <span class="muted small">(${T('optional, JPG oder PNG bis 2 MB, 1280×720','optional, JPG or PNG up to 2 MB, 1280×720')})</span><div class="muted small ell">${UF.thumb?esc(base(UF.thumb)):T('Zum Beispiel aus der Bildbearbeitung','e.g. from the image editor')}</div></div>${UF.thumb?`<button class="btn ghost sm" data-act="noThumb">✕</button>`:''}<button class="btn" data-act="pickThumb">${UF.thumb?T('Ändern','Change'):T('Auswählen','Choose')}</button></div>
+  <label class="f">${T('Titel','Title')}<input data-uf="title" value="${esc(UF.title)}" maxlength="100" placeholder="${T('Worum geht es im Video?','What is the video about?')}"><span class="cnt" id="cntT">${[...UF.title].length}/100</span></label>
+  <label class="f">${T('Beschreibung','Description')}<textarea data-uf="desc" rows="6" maxlength="5000" placeholder="${T('Erzähl kurz, worum es geht. Links zu Discord, Twitch und Social Media gehören auch hierher.','Say what it’s about. Links to Discord, Twitch and social media go here too.')}">${esc(UF.desc)}</textarea><span class="cnt" id="cntD">${[...UF.desc].length}/5000</span></label>
+  <label class="f">Tags <span class="muted" style="font-weight:400">(${T('mit Komma getrennt','comma separated')})</span><input data-uf="tags" value="${esc(UF.tags)}" placeholder="minecraft, lets play, survival"></label>
+  <div class="grid g3"><label class="f">${T('Kategorie','Category')}<select data-uf="category">${CATS().map(([k,n])=>`<option value="${k}" ${UF.category===k?'selected':''}>${n}</option>`).join('')}</select></label>
+   <label class="f">${T('Sichtbarkeit','Visibility')}<select data-uf="privacy">${[['public',T('Öffentlich','Public')],['unlisted',T('Nicht gelistet','Unlisted')],['private',T('Privat','Private')]].map(([k,n])=>`<option value="${k}" ${UF.privacy===k?'selected':''}>${n}</option>`).join('')}</select></label>
+   <label class="f">${T('Veröffentlichen','Publish')}<select data-uf="when"><option value="now" ${UF.when==='now'?'selected':''}>${T('Sofort nach dem Upload','Right after upload')}</option><option value="at" ${UF.when==='at'?'selected':''}>${T('Zu einem Termin','At a set time')}</option></select></label></div>
+  ${UF.when==='at'?`<label class="f">${T('Termin','Date and time')}<input type="datetime-local" data-uf="at" value="${esc(UF.at)}"></label><p class="muted small" style="margin:-6px 0 0">${T('Das Video wird jetzt hochgeladen und bleibt privat. YouTube veröffentlicht es selbst zum Termin, auch wenn dein PC dann aus ist.','The video uploads now and stays private. YouTube publishes it at the set time, even if your PC is off.')} ${S.heatYT.top.length?T('Gute Zeiten laut deinen Videos: ','Good times based on your videos: ')+S.heatYT.top.join(', '):''}</p>`:''}
+  <label class="row small" style="gap:10px"><button class="sw ${UF.kids?'on':''}" data-act="kids" aria-pressed="${UF.kids}"></button>${T('Für Kinder gemacht (Pflichtangabe bei YouTube)','Made for kids (required by YouTube)')}</label>
+  <div class="row"><button class="btn ghost" data-act="ufClear">${T('Leeren','Clear')}</button><span class="sp"></span><button class="btn pri" data-act="upAdd">${UF.when==='at'?T('Hochladen und planen','Upload and schedule'):T('Hochladen','Upload')}</button></div></div>
+ <div class="stack"><div class="card"><h3>${T('Vorschau','Preview')}</h3><div class="ytprev"><div class="im" style="${img?`background-image:url('${img}')`:''}">${img?'':T('Kein Thumbnail','No thumbnail')}</div><div class="tt" id="pvT">${esc(UF.title)||`<span class="muted">${T('Titel','Title')}</span>`}</div><div class="muted small" style="padding:0 12px 12px">${esc(S.yt.channel||T('Dein Kanal','Your channel'))} · ${UF.when==='at'&&UF.at?T('geplant: ','scheduled: ')+new Date(UF.at).toLocaleString(lang==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'}):T('sofort','now')}</div></div></div>
+  <div class="card"><h3>${T('Warteschlange','Queue')}</h3>${S.uploads.length?`<div class="list">${S.uploads.slice().reverse().map(u=>`<div class="li"><div style="flex:1;min-width:0"><div class="ell"><b>${esc(u.title)}</b></div><div class="muted small ell">${esc(base(u.file))}</div>${u.status==='uploading'?`<div class="prog"><i style="width:${Math.round(u.progress*100)}%"></i></div>`:''}${u.error?`<div class="small" style="color:var(--bad)">${esc(u.error)}</div>`:''}</div>${upStatus(u)}${u.status==='error'?`<button class="btn sm" data-act="upRetry" data-id="${u.id}">${T('Nochmal','Retry')}</button>`:''}${u.videoId?`<button class="btn sm ghost" data-open="https://youtu.be/${esc(u.videoId)}">${T('Öffnen','Open')}</button>`:''}${u.status!=='uploading'?`<button class="btn sm ghost" data-act="upDel" data-id="${u.id}" title="${T('Aus der Liste entfernen','Remove from list')}">✕</button>`:''}</div>`).join('')}</div>`:`<div class="empty small">${T('Noch keine Uploads.','No uploads yet.')}</div>`}</div></div></div>`};
+
+// Statistik
+let statTab='yt',vidSort='views';
+PAGES.stats=()=>{const head=ph(T('Statistik','Statistics'),T('Wie sich deine Kanäle entwickeln. Die Zahlen aktualisieren sich alle 6 Stunden, mit dem Pfeil oben sofort.','How your channels are growing. Numbers refresh every 6 hours, or right away with the arrow above.'),`<div class="seg"><button class="${statTab==='yt'?'on':''}" data-stat="yt"><i class="dot yt"></i> YouTube</button><button class="${statTab==='tw'?'on':''}" data-stat="tw"><i class="dot tw"></i> Twitch</button></div>`);
+ if(statTab==='yt'){if(!S.yt.connected)return head+needs('yt');const l=last28(),d90=S.days;
+  const vids=[...S.videos].filter(v=>v.privacy==='public').sort((a,b)=>vidSort==='date'?b.published-a.published:b[vidSort]-a[vidSort]);const mx=Math.max(1,...vids.map(v=>v.views));
+  return head+`<div class="grid g4" style="margin-bottom:16px">
+   <div class="card kpi"><span class="lbl">${T('Abos','Subscribers')}</span><span class="num">${short(S.stats.ytSubs)}</span>${delta(l.subs,' '+T('in 28 Tagen','in 28 days'))}</div>
+   <div class="card kpi"><span class="lbl">${T('Aufrufe (28 Tage)','Views (28 days)')}</span><span class="num">${short(l.views)}</span>${l.pviews?delta(l.views-l.pviews,' '+T('zum Vormonat','vs. before')):''}</div>
+   <div class="card kpi"><span class="lbl">${T('Wiedergabezeit (28 Tage)','Watch time (28 days)')}</span><span class="num">${short(Math.round(l.min/60))} h</span><span class="d">${fmtN(l.min)} ${T('Minuten','minutes')}</span></div>
+   <div class="card kpi"><span class="lbl">${T('Aufrufe gesamt','Total views')}</span><span class="num">${short(S.stats.ytViews)}</span><span class="d">${fmtN(S.stats.ytVideos)} Videos</span></div></div>
+  <div class="grid g2" style="margin-bottom:16px"><div class="card"><h3>${T('Aufrufe pro Tag','Views per day')} <small>${T('90 Tage','90 days')}</small></h3>${lineChart([{v:d90.map(x=>x.views),c:'var(--yt)'}],{labels:d90.map(x=>dLbl(x.day))})}</div>
+   <div class="card"><h3>${T('Abos gewonnen und verloren','Subscribers gained and lost')} <small>${T('pro Tag','per day')}</small></h3>${barChart(d90.map(x=>x.subsIn-x.subsOut),{labels:d90.map(x=>dLbl(x.day)),c:'var(--good)'})}</div></div>
+  <div class="card"><div class="row" style="margin-bottom:6px"><h3 style="margin:0">${T('Deine Videos','Your videos')} <small>${T('die letzten 50','the last 50')}</small></h3></div>
+   ${vids.length?`<table><thead><tr><th>Video</th><th class="s r" data-vsort="date">${T('Datum','Date')}</th><th class="s r" data-vsort="views">${T('Aufrufe','Views')}${vidSort==='views'?' ↓':''}</th><th class="s r" data-vsort="likes">Likes${vidSort==='likes'?' ↓':''}</th><th class="s r" data-vsort="comments">${T('Kommentare','Comments')}${vidSort==='comments'?' ↓':''}</th></tr></thead><tbody>
+   ${vids.map(v=>`<tr><td><div class="row">${thumbEl(v.thumb,'width:80px')}<div style="min-width:0"><div class="ell" style="max-width:420px;font-weight:600">${esc(v.title)}</div><div class="bar" style="width:160px;margin-top:5px"><i style="width:${v.views/mx*100}%"></i></div></div></div></td><td class="r muted">${fmtD(v.published)}</td><td class="r">${fmtN(v.views)}</td><td class="r">${fmtN(v.likes)}</td><td class="r">${fmtN(v.comments)}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${T('Noch keine öffentlichen Videos.','No public videos yet.')}</div>`}</div>`}
+ if(!S.tw.connected)return head+needs('tw');const sn=S.snaps.filter(x=>x.twFollowers>0);const vods=S.vods;
+ return head+`<div class="grid g4" style="margin-bottom:16px">
+  <div class="card kpi"><span class="lbl">Follower</span><span class="num">${short(S.stats.twFollowers)}</span>${delta(snapDelta('twFollowers',7),' '+T('in 7 Tagen','in 7 days'))}</div>
+  <div class="card kpi"><span class="lbl">${T('Streams (gespeichert)','Streams (saved)')}</span><span class="num">${fmtN(vods.length)}</span><span class="d">${T('VODs bei Twitch','VODs on Twitch')}</span></div>
+  <div class="card kpi"><span class="lbl">${T('Ø Aufrufe pro Stream','Avg views per stream')}</span><span class="num">${vods.length?short(Math.round(sum(vods,v=>v.views)/vods.length)):'–'}</span><span class="d">${T('aus den VODs','from VODs')}</span></div>
+  <div class="card kpi"><span class="lbl">${T('Bester Stream','Best stream')}</span><span class="num">${vods.length?short(Math.max(...vods.map(v=>v.views))):'–'}</span><span class="d">${T('Aufrufe','views')}</span></div></div>
+ <div class="grid g2"><div class="card"><h3>${T('Follower-Verlauf','Follower history')}</h3>${sn.length>1?lineChart([{v:sn.map(x=>x.twFollowers),c:'var(--tw)'}],{labels:sn.map(x=>dLbl(x.day))}):`<div class="empty small">${T('Kanalwerk merkt sich jeden Tag deine Follower-Zahl. Nach ein paar Tagen erscheint hier die Kurve.','Kanalwerk saves your follower count every day. After a few days, the curve appears here.')}</div>`}</div>
+  <div class="card"><h3>${T('Letzte Streams','Recent streams')}</h3>${vods.length?`<div class="list">${vods.slice(0,8).map(v=>`<div class="li">${thumbEl(v.thumb)}<div style="flex:1;min-width:0"><div class="ell"><b>${esc(v.title)}</b></div><div class="muted small">${fmtDT(v.created)} · ${esc(v.dur)}</div></div><span class="num" style="font-size:18px">${short(v.views)}</span></div>`).join('')}</div>`:`<div class="empty small">${T('Keine gespeicherten Streams. Aktiviere bei Twitch „Vergangene Übertragungen speichern“.','No saved streams. Turn on “Store past broadcasts” on Twitch.')}</div>`}</div></div>`};
+
+// Beste Zeiten
+function heatGrid(h,c){const wd=(lang==='en'?'Mon Tue Wed Thu Fri Sat Sun':'Mo Di Mi Do Fr Sa So').split(' ');let g='<span></span>';for(let x=0;x<24;x++)g+=`<span style="text-align:center">${x%3===0?x:''}</span>`;
+ for(let d=0;d<7;d++){g+=`<span class="hl">${wd[d]}</span>`;for(let x=0;x<24;x++){const v=h.grid[d][x];g+=`<i title="${wd[d]} ${x}:00 · ${h.count[d][x]} ${T('Veröffentlichungen','posts')}" style="background:${v>0?`color-mix(in srgb,${c} ${Math.round(12+v*88)}%,transparent)`:''}"></i>`}}
+ return `<div class="heat">${g}</div>`}
+PAGES.best=()=>{const card=(h,c,name,need,what)=>`<div class="card"><h3><i class="dot ${c==='var(--yt)'?'yt':'tw'}"></i> ${name}</h3>${need||(h.n<5?`<div class="empty small">${T(`Dafür braucht Kanalwerk mindestens 5 ${what}. Bisher: ${h.n}.`,`Kanalwerk needs at least 5 ${what} for this. So far: ${h.n}.`)}</div>`:`${heatGrid(h,c)}<div class="row wrapr" style="margin-top:14px"><b>${T('Am besten lief es bisher','Best so far')}:</b>${h.top.map(t=>`<span class="pill run">${t}</span>`).join('')}</div><p class="muted small" style="margin:8px 0 0">${T(`Ausgewertet: ${h.n} ${what}. Bewertet wird, wie viele Aufrufe pro Tag sie im Vergleich zu deinem Durchschnitt bekommen haben.`,`Analysed: ${h.n} ${what}. Rated by views per day compared with your average.`)}</p>`)}</div>`;
+ return ph(T('Beste Zeiten','Best times'),T('Wann deine Inhalte am besten ankommen, berechnet aus deinen eigenen Videos und Streams.','When your content does best, calculated from your own videos and streams.'),`<button class="btn" data-tab="cal" data-calweek="1">${T('Im Kalender ansehen','View in calendar')}</button>`)+
+ `<div class="grid g2">${card(S.heatYT,'var(--yt)',T('YouTube-Veröffentlichungen','YouTube uploads'),needs('yt'),T('öffentliche Videos','public videos'))}${card(S.heatTW,'var(--tw)',T('Twitch-Streams (Startzeit)','Twitch streams (start time)'),needs('tw'),T('gespeicherte Streams','saved streams'))}</div>
+ <div class="card" style="margin-top:16px"><h3>${T('So liest du das','How to read this')}</h3><p class="muted" style="margin:0">${T('Jedes Kästchen ist eine Stunde. Je kräftiger die Farbe, desto besser liefen deine Inhalte, die zu dieser Zeit erschienen sind. Leere Stunden heißen nicht schlecht, sondern dass du dort noch nichts veröffentlicht hast. Probier ruhig neue Zeiten aus, Kanalwerk lernt mit.','Each box is one hour. The stronger the colour, the better your content published at that time performed. Empty hours don’t mean bad, only that you haven’t published there yet. Try new times; Kanalwerk keeps learning.')}</p></div>`};
+
+// Vergleich
+PAGES.cmp=()=>{const me=[];if(S.yt.connected)me.push({kind:'yt',name:S.yt.channel,avatar:S.yt.avatar,subs:S.stats.ytSubs,views:S.stats.ytViews,d7:snapDelta('ytSubs',7),me:1});
+ if(S.tw.connected)me.push({kind:'tw',name:S.tw.name,avatar:S.tw.avatar,subs:S.stats.twFollowers,views:null,d7:snapDelta('twFollowers',7),me:1});
+ const rv=S.rivals.map(r=>{const a=r.snaps||[],l=a[a.length-1]||{subs:0,views:0};const cut=dayKey(new Date(Date.now()-7*864e5));const b=a.find(x=>x.day>=cut);return{...r,subs:l.subs,views:r.kind==='yt'?l.views:null,d7:b&&b!==l?l.subs-b.subs:null}});
+ const rows=[...me,...rv].sort((a,b)=>b.subs-a.subs);const mx=Math.max(1,...rows.map(r=>r.subs));
+ return ph(T('Vergleich','Compare'),T('Behalte andere Creator im Blick und sieh, wie schnell ihr im Vergleich wachst. Kanalwerk merkt sich jeden Tag die Zahlen.','Keep an eye on other creators and see how fast you grow compared with them. Kanalwerk saves the numbers every day.'))+`
+ <div class="card" style="margin-bottom:16px"><div class="row wrapr"><select id="rvK" style="width:150px"><option value="yt">YouTube</option><option value="tw">Twitch</option></select><input id="rvH" placeholder="${T('@kanalname, Twitch-Name oder Link','@handle, Twitch name or link')}" style="flex:1;min-width:220px"><button class="btn pri" data-act="rvAdd">${T('Hinzufügen','Add')}</button></div>
+  <p class="muted small" style="margin:8px 0 0">${T('Für YouTube-Kanäle muss dein YouTube verbunden sein, für Twitch-Kanäle dein Twitch.','YouTube channels need your YouTube connected, Twitch channels need your Twitch connected.')}</p></div>
+ <div class="card">${rows.length?`<table><thead><tr><th>${T('Kanal','Channel')}</th><th></th><th class="r">${T('Abos / Follower','Subscribers / followers')}</th><th class="r">${T('7 Tage','7 days')}</th><th class="r">${T('Aufrufe','Views')}</th><th></th></tr></thead><tbody>
+  ${rows.map(r=>`<tr${r.me?' style="background:var(--coral-soft)"':''}><td><div class="row"><i class="dot ${r.kind}"></i>${r.avatar?`<img src="${esc(r.avatar)}" style="width:28px;height:28px;border-radius:50%" alt="">`:''}<b>${esc(r.name)}</b>${r.me?`<span class="pill run">${T('Du','You')}</span>`:''}${r.error?`<span class="pill err" title="${esc(r.error)}">${T('Fehler','Error')}</span>`:''}</div></td><td style="width:180px"><div class="bar"><i style="width:${r.subs/mx*100}%;background:${r.kind==='yt'?'var(--yt)':'var(--tw)'}"></i></div></td><td class="r"><b>${fmtN(r.subs)}</b></td><td class="r">${r.d7==null?'<span class="muted">–</span>':delta(r.d7)}</td><td class="r">${r.views==null?'<span class="muted">–</span>':short(r.views)}</td><td class="r">${r.me?'':`<button class="btn sm ghost" data-act="rvDel" data-id="${r.id}">✕</button>`}</td></tr>`).join('')}</tbody></table>
+  <p class="muted small" style="margin:10px 0 0">${T('„7 Tage“ zeigt das Wachstum, sobald Kanalwerk Zahlen von mindestens zwei Tagen hat.','“7 days” shows growth once Kanalwerk has numbers from at least two days.')}</p>`:`<div class="empty">${T('Füge oben einen Kanal hinzu.','Add a channel above.')}</div>`}</div>`};
+
+// Link-Seite
+const THEMES={sunset:{bg:'linear-gradient(160deg,#ff9a5c,#e2453a 60%,#7a1f4d)',btn:'#fff',btnInk:'#2a1220',ink:'#fff'},night:{bg:'linear-gradient(170deg,#0f1726,#24345a)',btn:'#ff6b4a',btnInk:'#fff',ink:'#fff'},mint:{bg:'linear-gradient(160deg,#d9fff3,#9fe6d3)',btn:'#14233b',btnInk:'#fff',ink:'#14233b'},grape:{bg:'linear-gradient(160deg,#9147ff,#3b1a7a)',btn:'#fff',btnInk:'#3b1a7a',ink:'#fff'},paper:{bg:'#f3f5f9',btn:'#fff',btnInk:'#14233b',ink:'#14233b',border:'#14233b'},block:{bg:'linear-gradient(180deg,#7dc4ff 0 55%,#5c9c3c 55% 62%,#8a5a35 62%)',btn:'#3b3b3b',btnInk:'#fff',ink:'#fff'}};
+function linkHTML(L){const th=THEMES[L.theme]||THEMES.sunset;const av=L.avatar||S.yt.avatar||S.tw.avatar||'';
+ return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(L.name||'Links')}</title><style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:${th.bg};background-attachment:fixed;color:${th.ink};font:16px/1.45 "Segoe UI",system-ui,sans-serif;display:flex;justify-content:center}
+.w{width:100%;max-width:520px;padding:48px 20px;text-align:center}img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid ${th.btn};box-shadow:0 8px 24px #0003}
+h1{font-size:24px;margin:14px 0 4px}p{margin:0 0 26px;opacity:.85}a{display:block;margin:12px 0;padding:15px 18px;border-radius:14px;background:${th.btn};color:${th.btnInk};text-decoration:none;font-weight:700;${th.border?`border:2px solid ${th.border};`:''}box-shadow:0 4px 0 #0002;transition:transform .12s}a:hover{transform:translateY(-2px)}
+small{display:block;margin-top:30px;opacity:.6;font-size:12px}</style></head><body><div class="w">${av?`<img src="${esc(av)}" alt="">`:''}<h1>${esc(L.name)}</h1>${L.bio?`<p>${esc(L.bio)}</p>`:''}
+${(L.buttons||[]).filter(b=>b.title&&b.url).map(b=>`<a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a>`).join('\n')}</div></body></html>`}
+PAGES.link=()=>{const L=S.link;if(!L.name)L.name=S.yt.channel||S.tw.name||'';
+ return ph(T('Link-Seite','Link page'),T('Eine Seite für alle deine Links, für die Bio auf Twitch, YouTube, TikTok und Instagram. Als HTML-Datei, die du auf jedem Webspace hochladen kannst.','One page for all your links, for your bio on Twitch, YouTube, TikTok and Instagram. As an HTML file you can upload to any web host.'),`<button class="btn pri" data-act="linkExport">${T('Als Datei speichern','Save as file')}</button>`)+`
+ <div class="grid g-side"><div class="card stack">
+  <label class="f">Name<input data-link="name" value="${esc(L.name)}"></label>
+  <label class="f">${T('Kurzer Text','Short bio')}<input data-link="bio" value="${esc(L.bio)}" placeholder="${T('z. B. Minecraft-Streams jeden Mittwoch und Sonntag','e.g. Minecraft streams every Wednesday and Sunday')}"></label>
+  <label class="f">${T('Profilbild (Link)','Profile picture (link)')}<input data-link="avatar" value="${esc(L.avatar)}" placeholder="${T('Leer lassen für dein YouTube- oder Twitch-Bild','Leave empty to use your YouTube or Twitch picture')}"></label>
+  <div><div class="small" style="font-weight:600;color:var(--ink2);margin-bottom:6px">${T('Aussehen','Look')}</div><div class="themes">${Object.entries(THEMES).map(([k,t])=>`<button data-theme="${k}" class="${L.theme===k?'on':''}" style="background:${t.bg}" title="${k}" aria-label="${k}"></button>`).join('')}</div></div>
+  <div><div class="row" style="margin-bottom:8px"><b class="small" style="color:var(--ink2)">${T('Knöpfe','Buttons')}</b><span class="sp"></span><button class="btn sm" data-act="lbAdd">+ ${T('Knopf','Button')}</button></div>
+   <div class="stack" style="gap:8px">${L.buttons.map((b,i)=>`<div class="lbtn"><input data-lb="${i}" data-f="title" value="${esc(b.title)}" placeholder="${T('Text','Label')}"><input data-lb="${i}" data-f="url" value="${esc(b.url)}" placeholder="https://"><button class="btn sm ghost" data-act="lbUp" data-i="${i}" ${i?'':'disabled'} title="${T('Nach oben','Move up')}">↑</button><button class="btn sm ghost" data-act="lbDown" data-i="${i}" ${i<L.buttons.length-1?'':'disabled'} title="${T('Nach unten','Move down')}">↓</button><button class="btn sm ghost" data-act="lbDel" data-i="${i}">✕</button></div>`).join('')}</div></div></div>
+ <div class="card"><h3 style="text-align:center">${T('Vorschau','Preview')}</h3><div class="phone"><iframe id="linkPv" title="${T('Vorschau','Preview')}" sandbox></iframe></div></div></div>`};
+const linkPv=()=>{const f=$('#linkPv');if(f)f.srcdoc=linkHTML(S.link)};
+
+// Bericht
+let repMonth=(()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})();
+PAGES.rep=()=>{const [y,m]=repMonth.split('-').map(Number);const from=new Date(y,m-1,1),to=new Date(y,m,1);const fk=dayKey(from),tk=dayKey(to);
+ const days=S.days.filter(d=>d.day>=fk&&d.day<tk);const views=sum(days,d=>d.views),min=sum(days,d=>d.minutes),subs=sum(days,d=>d.subsIn-d.subsOut);
+ const vids=S.videos.filter(v=>v.published*1000>=from&&v.published*1000<to&&v.privacy==='public').sort((a,b)=>b.views-a.views);
+ const vods=S.vods.filter(v=>v.created*1000>=from&&v.created*1000<to);const sn=S.snaps.filter(s=>s.day>=fk&&s.day<tk&&s.twFollowers>0);
+ const twD=sn.length>1?sn[sn.length-1].twFollowers-sn[0].twFollowers:null;const mName=from.toLocaleDateString(lang==='en'?'en-GB':'de-DE',{month:'long',year:'numeric'});
+ return ph(T('Monatsbericht','Monthly report'),T('Deine Zahlen eines Monats auf einer Seite, zum Beispiel für Sponsoren. Speichern geht über „Drucken“ und dann „Als PDF speichern“.','Your numbers for one month on one page, e.g. for sponsors. Save it via “Print” and then “Save as PDF”.'),`<input type="month" id="repM" value="${repMonth}" style="width:170px"><button class="btn pri" data-act="print">${T('Drucken / als PDF','Print / save as PDF')}</button>`)+
+ (S.yt.connected||S.tw.connected?'':needs('any'))+`<div class="sheet"><div style="display:flex;align-items:center;gap:14px">${S.yt.avatar||S.tw.avatar?`<img src="${esc(S.yt.avatar||S.tw.avatar)}" style="width:56px;height:56px;border-radius:50%" alt="">`:''}<div><h1>${esc(S.yt.channel||S.tw.name||T('Mein Kanal','My channel'))}</h1><div class="sub">${T('Bericht für','Report for')} ${mName}</div></div></div>
+ <div class="kp"><div><b>${fmtN(views)}</b><span>${T('YouTube-Aufrufe','YouTube views')}</span></div><div><b>${subs>=0?'+':''}${fmtN(subs)}</b><span>${T('neue Abos (netto)','new subscribers (net)')}</span></div><div><b>${fmtN(Math.round(min/60))} h</b><span>${T('Wiedergabezeit','Watch time')}</span></div><div><b>${twD==null?'–':(twD>=0?'+':'')+fmtN(twD)}</b><span>${T('neue Twitch-Follower','new Twitch followers')}</span></div></div>
+ <div class="kp" style="margin-top:-12px"><div><b>${short(S.stats.ytSubs||0)}</b><span>${T('YouTube-Abos gesamt','YouTube subscribers total')}</span></div><div><b>${short(S.stats.twFollowers||0)}</b><span>${T('Twitch-Follower gesamt','Twitch followers total')}</span></div><div><b>${vids.length}</b><span>${T('neue Videos','new videos')}</span></div><div><b>${vods.length}</b><span>${T('Streams','streams')}</span></div></div>
+ ${days.length?`<h2>${T('Aufrufe pro Tag','Views per day')}</h2>${lineChart([{v:days.map(d=>d.views),c:'#ff6b4a'}],{h:170,labels:days.map(d=>dLbl(d.day))})}`:''}
+ <h2>${T('Videos in diesem Monat','Videos this month')}</h2>${vids.length?`<table><thead><tr><th>Video</th><th class="r">${T('Datum','Date')}</th><th class="r">${T('Aufrufe','Views')}</th><th class="r">Likes</th></tr></thead><tbody>${vids.slice(0,10).map(v=>`<tr><td>${esc(v.title)}</td><td class="r">${fmtD(v.published)}</td><td class="r">${fmtN(v.views)}</td><td class="r">${fmtN(v.likes)}</td></tr>`).join('')}</tbody></table>`:`<p style="color:#6b778a">${T('Keine neuen Videos in diesem Monat.','No new videos this month.')}</p>`}
+ ${vods.length?`<h2>${T('Streams','Streams')}</h2><table><thead><tr><th>Stream</th><th class="r">${T('Datum','Date')}</th><th class="r">${T('Dauer','Length')}</th><th class="r">${T('Aufrufe','Views')}</th></tr></thead><tbody>${vods.slice(0,10).map(v=>`<tr><td>${esc(v.title)}</td><td class="r">${fmtD(v.created)}</td><td class="r">${esc(v.dur)}</td><td class="r">${fmtN(v.views)}</td></tr>`).join('')}</tbody></table>`:''}
+ ${S.heatYT.top.length?`<h2>${T('Beste Zeiten','Best times')}</h2><p>${S.heatYT.top.join(' · ')}</p>`:''}
+ <p style="color:#9aa5b5;font-size:12px;margin-top:30px">${T('Erstellt mit Kanalwerk am','Created with Kanalwerk on')} ${new Date().toLocaleDateString(lang==='en'?'en-GB':'de-DE')}. ${T('Quelle: YouTube Analytics und Twitch.','Source: YouTube Analytics and Twitch.')}</p></div>`};
+
+// Ankündigungen
+PAGES.ann=()=>{const a=S.ann;const sw=(on,k)=>`<button class="sw ${on?'on':''}" data-ann="${k}" aria-pressed="${!!on}"></button>`;
+ return ph(T('Ankündigungen','Announcements'),T('Kanalwerk meldet neue Videos und deinen Stream-Start automatisch. Es prüft alle 5 Minuten, solange Kanalwerk geöffnet ist.','Kanalwerk announces new videos and your stream start automatically. It checks every 5 minutes while Kanalwerk is open.'))+`
+ <div class="grid g2"><div class="stack">
+  <div class="card"><h3>Discord</h3><label class="f">${T('Webhook-Adresse','Webhook URL')}<input type="password" data-annf="discord" value="${esc(a.discord)}" placeholder="https://discord.com/api/webhooks/…"></label>
+   <ol class="steps"><li>${T('In Discord: Servereinstellungen → Integrationen → Webhooks → Neuer Webhook.','In Discord: Server settings → Integrations → Webhooks → New webhook.')}</li><li>${T('Kanal wählen, „Webhook-URL kopieren“ und hier einfügen.','Pick a channel, “Copy webhook URL” and paste it here.')}</li></ol></div>
+  <div class="card"><h3>${T('Verlauf','Log')}</h3>${a.log.length?`<div class="list">${a.log.slice(0,12).map(l=>`<div class="li small">${esc(l)}</div>`).join('')}</div>`:`<div class="empty small">${T('Noch nichts gemeldet.','Nothing announced yet.')}</div>`}</div></div>
+ <div class="stack"><div class="card"><div class="row" style="margin-bottom:10px"><h3 style="margin:0"><i class="dot yt"></i> ${T('Neues YouTube-Video','New YouTube video')}</h3><span class="sp"></span>${sw(a.videoOn,'videoOn')}</div>
+   <div class="row small" style="gap:18px;margin-bottom:10px"><label class="row" style="gap:8px">${sw(a.videoDiscord,'videoDiscord')} Discord</label><label class="row" style="gap:8px">${sw(a.videoTwitch,'videoTwitch')} ${T('Twitch-Chat','Twitch chat')}</label></div>
+   <label class="f">${T('Nachricht','Message')}<textarea data-annf="videoMsg" rows="2">${esc(a.videoMsg)}</textarea></label><p class="muted small" style="margin:6px 0 10px"><code>{title}</code> <code>{url}</code> <code>{channel}</code></p>
+   <button class="btn sm" data-act="annTest" data-k="video" ${S.yt.connected?'':'disabled'}>${T('Test senden','Send test')}</button>${S.yt.connected?'':` <span class="muted small">${T('YouTube verbinden','Connect YouTube')}</span>`}</div>
+  <div class="card"><div class="row" style="margin-bottom:10px"><h3 style="margin:0"><i class="dot tw"></i> ${T('Stream geht live','Stream goes live')}</h3><span class="sp"></span>${sw(a.liveOn,'liveOn')}</div>
+   <label class="f">${T('Nachricht auf Discord','Message on Discord')}<textarea data-annf="liveMsg" rows="2">${esc(a.liveMsg)}</textarea></label><p class="muted small" style="margin:6px 0 10px"><code>{title}</code> <code>{game}</code> <code>{url}</code> <code>{channel}</code></p>
+   <button class="btn sm" data-act="annTest" data-k="live">${T('Test senden','Send test')}</button>${S.tw.connected?'':` <span class="muted small">${T('Für die Live-Erkennung Twitch verbinden','Connect Twitch for live detection')}</span>`}</div></div></div>`};
+
+// Konten
+function accModal(){const y=S.yt,w=S.tw,dev=w.device||{};
+ modal(`<h2>${T('Konten','Accounts')}</h2><p class="muted" style="margin:0 0 16px">${T('Die Anmeldedaten bleiben auf deinem PC. Kanalwerk spricht direkt mit YouTube und Twitch.','Your sign-in data stays on your PC. Kanalwerk talks directly to YouTube and Twitch.')}</p>
+ <div class="grid g2"><div class="card stack"><h3 style="margin:0"><i class="dot yt"></i> YouTube</h3>
+  ${y.connected?`<div class="row">${y.avatar?`<img src="${esc(y.avatar)}" style="width:40px;height:40px;border-radius:50%" alt="">`:''}<div><b>${esc(y.channel||T('Verbunden','Connected'))}</b><div class="muted small">${T('verbunden','connected')}</div></div><span class="sp"></span><button class="btn sm" data-act="ytOut">${T('Trennen','Disconnect')}</button></div>`:`
+  <ol class="steps"><li>${T('Öffne die','Open the')} <a href="#" data-open="https://console.cloud.google.com/apis/credentials">Google Cloud Console</a> ${T('und lege ein Projekt an.','and create a project.')}</li>
+  <li>${T('Unter „APIs und Dienste“ die','Under “APIs & Services”, enable')} <b>YouTube Data API v3</b> ${T('und die','and')} <b>YouTube Analytics API</b> ${T('aktivieren.','.')}</li>
+  <li>${T('„OAuth-Zustimmungsbildschirm“: Typ „Extern“, dich selbst als Testnutzer eintragen.','“OAuth consent screen”: type “External”, add yourself as a test user.')}</li>
+  <li>${T('„Anmeldedaten“ → „OAuth-Client-ID“ → Typ','“Credentials” → “OAuth client ID” → type')} <b>${T('Desktop-App','Desktop app')}</b>. ${T('Client-ID und Clientschlüssel hier einfügen.','Paste client ID and client secret here.')}</li></ol>
+  <label class="f">Client-ID<input id="ytCid" value="${esc(y.clientId)}" placeholder="…apps.googleusercontent.com"></label>
+  <label class="f">${T('Clientschlüssel','Client secret')}<input id="ytSec" type="password" placeholder="${y.hasSecret?T('gespeichert','saved'):'GOCSPX-…'}"></label>
+  ${y.login&&y.login!=='ok'&&y.login!=='waiting'?`<div class="small" style="color:var(--bad)">${esc(y.login)}</div>`:''}
+  <button class="btn pri" data-act="ytIn">${y.login==='waiting'?T('Warte auf Google …','Waiting for Google …'):T('Mit Google anmelden','Sign in with Google')}</button>`}</div>
+ <div class="card stack"><h3 style="margin:0"><i class="dot tw"></i> Twitch</h3>
+  ${w.connected?`<div class="row">${w.avatar?`<img src="${esc(w.avatar)}" style="width:40px;height:40px;border-radius:50%" alt="">`:''}<div><b>${esc(w.name||w.login)}</b><div class="muted small">${T('verbunden','connected')}</div></div><span class="sp"></span><button class="btn sm" data-act="twOut">${T('Trennen','Disconnect')}</button></div>`:`
+  <ol class="steps"><li>${T('Öffne die','Open the')} <a href="#" data-open="https://dev.twitch.tv/console/apps/create">Twitch-Developer-Konsole</a> ${T('und registriere eine Anwendung.','and register an application.')}</li>
+  <li>${T('OAuth-Redirect-URL:','OAuth redirect URL:')} <code>http://localhost</code>, ${T('Kategorie beliebig,','any category,')} <b>${T('Client-Typ: Öffentlich','Client type: Public')}</b>.</li><li>${T('Client-ID kopieren und hier einfügen.','Copy the client ID and paste it here.')}</li></ol>
+  <label class="f">Client-ID<input id="twCid" value="${esc(w.clientId)}"></label>
+  ${dev.state==='waiting'&&dev.code?`<p class="small" style="margin:0">${T('Bestätige im Browser diesen Code:','Confirm this code in your browser:')}</p><div class="code">${esc(dev.code)}</div><button class="btn sm" data-open="${esc(dev.uri)}">${T('Seite erneut öffnen','Open page again')}</button>`:''}
+  ${dev.state&&dev.state!=='ok'&&dev.state!=='waiting'?`<div class="small" style="color:var(--bad)">${esc(dev.state)}</div>`:''}
+  <button class="btn pri" data-act="twIn" style="background:var(--tw);border-color:var(--tw)">${T('Mit Twitch anmelden','Sign in with Twitch')}</button>`}</div></div>
+ <div class="row" style="margin-top:16px"><span class="sp"></span><button class="btn" data-act="close">${T('Fertig','Done')}</button></div>`,'wide')}
+
+// ---------------------------------------------------------------- Fenster, Rendern, Eingaben
+function modal(html,cls=''){$('#modal').innerHTML=`<div class="modal" data-act="bgclose"><div class="box ${cls}" role="dialog" aria-modal="true">${html}</div></div>`}
+const closeModal=()=>{$('#modal').innerHTML=''};
+function render(){if(!S)return;renderTabs();const f=PAGES[page]||PAGES.home;$('#app').innerHTML=f();if(page==='link')linkPv();if(location.hash.slice(1)!==page)history.replaceState(null,'','#'+page)}
+async function load(){S=await api('/api/state');lang=S.lang||'de';document.documentElement.lang=lang;render()}
+async function act(u,b){try{const r=await api(u,b);if(r&&r.yt)S=r;render();return r}catch(e){toast(e.message);throw e}}
+
+document.addEventListener('click',async e=>{const el=e.target.closest('[data-tab],[data-act],[data-calmode],[data-calnav],[data-weeknav],[data-day],[data-item],[data-slot],[data-stat],[data-vsort],[data-theme],[data-ann],[data-open]');if(!el)return;
+ if(el.dataset.open){e.preventDefault();api('/api/open',{url:el.dataset.open});return}
+ if(el.dataset.tab){page=el.dataset.tab;if(el.dataset.calweek)calMode='week';closeModal();render();$('main').scrollTop=0;return}
+ if(el.dataset.calmode){calMode=el.dataset.calmode;return render()}
+ if(el.dataset.calnav){const v=+el.dataset.calnav;if(v===0){calRef=new Date();calRef.setDate(1)}else calRef.setMonth(calRef.getMonth()+v);return render()}
+ if(el.dataset.weeknav){const v=+el.dataset.weeknav;if(v===0)weekRef=new Date();else weekRef.setDate(weekRef.getDate()+v);return render()}
+ if(el.dataset.item){e.stopPropagation();const [k,j]=el.dataset.item.split('|');const its=calItems().filter(it=>dayKey(new Date(it.at*1000))===k).sort((a,b)=>a.at-b.at);return itemModal(its[+j])}
+ if(el.dataset.day)return evModal(null,el.dataset.day);
+ if(el.dataset.slot){const ev=el.querySelector('.ev');if(ev){const [d,h]=el.dataset.slot.split('T');const it=calItems().find(x=>{const t=new Date(x.at*1000);return dayKey(t)===d&&t.getHours()===+h.slice(0,2)});if(it)return itemModal(it)}return evModal(null,el.dataset.slot)}
+ if(el.dataset.stat){statTab=el.dataset.stat;return render()}
+ if(el.dataset.vsort){vidSort=el.dataset.vsort;return render()}
+ if(el.dataset.theme){S.link.theme=el.dataset.theme;await act('/api/link',S.link);return}
+ if(el.dataset.ann){S.ann[el.dataset.ann]=!S.ann[el.dataset.ann];await act('/api/ann',S.ann);return}
+ const a=el.dataset.act,id=el.dataset.id;
+ const H={
+  accounts:accModal,close:closeModal,bgclose:()=>{if(e.target===el)closeModal()},
+  ytIn:async()=>{const cid=$('#ytCid').value.trim(),sec=$('#ytSec').value.trim();await act('/api/yt/creds',{clientId:cid,secret:sec});await act('/api/yt/login',{});toast(T('Melde dich im Browser bei Google an.','Sign in with Google in your browser.'));pollAcc();accModal()},
+  ytOut:async()=>{if(confirm(T('YouTube trennen?','Disconnect YouTube?'))){await act('/api/yt/logout',{});accModal()}},
+  twIn:async()=>{await act('/api/tw/creds',{clientId:$('#twCid').value.trim()});await act('/api/tw/login',{});await load();pollAcc();accModal()},
+  twOut:async()=>{if(confirm(T('Twitch trennen?','Disconnect Twitch?'))){await act('/api/tw/logout',{});accModal()}},
+  evNew:()=>evModal(null,dayKey(new Date())),
+  evSave:async()=>{const at=new Date($('#evA').value).getTime()/1000;if(!$('#evT').value.trim())return toast(T('Gib einen Titel ein.','Enter a title.'));if(!at)return toast(T('Wähle Datum und Uhrzeit.','Choose date and time.'));await act('/api/events',{do:'save',e:{id,title:$('#evT').value.trim(),kind:$('#evK').value,at:Math.round(at),note:$('#evN').value}});closeModal();toast(T('Gespeichert','Saved'))},
+  evDel:async()=>{await act('/api/events',{do:'delete',e:{id}});closeModal()},
+  pickVideo:async()=>{try{const r=await api('/api/pick?filter='+encodeURIComponent((lang==='en'?'Videos':'Videos')+'|*.mp4;*.mov;*.mkv;*.webm;*.avi;*.m4v'));if(r.paths&&r.paths[0]){UF.file=r.paths[0];if(!UF.title)UF.title=r.paths[0].split(/[\\/]/).pop().replace(/\.[^.]+$/,'').slice(0,100);saveUF();render()}}catch(x){toast(x.message)}},
+  pickThumb:async()=>{try{const r=await api('/api/pick?filter='+encodeURIComponent((lang==='en'?'Images':'Bilder')+'|*.jpg;*.jpeg;*.png'));if(r.paths&&r.paths[0]){UF.thumb=r.paths[0];saveUF();render()}}catch(x){toast(x.message)}},
+  noThumb:()=>{UF.thumb='';saveUF();render()},kids:()=>{UF.kids=!UF.kids;saveUF();render()},
+  ufClear:()=>{UF={file:'',thumb:'',title:'',desc:'',tags:'',category:UF.category,privacy:UF.privacy,when:'now',at:'',kids:false};saveUF();render()},
+  upAdd:async()=>{let at=0;if(UF.when==='at'){at=Math.round(new Date(UF.at).getTime()/1000);if(!at)return toast(T('Wähle einen Termin.','Choose a date and time.'))}
+   await act('/api/upload/add',{file:UF.file,thumb:UF.thumb,title:UF.title.trim(),desc:UF.desc,tags:UF.tags,category:UF.category,privacy:UF.privacy,publishAt:at,kids:UF.kids});
+   UF={file:'',thumb:'',title:'',desc:'',tags:'',category:UF.category,privacy:UF.privacy,when:'now',at:'',kids:false};saveUF();render();toast(T('In der Warteschlange. Der Upload startet gleich.','Queued. The upload starts shortly.'))},
+  upRetry:()=>act('/api/upload/do',{id,do:'retry'}),upDel:()=>act('/api/upload/do',{id,do:'remove'}),
+  rvAdd:async()=>{const h=$('#rvH').value.trim();if(!h)return toast(T('Gib einen Kanal ein.','Enter a channel.'));el.disabled=true;try{await act('/api/rivals',{do:'add',kind:$('#rvK').value,handle:h})}finally{el.disabled=false}},
+  rvDel:()=>act('/api/rivals',{do:'remove',id}),
+  lbAdd:()=>{S.link.buttons.push({title:'',url:'https://'});act('/api/link',S.link)},
+  lbDel:()=>{S.link.buttons.splice(+el.dataset.i,1);act('/api/link',S.link)},
+  lbUp:()=>{const i=+el.dataset.i,b=S.link.buttons;[b[i-1],b[i]]=[b[i],b[i-1]];act('/api/link',S.link)},
+  lbDown:()=>{const i=+el.dataset.i,b=S.link.buttons;[b[i+1],b[i]]=[b[i],b[i+1]];act('/api/link',S.link)},
+  linkExport:async()=>{try{const r=await api('/api/link/export',{html:linkHTML(S.link)});toast(T('Gespeichert: ','Saved: ')+r.path)}catch(x){toast(x.message)}},
+  print:()=>window.print(),
+  annTest:async()=>{const r=await act('/api/ann/test',{kind:el.dataset.k});toast(r.errors&&r.errors.length?r.errors.join(' · '):T('Test gesendet.','Test sent.'))}};
+ if(H[a]){e.preventDefault();try{await H[a]()}catch(x){}}});
+
+let saveT;document.addEventListener('input',e=>{const el=e.target;
+ if(el.dataset.uf){UF[el.dataset.uf]=el.value;saveUF();if(el.dataset.uf==='title'){$('#cntT').textContent=[...el.value].length+'/100';const p=$('#pvT');if(p)p.innerHTML=esc(el.value)||`<span class="muted">${T('Titel','Title')}</span>`}if(el.dataset.uf==='desc')$('#cntD').textContent=[...el.value].length+'/5000';return}
+ if(el.dataset.link){S.link[el.dataset.link]=el.value;linkPv();clearTimeout(saveT);saveT=setTimeout(()=>api('/api/link',S.link).catch(x=>toast(x.message)),500);return}
+ if(el.dataset.lb){S.link.buttons[+el.dataset.lb][el.dataset.f]=el.value;linkPv();clearTimeout(saveT);saveT=setTimeout(()=>api('/api/link',S.link).catch(x=>toast(x.message)),500);return}
+ if(el.dataset.annf){S.ann[el.dataset.annf]=el.value;clearTimeout(saveT);saveT=setTimeout(()=>api('/api/ann',S.ann).catch(x=>toast(x.message)),600)}});
+document.addEventListener('change',e=>{const el=e.target;if(el.dataset.uf&&(el.tagName==='SELECT'||el.type==='datetime-local')){UF[el.dataset.uf]=el.value;saveUF();render()}if(el.id==='repM'&&el.value){repMonth=el.value;render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML){closeModal()}if(e.key==='Enter'&&e.target.id==='rvH'){document.querySelector('[data-act=rvAdd]').click()}});
+$('#accBtn').onclick=accModal;
+$('#refresh').onclick=async()=>{const b=$('#refresh');if(b.classList.contains('spin'))return;if(!S.yt.connected&&!S.tw.connected)return accModal();b.classList.add('spin');try{const r=await api('/api/refresh',{});S=r;render();const er=Object.values(r.errors||{});toast(er.length?er.join(' · '):T('Zahlen aktualisiert.','Numbers updated.'))}catch(x){toast(x.message)}b.classList.remove('spin')};
+const applyMode=()=>{let m='day';try{m=localStorage.getItem('kw-mode')||'day'}catch(e){}document.documentElement.dataset.mode=m};applyMode();
+$('#mode').onclick=()=>{const n=document.documentElement.dataset.mode==='night'?'day':'night';try{localStorage.setItem('kw-mode',n)}catch(e){}applyMode()};
+let pollT;function pollAcc(){clearInterval(pollT);let n=0;pollT=setInterval(async()=>{n++;const prev=JSON.stringify([S.yt.connected,S.tw.connected,S.yt.login,(S.tw.device||{}).state]);await load();
+ const now=JSON.stringify([S.yt.connected,S.tw.connected,S.yt.login,(S.tw.device||{}).state]);if(now!==prev&&$('#modal').innerHTML)accModal();
+ if((S.yt.login==='ok'||!S.yt.login||S.yt.login!=='waiting')&&((S.tw.device||{}).state!=='waiting')||n>200){clearInterval(pollT);if(S.yt.connected||S.tw.connected){$('#refresh').click()}}},2500)}
+// Uploads live mitverfolgen
+setInterval(async()=>{if(!S||$('#modal').innerHTML||document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;if(S.uploads.some(u=>u.status==='uploading'||u.status==='wait')){await load()}},3000);
+
+// ---------------------------------------------------------------- kurze Einführung (nur das Wichtigste)
+function tour(){const steps=[
+ {t:T('Willkommen bei Kanalwerk','Welcome to Kanalwerk'),d:T('Hier planst du Uploads, siehst deine Zahlen von YouTube und Twitch und lässt neue Videos automatisch ankündigen.','Plan uploads, see your YouTube and Twitch numbers and announce new videos automatically.')},
+ {el:'#accBtn',t:T('1. Konten verbinden','1. Connect accounts'),d:T('Verbinde hier YouTube und Twitch. Die Anleitung steht direkt daneben.','Connect YouTube and Twitch here. The steps are shown right there.')},
+ {el:'[data-tab=up]',t:T('2. Hochladen und planen','2. Upload and schedule'),d:T('Video, Thumbnail und Titel auswählen, Termin setzen, fertig. YouTube veröffentlicht zum Termin.','Pick video, thumbnail and title, set a time, done. YouTube publishes at that time.')},
+ {el:'[data-tab=stats]',t:T('3. Zahlen ansehen','3. Check your numbers'),d:T('Statistik, beste Zeiten, Vergleich und Monatsbericht findest du in den Reitern daneben.','Statistics, best times, comparison and monthly report are in the tabs next to it.'),last:1}];
+ let i=0;const box=document.createElement('div');box.className='tour';box.innerHTML='<div class="hole"></div><div class="tc"></div>';document.body.appendChild(box);
+ const end=()=>{box.remove();api('/api/tour',{})};
+ const draw=()=>{const st=steps[i],hole=box.querySelector('.hole'),c=box.querySelector('.tc');const el=st.el&&document.querySelector(st.el);const r=el&&el.getBoundingClientRect();
+  if(r){Object.assign(hole.style,{display:'block',left:r.left-6+'px',top:r.top-6+'px',width:r.width+12+'px',height:r.height+12+'px'});box.style.background=''}else{hole.style.display='none';box.style.background='#0b1424b8'}
+  c.innerHTML=`<div class="dots">${steps.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div><h3>${st.t}</h3><p>${st.d}</p><div class="row">${st.last?'':`<button class="btn ghost" data-t="skip">${T('Überspringen','Skip')}</button>`}<span class="sp"></span>${i?`<button class="btn" data-t="back">${T('Zurück','Back')}</button>`:''}<button class="btn pri" data-t="next">${st.last?T('Los geht’s','Let’s go'):T('Weiter','Next')}</button></div>`;
+  if(r){const x=Math.min(innerWidth-c.offsetWidth-16,Math.max(16,r.left+r.width/2-c.offsetWidth/2));Object.assign(c.style,{left:x+'px',top:r.bottom+16+'px',transform:'none'})}else Object.assign(c.style,{left:'50%',top:'50%',transform:'translate(-50%,-50%)'});c.querySelector('[data-t=next]').focus()};
+ box.addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;if(b.dataset.t==='skip')end();else if(b.dataset.t==='back'){i--;draw()}else if(steps[i].last)end();else{i++;draw()}});
+ box.addEventListener('keydown',e=>{if(e.key==='Escape')end()});draw()}
+
+load().then(()=>{if(!S.tourDone)setTimeout(tour,500)}).catch(e=>{$('#app').innerHTML=`<div class="empty">${esc(e.message)}</div>`});

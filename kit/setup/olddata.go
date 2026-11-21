@@ -7,7 +7,7 @@ import (
 )
 
 // Ordner, in denen die Werkzeuge ihre Projekte ablegen (unter dem Benutzer-Einstellungsordner)
-var dataApps = []string{"CreatorHub", "Bildbearbeitung", "Videoschnitt", "MP3-Schneider", "Dateityp-Umwandler", "Upscaler", "MotionDesign", "StreamPilot"}
+var dataApps = []string{"CreatorHub", "Bildbearbeitung", "Videoschnitt", "MP3-Schneider", "Dateityp-Umwandler", "Upscaler", "MotionDesign", "StreamPilot", "Kanalwerk"}
 
 // OldProjects zählt Projekte, die von einer früheren Installation übrig sind.
 func OldProjects() int {

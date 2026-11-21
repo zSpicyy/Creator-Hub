@@ -156,6 +156,7 @@ func StopTools() {
 		exec.Command("pkill", sig, "-x", "Videoschnitt").Run()
 		exec.Command("pkill", sig, "-x", "MP3-Schneider").Run()
 		exec.Command("pkill", sig, "-x", "StreamPilot").Run()
+		exec.Command("pkill", sig, "-x", "Kanalwerk").Run()
 		exec.Command("pkill", sig, "-x", "Bildbearbeitung").Run()
 		exec.Command("pkill", sig, "-x", "Motion-Design").Run()
 		if sig == "-TERM" {

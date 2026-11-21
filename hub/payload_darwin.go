@@ -17,6 +17,7 @@ var toolTitle = map[string][2]string{
 	"Dateityp-Umwandler": {"Dateityp-Umwandler", "File Converter"},
 	"Motion-Design":      {"Motion Design", "Motion Design"},
 	"StreamPilot":        {"StreamPilot", "StreamPilot"},
+	"Kanalwerk":          {"Kanalwerk", "Kanalwerk"},
 }
 
 // afterExtract legt Info.plist und Symbol der Werkzeug-App an.
