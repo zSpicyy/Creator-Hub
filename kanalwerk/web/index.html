@@ -205,6 +205,22 @@ code{background:var(--rule2);padding:1px 6px;border-radius:5px;font-size:12.5px}
 .tour .tc h3{margin:6px 0}.tour .tc p{margin:0 0 14px;color:var(--ink2)}
 .tour .dots{display:flex;gap:5px}.tour .dots i{width:7px;height:7px;border-radius:4px;background:var(--rule)}.tour .dots i.on{background:var(--coral);width:18px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.acccard{display:flex;flex-direction:column;gap:14px}
+.acchead{display:flex;align-items:center;gap:12px}
+.accico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);flex:none}
+.accico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.acct{display:flex;flex-direction:column;min-width:0;flex:1}.acct h3{margin:0!important;font-size:16px}.acct span{color:var(--ink2);font-size:13px}
+.accme{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.accme img,.accini{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none}.accini{display:grid;place-items:center;background:var(--rule2);font-weight:700}
+.accgo{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.accsetup{border:1px solid var(--rule);border-radius:12px;padding:0 14px;background:var(--paper)}
+.accsetup summary{cursor:pointer;padding:11px 0;font-weight:600;color:var(--ink2)}
+.accsetup[open]{padding-bottom:14px}.accsetup[open] summary{color:var(--ink)}
+.accsetup .steps{margin:4px 0 12px}.accsetup .btn.pri{margin-top:12px}
+.accerr{margin:0;color:var(--bad);font-size:13px}
+.accode{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn.danger{color:var(--bad)}
+#accBtn.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
 </style>
 <link rel="stylesheet" href="/kit/polish.css">
 </head>

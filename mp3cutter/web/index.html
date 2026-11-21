@@ -65,11 +65,21 @@ button,input,select,textarea{border-radius:8px}.pj,.navb{border-radius:8px;margi
 .brand{display:flex;align-items:center;gap:10px;font:700 16px "Segoe UI",system-ui,sans-serif}.brand img{width:30px;height:30px}
 #kitOverlay{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(3px);pointer-events:none}#kitOverlay div{border:3px dashed var(--accent);border-radius:18px;padding:40px 60px;background:var(--panel);font-size:18px;font-weight:600;color:var(--accent)}body.kit-dragging #kitOverlay{display:grid}
 #kitToast{position:fixed;bottom:20px;left:50%;translate:-50% 0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 16px;z-index:60;display:none}#kitToast.show{display:block}
-/* Projektkarten */.pgrid,.ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.proj{position:relative;padding:12px!important;border-radius:14px!important;display:flex!important;flex-direction:column;background:var(--panel);border:1px solid var(--line);overflow:hidden;text-align:left;cursor:pointer;color:var(--text);font:inherit}.proj:hover{border-color:var(--accent)}.proj .th{border-radius:10px;overflow:hidden;height:150px!important;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--accent) 22%,var(--panel2)),var(--panel2) 75%) center/cover}.proj .tx{padding:12px 2px 2px!important;display:flex;flex-direction:column;gap:6px;flex:1}.proj .tr{display:flex;align-items:center;gap:8px;min-width:0}.proj .tr b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.proj .tag{font-style:normal;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;white-space:nowrap;flex:none}.proj .tx>span{font-size:13px;color:var(--muted)}.proj .open{font-style:normal;align-self:flex-end;margin-top:4px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;border-radius:9px;padding:6px 14px}.proj .del{top:20px!important;right:20px!important}</style><link rel="stylesheet" href="/kit/polish.css">
+/* Projektkarten */.pgrid,.ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.proj{position:relative;padding:12px!important;border-radius:14px!important;display:flex!important;flex-direction:column;background:var(--panel);border:1px solid var(--line);overflow:hidden;text-align:left;cursor:pointer;color:var(--text);font:inherit}.proj:hover{border-color:var(--accent)}.proj .th{border-radius:10px;overflow:hidden;height:150px!important;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--accent) 22%,var(--panel2)),var(--panel2) 75%) center/cover}.proj .tx{padding:12px 2px 2px!important;display:flex;flex-direction:column;gap:6px;flex:1}.proj .tr{display:flex;align-items:center;gap:8px;min-width:0}.proj .tr b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.proj .tag{font-style:normal;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;white-space:nowrap;flex:none}.proj .tx>span{font-size:13px;color:var(--muted)}.proj .open{font-style:normal;align-self:flex-end;margin-top:4px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;border-radius:9px;padding:6px 14px}.proj .del{top:20px!important;right:20px!important}.acccard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;max-width:620px}
+.acchead{display:flex;align-items:center;gap:12px}.accico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#1db95428;color:#1db954;flex:none}
+.accico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.acct{display:flex;flex-direction:column;flex:1;min-width:0}.acct h3{margin:0;font-size:16px}.acct span{color:var(--muted);font-size:13px}
+.accpill{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--panel2);color:var(--muted)}.accpill.ok{background:#1b9a5a22;color:var(--ok)}
+.accme{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.accini{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);font-weight:700;flex:none}
+.accgo{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.accsetup{border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--bg)}.accsetup summary{cursor:pointer;padding:11px 0;font-weight:600;color:var(--muted)}
+.accsetup[open]{padding-bottom:14px}.accsetup ol{margin:4px 0 12px;padding-left:20px;line-height:1.6}.accsetup .main-btn{margin-top:4px}
+</style><link rel="stylesheet" href="/kit/polish.css">
 </head><body>
 <header class="ch-top chtop"><div class="ch-brand"><img src="/logo.svg" alt="">MP3 Schneider</div><span class="ch-sp"></span></header>
 <nav class="ch-nav"><button class="ch-item" id="ovb" type="button"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button><div id="plist"></div>
-<form id="nf"><input id="nn" placeholder="Name des Projekts" aria-label="Name des Projekts"><button>Neues Projekt</button><div class="err" id="ne"></div></form><button class="ch-item" id="setb" type="button" style="margin-top:6px"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Einstellungen</button></nav>
+<form id="nf"><input id="nn" placeholder="Name des Projekts" aria-label="Name des Projekts"><button>Neues Projekt</button><div class="err" id="ne"></div></form><button class="ch-item" id="accb" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Konten</button><button class="ch-item" id="setb" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Einstellungen</button></nav>
 <main id="app"></main><audio id="au" preload="none"></audio>
 <script src="/kit/i18n.js"></script>
 <script src="/kit/kit.js"></script>
@@ -87,7 +97,7 @@ async function rail(){list=await api('/projects');$('#plist').innerHTML=list.map
 $('#nf').onsubmit=async e=>{e.preventDefault();$('#ne').textContent='';try{const p=await api('/projects',{method:'POST',body:{name:$('#nn').value}});$('#nn').value='';await open_(p)}catch(x){$('#ne').textContent=x.message}};
 function empty(){if(list&&list.length)return overview();app.innerHTML=`<div class="ch-empty" style="margin:28px;padding:56px 20px"><svg viewBox="0 0 48 48"><path d="M6 24v0M12 18v12M18 10v28M24 16v16M30 6v36M36 15v18M42 21v6"/></svg><b>Noch keine Projekte</b><p>Lege ein Projekt an und wähle danach deine lange Aufnahme aus. Sie wird automatisch in einzelne Dateien geschnitten.</p><form id="nf2" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center"><input id="nn2" placeholder="Name des Projekts" aria-label="Name des Projekts" style="width:240px"><button class="main-btn">Neues Projekt</button></form><div class="err" id="ne2"></div></div>`;$('#nf2').onsubmit=async e=>{e.preventDefault();$('#ne2').textContent='';try{const p=await api('/projects',{method:'POST',body:{name:$('#nn2').value.trim()||Kit.t('Mein Projekt')}});await open_(p)}catch(x){$('#ne2').textContent=x.message}};setTimeout(()=>$('#nn2')?.focus(),50)}
 // Projektübersicht als Karten, wie in den anderen Werkzeugen
-function overview(){P=null;clearInterval(timer);au.pause();$('#ovb').setAttribute('aria-current','true');$('#setb').setAttribute('aria-current','false');$('#plist').querySelectorAll('.pj').forEach(b=>b.setAttribute('aria-current','false'));
+function overview(){P=null;clearInterval(timer);au.pause();$('#ovb').setAttribute('aria-current','true');$('#setb').setAttribute('aria-current','false');$('#accb').setAttribute('aria-current','false');$('#plist').querySelectorAll('.pj').forEach(b=>b.setAttribute('aria-current','false'));
  app.innerHTML=`<div class="ov"><div class="ovh"><h2>Projekte</h2><span>${list.length}</span></div><div class="ovgrid">${list.map(p=>`<button class="proj" data-ov="${p.id}"><div class="th"><img src="/logo.svg" alt="" style="width:72px;height:72px"></div><div class="tx"><div class="tr"><b>${esc(p.name)}</b><em class="tag">${p.analyzed?partsOf(p).length+' Teile':p.source?'bereit':'neu'}</em></div><span>${p.dur?clock(p.dur)+' Min. Aufnahme':'Noch keine MP3 gewählt'}</span><i class="open">Öffnen</i></div></button>`).join('')}</div></div>`;
  app.querySelectorAll('[data-ov]').forEach(b=>b.onclick=()=>open_(list.find(x=>String(x.id)===b.dataset.ov)))}
 function partsOf(p){const c=(p.cuts||[]).filter(x=>x.accepted).map(x=>x.t).sort((a,b)=>a-b),e=[0,...c,p.dur];return c.concat(0).map((_,i)=>({a:e[i],b:e[i+1]}))}
@@ -97,16 +107,11 @@ const tracks=()=>P.tracks||[];
 const nameOf=i=>tracks()[i]?.title||`${pre()} ${i+1}`;
 async function save(b){P=await api('/projects/'+P.id,{method:'PATCH',body:b});return P}
 
-async function open_(p){$('#setb').setAttribute('aria-current','false');$('#ovb').setAttribute('aria-current','false');undo=[];clearInterval(timer);au.pause();P=p;peaks=null;await rail();render();const j=await api(`/projects/${P.id}/job`);if(j.running)watch();else if(P.analyzed)await loadWave()}
-async function settings(){clearInterval(timer);au.pause();P=null;peaks=null;await rail();$('#setb').setAttribute('aria-current','true');$('#ovb').setAttribute('aria-current','false');const d=await api('/settings');setv=d.settings;sp=await api('/spotify/status');
+async function open_(p){$('#setb').setAttribute('aria-current','false');$('#accb').setAttribute('aria-current','false');$('#ovb').setAttribute('aria-current','false');undo=[];clearInterval(timer);au.pause();P=p;peaks=null;await rail();render();const j=await api(`/projects/${P.id}/job`);if(j.running)watch();else if(P.analyzed)await loadWave()}
+async function settings(){clearInterval(timer);au.pause();P=null;peaks=null;await rail();$('#setb').setAttribute('aria-current','true');$('#accb').setAttribute('aria-current','false');$('#ovb').setAttribute('aria-current','false');const d=await api('/settings');setv=d.settings;sp=await api('/spotify/status');
  const s=setv,opt=(v,t,cur)=>`<option value="${v}" ${v===cur?'selected':''}>${t}</option>`;
  app.innerHTML=`<header class="top"><h1>Einstellungen</h1><span class="note" id="saved2" aria-live="polite"></span></header><section class="sets">
- <h2 style="border:0;margin-top:0;padding-top:0">Spotify</h2><div style="grid-column:1/-1">${sp.connected?`<div class="tl"><span class="ok">Verknüpft${sp.name?' mit '+esc(sp.name):''}</span><button id="spoff">Verknüpfung trennen</button></div><p class="note">In jedem Projekt kannst du jetzt unter „Titel“ deine Playlists auswählen.</p>`:
- `<ol><li>Leg bei Spotify kostenlos eine eigene App an. Spotify verlangt dafür ein Premium-Konto. Name und Beschreibung sind frei, bei den APIs wählst du „Web API“.<div><button id="dash">Spotify-Dashboard öffnen</button></div></li>
- <li>Trag dort diese Redirect-URI ein:<div class="tl"><code id="ruri">${esc(sp.redirect)}</code><button id="copy">Kopieren</button></div></li>
- <li>Kopiere die Client-ID deiner App und füge sie hier ein:<div class="line"><input id="cid" placeholder="Client-ID" value="${esc(s.clientId)}" aria-label="Client-ID"></div></li>
- </ol><div style="margin-top:12px"><button class="main-btn" id="spon">Mit Spotify verbinden</button></div>`}<div class="err" id="sperr">${esc(sp.error||'')}</div></div>
- <h2>Neue Projekte</h2>
+ <h2 style="border:0;margin-top:0;padding-top:0">Neue Projekte</h2>
  <label for="dout">Zielordner</label><div class="line"><input id="dout" value="${esc(s.defaultOutDir)}" placeholder="Bei jedem Projekt selbst wählen"><button id="dpick">Auswählen</button></div>
  <label for="dkind">Inhalt</label><select id="dkind">${kinds.map(k=>opt(k.id,esc(k.name),s.defaultKind)).join('')}</select>
  <h2>Dateien</h2>
@@ -130,6 +135,26 @@ async function settings(){clearInterval(timer);au.pause();P=null;peaks=null;awai
  if($('#spon'))$('#spon').onclick=async()=>{setv.clientId=$('#cid').value.trim();await put();$('#sperr').textContent='';try{await api('/spotify/connect',{method:'POST'});$('#spon').disabled=true;$('#spon').textContent='Anmeldung im Browser läuft …';clearInterval(timer);timer=setInterval(async()=>{const st=await api('/spotify/status');if(!st.pending){clearInterval(timer);sp=st;plCache=null;await settings()}},700)}catch(x){$('#sperr').textContent=x.message}};
 }
 $('#setb').onclick=settings;
+// Konten: Spotify im gleichen Aufbau wie in StreamPilot und Social-Planer
+async function accounts(){clearInterval(timer);au.pause();P=null;peaks=null;await rail();$('#accb').setAttribute('aria-current','true');$('#setb').setAttribute('aria-current','false');$('#ovb').setAttribute('aria-current','false');
+ const d=await api('/settings');setv=d.settings;sp=await api('/spotify/status');const s=setv;const ready=!!s.clientId;
+ app.innerHTML=`<header class="top"><h1>Konten</h1></header><div style="padding:0 24px 24px"><p class="note" style="margin:-6px 0 18px">Melde dich bei Spotify an, dann kannst du in jedem Projekt unter „Titel“ deine Playlists auswählen. Die Anmeldung bleibt auf deinem PC.</p>
+ <div class="acccard"><div class="acchead"><div class="accico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 9.5c3-1 6.5-.7 9 .8M8 12.6c2.5-.7 5.3-.4 7.3.8M8.6 15.4c2-.5 4-.3 5.6.6"/></svg></div><div class="acct"><h3>Spotify</h3><span>Playlists als Titelliste für deine Aufnahmen</span></div><span class="accpill ${sp.connected?'ok':''}">${sp.connected?'Verbunden':'Nicht verbunden'}</span></div>
+ ${sp.connected?`<div class="accme"><div class="accini">${esc((sp.name||'S').slice(0,1).toUpperCase())}</div><div class="acct"><b>${esc(sp.name||'Spotify')}</b><span>Angemeldet</span></div><span class="sp"></span><button id="spoff">Trennen</button></div>`
+ :`${ready?`<div class="accgo"><button class="main-btn" id="spon">Anmelden</button><span class="note">Öffnet die Anmeldung im Browser.</span></div>`:''}
+ <details class="accsetup" ${ready?'':'open'}><summary>${ready?'App-Daten ändern':'Einmalig einrichten'}</summary><ol>
+ <li>Leg bei Spotify kostenlos eine eigene App an. Spotify verlangt dafür ein Premium-Konto. Name und Beschreibung sind frei, bei den APIs wählst du „Web API“.<div style="margin-top:6px"><button id="dash">Spotify-Dashboard öffnen</button></div></li>
+ <li>Trag dort diese Redirect-URI ein:<div class="tl"><code id="ruri">${esc(sp.redirect)}</code><button id="copy">Kopieren</button></div></li>
+ <li>Kopiere die Client-ID deiner App und füge sie hier ein:<div class="line"><input id="cid" placeholder="Client-ID" value="${esc(s.clientId)}" aria-label="Client-ID"></div></li></ol>
+ ${ready?'':`<button class="main-btn" id="spon">Speichern und anmelden</button>`}</details>`}
+ <div class="err" id="sperr">${esc(sp.error||'')}</div></div></div>`;
+ if($('#dash'))$('#dash').onclick=()=>api('/spotify/dashboard',{method:'POST'});
+ if($('#copy'))$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(sp.redirect);$('#copy').textContent='Kopiert'}catch{getSelection().selectAllChildren($('#ruri'))}};
+ if($('#spoff'))$('#spoff').onclick=async()=>{await api('/spotify/disconnect',{method:'POST'});plCache=null;accounts()};
+ if($('#spon'))$('#spon').onclick=async()=>{if($('#cid')){setv.clientId=$('#cid').value.trim();await api('/settings',{method:'PUT',body:setv}).catch(()=>{})}$('#sperr').textContent='';try{await api('/spotify/connect',{method:'POST'});$('#spon').disabled=true;$('#spon').textContent='Anmeldung im Browser läuft …';clearInterval(timer);timer=setInterval(async()=>{const st=await api('/spotify/status');if(!st.pending){clearInterval(timer);sp=st;plCache=null;await accounts()}},700)}catch(x){$('#sperr').textContent=x.message}};
+}
+$('#accb').onclick=accounts;
+
 function sumT(){return tracks().reduce((s,t)=>s+(t.dur||0),0)}
 function render(){const i=P.info||{},k=kind(),music=['song','music'].includes(P.kind),tr=tracks();
  const sum=sumT(),dur=P.dur||i.estimate||0;
@@ -166,7 +191,7 @@ function render(){const i=P.info||{},k=kind(),music=['song','music'].includes(P.
  if($('#np'))$('#np').onchange=e=>save({noPause:e.target.checked});
  const again=async()=>{await rail();render();if(P.analyzed)await run()};
  if($('#ptog'))$('#ptog').onclick=()=>{$('#pmanual').hidden=!$('#pmanual').hidden};
- if($('#plink'))$('#plink').onclick=settings;
+ if($('#plink'))$('#plink').onclick=accounts;
  if($('#plbtn'))$('#plbtn').onclick=async()=>{const box=$('#plbox'),open=box.hidden;box.hidden=!open;$('#plbtn').setAttribute('aria-expanded',open);if(!open)return;$('#plq').focus();
   const show=l=>{const q=$('#plq').value.toLowerCase(),f=l.filter(x=>x.name.toLowerCase().includes(q));$('#pll').innerHTML=f.map(x=>`<button class="plr" data-id="${x.id}"><span>${esc(x.name)}</span><small>${x.total?x.total+' Titel':''}${x.mine?'':' · von '+esc(x.owner)}</small></button>`).join('')||'<p class="note" style="padding:8px 10px">Keine Playlist gefunden.</p>';
    $('#pll').querySelectorAll('.plr').forEach(b=>b.onclick=async()=>{const x=l.find(y=>y.id===b.dataset.id);$('#pll').innerHTML='<p class="note" style="padding:8px 10px">Titel werden geladen …</p>';try{P=await api(`/projects/${P.id}/tracks`,{method:'POST',body:{playlist:x.id,name:x.name}});await again()}catch(e){$('#pe2').textContent=e.message;show(l)}})};
