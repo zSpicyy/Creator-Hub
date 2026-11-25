@@ -50,7 +50,7 @@ func (a *App) cmd(args ...string) *exec.Cmd {
 
 // probe liest Dauer, Größe, Bildrate und ob Ton vorhanden ist.
 func (a *App) probe(m *Media) error {
-	c := exec.Command(a.eng.FFprobe(), "-v", "error", "-show_entries", "format=duration:stream=codec_type,width,height,avg_frame_rate,duration", "-of", "json", m.Path)
+	c := exec.Command(a.eng.FFprobe(), "-v", "error", "-show_entries", "format=duration:stream=codec_type,codec_name,pix_fmt,width,height,avg_frame_rate,duration", "-of", "json", m.Path)
 	kit.HideCmd(c)
 	b, err := c.Output()
 	if err != nil {
@@ -59,6 +59,8 @@ func (a *App) probe(m *Media) error {
 	var j struct {
 		Streams []struct {
 			Type string `json:"codec_type"`
+			Name string `json:"codec_name"`
+			Pix  string `json:"pix_fmt"`
 			W    int    `json:"width"`
 			H    int    `json:"height"`
 			FR   string `json:"avg_frame_rate"`
@@ -74,7 +76,7 @@ func (a *App) probe(m *Media) error {
 		switch s.Type {
 		case "video":
 			if !hasV && s.W > 0 {
-				hasV, m.W, m.H = true, s.W, s.H
+				hasV, m.W, m.H, m.VCodec, m.PixFmt = true, s.W, s.H, s.Name, s.Pix
 				if p := strings.Split(s.FR, "/"); len(p) == 2 {
 					n, _ := strconv.ParseFloat(p[0], 64)
 					d, _ := strconv.ParseFloat(p[1], 64)
@@ -84,6 +86,9 @@ func (a *App) probe(m *Media) error {
 				}
 			}
 		case "audio":
+			if !m.HasAudio {
+				m.ACodec = s.Name
+			}
 			m.HasAudio = true
 		}
 	}
@@ -181,8 +186,9 @@ func (a *App) prepare(p *Project, m *Media) {
 	}
 	a.mu.Lock()
 	m.Missing = false
-	need := m.Proxy == "" || m.Proxy == "error"
-	if need {
+	// alles, was noch nicht fertig ist (auch nach einem Neustart mitten in der Vorbereitung), wieder einreihen
+	need := m.Proxy != "ok"
+	if need && m.Proxy != "direct" {
 		m.Proxy = "wait"
 	}
 	a.mu.Unlock()
@@ -204,11 +210,22 @@ func (a *App) worker() {
 		var err error
 		switch m.Kind {
 		case "video":
-			a.thumbs(m, dir)
-			if m.HasAudio {
-				a.wave(m, dir)
-			}
+			// wie Premiere Pro: das Original sofort nutzbar machen, die Vorschau-Kopie entsteht nebenbei
+			a.makeDirect(p, m, dir)
+			var wg sync.WaitGroup
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				a.thumbs(m, dir)
+				if m.HasAudio {
+					a.wave(m, dir)
+				}
+				a.mu.Lock()
+				a.save(p)
+				a.mu.Unlock()
+			}()
 			err = a.proxy(m, dir)
+			wg.Wait()
 		case "audio":
 			a.wave(m, dir)
 			if !directAudio[ext(m.Path)] {
@@ -229,8 +246,11 @@ func (a *App) worker() {
 		a.mu.Lock()
 		if err != nil {
 			m.Proxy, m.Error = "error", err.Error()
-		} else if m.Proxy != "direct" {
+		} else {
 			m.Proxy = "ok"
+		}
+		if err != nil && m.direct() {
+			m.Proxy, m.Error = "direct", "" // Kopie ging nicht, das Original spielt aber direkt
 		}
 		m.ProxyPct = 1
 		a.save(p)
@@ -280,6 +300,47 @@ func (l *limitWriter) Write(p []byte) (int, error) {
 		l.b.WriteString(s[len(s)-l.max/2:])
 	}
 	return l.b.Write(p)
+}
+
+// webPlayable: Formate, die die Vorschau (Chromium) ohne Umrechnen abspielt.
+var (
+	webVideo = set("h264 vp8 vp9 av1")
+	webAudio = set("aac mp3 opus vorbis flac")
+	webBox   = set("mp4 m4v mov webm")
+)
+
+func (m *Media) webPlayable() bool {
+	if !webVideo[m.VCodec] || (m.PixFmt != "" && m.PixFmt != "yuv420p" && m.PixFmt != "yuvj420p") {
+		return false
+	}
+	return !m.HasAudio || webAudio[m.ACodec]
+}
+
+// direct: Das Original (oder eine umverpackte Fassung) spielt schon, bevor die Kopie fertig ist.
+func (m *Media) direct() bool { return m.Kind == "video" && m.webPlayable() }
+
+// makeDirect: abspielbare Videos sofort freigeben. Steckt das Video in einem anderen Behälter
+// (z. B. MKV von OBS), wird es nur umverpackt – das dauert Sekunden statt Minuten.
+func (a *App) makeDirect(p *Project, m *Media, dir string) {
+	if !m.direct() {
+		return
+	}
+	if !webBox[ext(m.Path)] {
+		out := filepath.Join(dir, "direct.mp4")
+		if _, err := os.Stat(out); err != nil {
+			args := []string{"-i", m.Path, "-map", "0:v:0", "-c:v", "copy"}
+			if m.HasAudio {
+				args = append(args, "-map", "0:a:0", "-c:a", "copy")
+			}
+			if a.run(m, append(args, "-movflags", "+faststart"), out) != nil {
+				return
+			}
+		}
+	}
+	a.mu.Lock()
+	m.Proxy, m.ProxyPct = "direct", 0
+	a.save(p)
+	a.mu.Unlock()
 }
 
 // proxy: kleine H.264-Kopie mit vielen Schlüsselbildern, damit die Vorschau flüssig springt.
@@ -449,6 +510,14 @@ func (a *App) serveFile(w http.ResponseWriter, r *http.Request) {
 				http.ServeFile(w, r, filepath.Join(dir, f))
 				return
 			}
+		}
+		if m.Proxy == "direct" {
+			if _, err := os.Stat(filepath.Join(dir, "direct.mp4")); err == nil {
+				http.ServeFile(w, r, filepath.Join(dir, "direct.mp4"))
+			} else {
+				http.ServeFile(w, r, m.Path)
+			}
+			return
 		}
 		if (m.Kind == "audio" && directAudio[ext(m.Path)]) || (m.Kind == "image" && directImage[ext(m.Path)]) {
 			http.ServeFile(w, r, m.Path)

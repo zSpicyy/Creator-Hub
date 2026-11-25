@@ -42,6 +42,9 @@ type Media struct {
 	Wave     bool    `json:"wave"`
 	Missing  bool    `json:"missing"`
 	Error    string  `json:"error"`
+	VCodec   string  `json:"vcodec,omitempty"`
+	ACodec   string  `json:"acodec,omitempty"`
+	PixFmt   string  `json:"pixfmt,omitempty"`
 }
 
 type Text struct {
@@ -342,6 +345,7 @@ func newApp(root string) *App {
 	}
 	for i := 0; i < 2; i++ {
 		go a.worker()
+		go a.worker() // zwei Dateien gleichzeitig vorbereiten
 	}
 	for _, p := range a.projects {
 		for _, m := range p.Media {

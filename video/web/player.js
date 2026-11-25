@@ -6,7 +6,9 @@ const Player=(()=>{
   offA=document.createElement('canvas');offB=document.createElement('canvas');for(const o of[offA,offB]){o.width=cw;o.height=ch}
   for(const e of els.values())e.remove?.();els.clear();$('#hidden').innerHTML='';P.pause();P.seek(App.t||0)};
  // Ein Element je Clip (dieselbe Datei kann mehrmals gleichzeitig laufen)
- function el(c){const m=App.media(c.mediaId);if(!m||!(m.proxy==='ok'||m.proxy==='direct'))return null;const key=c.id+'|'+m.id;let e=els.get(key);
+ function el(c){const m=App.media(c.mediaId);if(!m||!(m.proxy==='ok'||m.proxy==='direct'))return null;const key=c.id+'|'+m.id+'|'+m.proxy;let e=els.get(key);
+  // fertige Vorschau-Kopie ersetzt das direkt abgespielte Original: altes Element aufräumen
+  if(!e)for(const [k,o] of els)if(k.startsWith(c.id+'|'+m.id+'|')){try{o.pause&&o.pause();o.removeAttribute('src');o.load&&o.load()}catch(x){}els.delete(k)}
   if(!e){if(m.kind==='image'){e=new Image();e.src=url(m);e.onload=()=>P.draw()}else{e=document.createElement(m.kind==='video'?'video':'audio');e.preload='auto';e.src=url(m);e.playsInline=true;e.addEventListener('seeked',()=>{if(!P.playing)P.draw()});e.addEventListener('loadeddata',()=>{if(!P.playing){seekEl(c,e);P.draw()}})}
    e.dataset.kind=m.kind;e.dataset.clip=c.id;els.set(key,e);if(m.kind!=='image')$('#hidden').append(e)}return e}
  const srcTime=(c,t)=>c.reverse?Math.max(c.in,c.out-(t-c.start)*(c.speed||1)-0.001):c.in+(t-c.start)*(c.speed||1);
