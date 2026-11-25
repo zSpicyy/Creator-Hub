@@ -116,18 +116,19 @@ type Theme struct {
 	Theme   string `json:"theme"`
 	Accent  string `json:"accent"`
 	Density string `json:"density"`
+	Nav     string `json:"nav"`
 }
 
 var accents = map[string]string{"koralle": "#ff6b4a", "indigo": "#7c6cff", "blau": "#4c8dff", "türkis": "#25b8c9", "grün": "#3fbf7f", "gelb": "#e0b43a", "orange": "#f08a3c", "rot": "#e5584f", "pink": "#e5629f", "violett": "#9a78f0"}
 
 func ReadTheme() Theme {
-	t := Theme{Lang: "en", Theme: "light", Accent: "#ff6b4a", Density: "normal"}
+	t := Theme{Lang: "en", Theme: "light", Accent: "#ff6b4a", Density: "normal", Nav: "side"}
 	d, _ := os.UserConfigDir()
 	b, err := os.ReadFile(filepath.Join(d, "CreatorHub", "einstellungen.json"))
 	if err != nil {
 		return t
 	}
-	var s struct{ Lang, Theme, Accent, Density string }
+	var s struct{ Lang, Theme, Accent, Density, Nav string }
 	if json.Unmarshal(b, &s) != nil {
 		return t
 	}
@@ -139,6 +140,9 @@ func ReadTheme() Theme {
 	}
 	if s.Density != "" {
 		t.Density = s.Density
+	}
+	if s.Nav == "top" {
+		t.Nav = "top"
 	}
 	if c, ok := accents[s.Accent]; ok {
 		t.Accent = c

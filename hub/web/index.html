@@ -168,7 +168,7 @@ input[type=text],input[type=email],input[type=number]{background:var(--bg);borde
     <button class="avatar btn" id="acct" title="Konto"></button>
   </div>
 </header>
-<nav class="ch-nav navtop">
+<nav class="ch-nav">
   <button data-page="tools" class="ch-item on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>Werkzeuge</button>
   <button data-page="projects" class="ch-item"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projekte</button>
   <button data-page="settings" class="ch-item"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Einstellungen</button>
@@ -214,7 +214,7 @@ function dur(s){if(s<60)return`${s} Sek.`;if(s<3600)return`${Math.round(s/60)} M
 const tool=id=>S.tools.find(t=>t.id===id);
 
 function applyTheme(){const s=S.settings;let th=s.theme;if(th==='system')th=matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
- const r=document.documentElement;r.dataset.theme=th;r.dataset.density=s.density;
+ const r=document.documentElement;r.dataset.theme=th;r.dataset.density=s.density;r.dataset.nav=s.nav==='top'?'top':'side';if(window.Kit&&Kit.navMode)Kit.navMode();else document.querySelectorAll('.ch-nav').forEach(n=>n.classList.toggle('navtop',s.nav==='top'));
  const ca=/^ctp-/.test(s.accent||'')?CTP[ctpFl(th)][s.accent.slice(4)]:null;const c=ca||ACCENTS[s.accent]||(/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:ACCENTS.koralle);r.style.setProperty('--accent',c);
  const l=parseInt(c.slice(1,3),16)*.3+parseInt(c.slice(3,5),16)*.59+parseInt(c.slice(5,7),16)*.11;
  r.style.setProperty('--accent-ink',l>150?'#10131a':'#fff')}
@@ -294,7 +294,8 @@ function viewSettings(){const s=S.settings;
   <div class="sw" style="margin-bottom:6px">${Object.entries(CTP[ctpFl(document.documentElement.dataset.theme)]).map(([k,c])=>`<button class="${s.accent==='ctp-'+k?'on':''}" data-accent="ctp-${k}" title="${CTPN[k]}" style="background:${c}"></button>`).join('')}</div>
   <div class="line" style="margin-top:8px"><div>Eigene Farben<small>Klicke auf Plus und wähle eine beliebige Farbe. Rechtsklick auf eine eigene Farbe entfernt sie.</small></div></div>
   <div class="sw" style="margin-bottom:6px">${(s.customAccents||[]).map(c=>`<button class="${s.accent===c?'on':''}" data-accent="${c}" data-custom="${c}" title="${c} (Rechtsklick: entfernen)" style="background:${c}"></button>`).join('')}<label class="addc" title="Eigene Farbe hinzufügen">+<input type="color" id="addColor" value="${/^#/.test(s.accent)?s.accent:(ACCENTS[s.accent]||'#4c8dff')}"></label></div>
-  <div class="line"><div>Kompakte Darstellung<small>Weniger Abstand, mehr auf einmal sichtbar.</small></div>${sw(s.density==='compact','compact')}</div></div>
+  <div class="line"><div>Kompakte Darstellung<small>Weniger Abstand, mehr auf einmal sichtbar.</small></div>${sw(s.density==='compact','compact')}</div>
+  <div class="line"><div>Menü in Projekten<small>Gilt für den Hub und alle Werkzeuge.</small></div><select id="sNav"><option value="side">Seitenleiste links</option><option value="top">Reiter oben</option></select></div></div>
  <div class="sec"><h3>Werkzeuge</h3>
   <div class="line"><div>Standard-Sortierung<small>Wird beim Start verwendet.</small></div><select id="sSort"><option value="az">A bis Z</option><option value="za">Z bis A</option><option value="recent">Zuletzt benutzt</option><option value="cat">Nach Kategorie</option></select></div>
   <div class="line"><div>Ansicht<small>Kacheln oder Liste.</small></div><select id="sView"><option value="grid">Kacheln</option><option value="list">Liste</option></select></div></div>
@@ -341,7 +342,7 @@ function render(){
  renderHist();
  const m=$('#main'),sc=m.scrollTop;
  m.innerHTML=page==='tools'?viewTools():page==='projects'?viewProjects():viewSettings();
- if(page==='settings'){$('#sSort').value=S.settings.sort;$('#sView').value=S.settings.view;$('#sRemind').value=S.settings.updRemind||'4h'}
+ if(page==='settings'){$('#sSort').value=S.settings.sort;$('#sView').value=S.settings.view;$('#sRemind').value=S.settings.updRemind||'4h';$('#sNav').value=S.settings.nav==='top'?'top':'side'}
  m.scrollTop=sc}
 
 function popAccount(){const a=S.account,p=$('#pop');
@@ -383,6 +384,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('change',async e=>{
  if(e.target.id==='addColor'){const c=e.target.value.toLowerCase();const l=S.settings.customAccents||[];if(!l.includes(c))l.push(c);S.settings.customAccents=l.slice(-12);S.settings.accent=c;return saveSettings()}
  if(e.target.id==='sort'){S.settings.sort=e.target.value;return saveSettings()}
+ if(e.target.id==='sNav'){S.settings.nav=e.target.value;return saveSettings()}
  if(e.target.id==='sSort'){S.settings.sort=e.target.value;return saveSettings()}
  if(e.target.id==='sView'){S.settings.view=e.target.value;return saveSettings()}
  if(e.target.id==='sRemind'){S.settings.updRemind=e.target.value;await saveSettings();return loadUp()}

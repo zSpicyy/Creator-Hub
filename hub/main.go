@@ -50,7 +50,7 @@ type Tool struct {
 var tools = []Tool{
 	{ID: "mp3", Kind: "app", Name: "MP3 Schneider", Desc: "Schneidet lange Aufnahmen automatisch an den Pausen in einzelne Dateien.", Category: "Audio", Tags: []string{"mp3", "audio", "songs", "schneiden", "playlist", "spotify"}, Exe: exeName("MP3-Schneider"), DataDir: "MP3-Schneider"},
 	{ID: "convert", Kind: "hub", Name: "Dateityp-Umwandler", Desc: "Wandelt Videos, Musik und Bilder in andere Formate um.", Category: "Dateien", Tags: []string{"konvertieren", "format", "umwandeln", "png", "jpg", "mp4", "wav"}, Exe: "", DataDir: "Dateityp-Umwandler"},
-	{ID: "cutout", Kind: "hub", Name: "Freisteller", Desc: "Entfernt Hintergründe und schneidet Motive aus, mit Auswahl und Einkreisen.", Category: "Bild", Tags: []string{"hintergrund", "freistellen", "transparent", "ausschneiden", "ki"}, Exe: "", DataDir: "Freisteller"},
+	{ID: "cutout", Kind: "hub", Name: "Hintergrund-Entferner", Desc: "Entfernt Hintergründe und schneidet Motive aus, mit Auswahl und Einkreisen.", Category: "Bild", Tags: []string{"hintergrund", "freistellen", "transparent", "ausschneiden", "ki"}, Exe: "", DataDir: "Freisteller"},
 	{ID: "image", Kind: "app", Name: "Bildbearbeitung", Desc: "Ebenen, Pinsel, Auswahl und Filter – Werkzeuge wie in GIMP.", Category: "Bild", Tags: []string{"gimp", "photoshop", "bild", "ebenen", "malen", "filter", "thumbnail"}, Exe: exeName("Bildbearbeitung"), DataDir: "Bildbearbeitung"},
 	{ID: "motion", Kind: "app", Name: "Motion Design", Desc: "Animierte Titel, Motion Graphics und Effekte mit Ebenen und Keyframes. Aufgebaut wie After Effects.", Category: "Video", Tags: []string{"after effects", "animation", "motion", "keyframes", "titel", "ebenen", "effekte"}, Exe: exeName("Motion-Design"), DataDir: "MotionDesign"},
 	{ID: "video", Kind: "app", Name: "Videoschnitt", Desc: "Zeitleiste, Übergänge, Effekte, Filter, Sticker und Sounds. Aufgebaut wie Filmora.", Category: "Video", Tags: []string{"video", "schnitt", "filmora", "übergänge", "effekte", "filter", "sticker", "rendern"}, Exe: exeName("Videoschnitt"), DataDir: "Videoschnitt"},
@@ -78,6 +78,7 @@ type Settings struct {
 	Theme         string   `json:"theme"`   // black | dark | light | system
 	Accent        string   `json:"accent"`  // Name der Akzentfarbe
 	Density       string   `json:"density"` // normal | compact
+	Nav           string   `json:"nav"`     // side | top
 	Sort          string   `json:"sort"`
 	View          string   `json:"view"` // grid | list
 	HistoryOn     bool     `json:"historyOn"`
@@ -144,7 +145,7 @@ func newApp() *App {
 	if ex, err := os.Executable(); err == nil {
 		a.exeDir = filepath.Dir(ex)
 	}
-	a.set = Settings{AutoUpdate: true, Lang: "en", Theme: "light", Accent: "koralle", Density: "normal", Sort: "az", View: "grid", HistoryOn: true, HistoryMax: 100}
+	a.set = Settings{AutoUpdate: true, Lang: "en", Theme: "light", Accent: "koralle", Density: "normal", Nav: "side", Sort: "az", View: "grid", HistoryOn: true, HistoryMax: 100}
 	a.load("einstellungen.json", &a.set)
 	a.load("verlauf.json", &a.history)
 	var ac Account

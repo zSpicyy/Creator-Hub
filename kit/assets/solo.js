@@ -5,9 +5,9 @@
 (()=>{const K=window.Kit;if(!K||!window.__solo)return;
 let S=window.__solo,setupOpen=false,setupHidden=false,doneShown=false,popClosed=false,setOpen=false,want=false,cfg=null,busy=false;
 const de=()=>K.lang==='de',T=(a,b)=>de()?a:b,esc=K.esc,title=()=>de()?S.title:(S.titleEN||S.title),C=S.color||'#7c6cff',LOGO='/kit/logos/'+S.logo+'.svg';
-const ACC={indigo:'#7c6cff',blau:'#4c8dff',türkis:'#25b8c9',grün:'#3fbf7f',gelb:'#e0b43a',orange:'#f08a3c',rot:'#e5584f',pink:'#e5629f',violett:'#9a78f0'};
+const ACC={koralle:'#ff6b4a',indigo:'#7c6cff',blau:'#4c8dff',türkis:'#25b8c9',grün:'#3fbf7f',gelb:'#e0b43a',orange:'#f08a3c',rot:'#e5584f',pink:'#e5629f',violett:'#9a78f0'};
 const CTP={latte:{mauve:'#8839ef',pink:'#ea76cb',red:'#d20f39',peach:'#fe640b',yellow:'#df8e1d',green:'#40a02b',teal:'#179299',sky:'#04a5e5',blue:'#1e66f5',lavender:'#7287fd'},frappe:{mauve:'#ca9ee6',pink:'#f4b8e4',red:'#e78284',peach:'#ef9f76',yellow:'#e5c890',green:'#a6d189',teal:'#81c8be',sky:'#99d1db',blue:'#8caaee',lavender:'#babbf1'},macchiato:{mauve:'#c6a0f6',pink:'#f5bde6',red:'#ed8796',peach:'#f5a97f',yellow:'#eed49f',green:'#a6da95',teal:'#8bd5ca',sky:'#91d7e3',blue:'#8aadf4',lavender:'#b7bdf8'},mocha:{mauve:'#cba6f7',pink:'#f5c2e7',red:'#f38ba8',peach:'#fab387',yellow:'#f9e2af',green:'#a6e3a1',teal:'#94e2d5',sky:'#89dceb',blue:'#89b4fa',lavender:'#b4befe'}};
-const THEMES=[['black','Schwarz','Black','#000'],['dark','Dunkel','Dark','#14161a'],['light','Hell','Light','#f3f4f6'],['system','Wie das System','Like the system','linear-gradient(90deg,#14161a 50%,#f3f4f6 50%)']];
+const THEMES=[['light','Hell','Light','#eef2f7'],['dark','Nacht','Night','#0f1726'],['black','Schwarz','Black','#000'],['system','Wie das System','Like the system','linear-gradient(90deg,#0f1726 50%,#eef2f7 50%)']];
 const CTPF=[['latte','Latte','#eff1f5','#4c4f69'],['frappe','Frappé','#303446','#c6d0f5'],['macchiato','Macchiato','#24273a','#cad3f5'],['mocha','Mocha','#1e1e2e','#cdd6f4']];
 const st=document.createElement('style');st.textContent=`
 .so-ov{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:20px;background:color-mix(in srgb,#000 55%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font:14px/1.5 var(--font,system-ui,sans-serif);color:var(--text)}
@@ -116,13 +116,13 @@ function updLine(){const U=S.update||{};let txt,btn='';
  else txt=U.checked?T('Du hast die neueste Version.','You have the latest version.'):T('Noch nicht gesucht.','Not checked yet.');
  if(!btn&&S.server&&!U.loading)btn=`<button class="so-btn" data-s="check">${T('Jetzt suchen','Check now')}</button>`;
  return`<div class="so-line"><div>${T('Version','Version')} ${esc(S.version)}<small>${esc(txt)}</small></div>${btn}</div>`}
-function renderSet(){if(!so)return;const s=cfg||{},th=s.theme||'black',ac=s.accent||'indigo',fl=CTP[document.documentElement.dataset.theme]?document.documentElement.dataset.theme:(document.documentElement.dataset.theme==='light'?'latte':'mocha');
+function renderSet(){if(!so)return;const s=cfg||{},th=s.theme||'light',ac=s.accent||'koralle',fl=CTP[document.documentElement.dataset.theme]?document.documentElement.dataset.theme:(document.documentElement.dataset.theme==='light'?'latte':'mocha');
  so.querySelector('.so-set-body').innerHTML=`
  <div class="so-sec"><h3>Updates</h3>${updLine()}
   <div class="so-line"><div>${T('Automatisch nach Updates suchen','Check for updates automatically')}<small>${T('Beim Start und alle 6 Stunden. Installiert wird erst, wenn du es sagst.','On start and every 6 hours. Nothing is installed until you say so.')}</small></div><button class="so-tg ${S.opts&&S.opts.auto?'on':''}" data-s="auto" role="switch" aria-checked="${!!(S.opts&&S.opts.auto)}"></button></div>
   <div class="so-line"><div>${T('Update-Quelle','Update source')}<small>GitHub · ${T('jedes Update ist signiert','every update is signed')}</small></div></div></div>
  <div class="so-sec"><h3>${T('Sprache','Language')}</h3><div class="so-line"><div>${T('Sprache der App','App language')}<small>${T('Wird nach dem Neuladen übernommen.','Applies after reloading.')}</small></div><div class="so-seg"><button class="so-btn ${s.lang!=='de'?'on':''}" data-lang="en">English</button><button class="so-btn ${s.lang==='de'?'on':''}" data-lang="de">Deutsch</button></div></div></div>
- <div class="so-sec"><h3>Design</h3>
+ <div class="so-sec"><h3>${T('Darstellung (wie im Creator Hub)','Appearance (same as in Creator Hub)')}</h3>
   <div class="so-ths">${THEMES.map(([k,a,b,c])=>`<button class="so-th ${th===k?'on':''}" data-th="${k}"><i style="background:${c}"></i>${T(a,b)}</button>`).join('')}</div>
   <div class="so-lab">Catppuccin</div>
   <div class="so-ths">${CTPF.map(([k,n,bg,tx])=>`<button class="so-th ctp ${th===k?'on':''}" data-th="${k}"><i style="background:${bg};color:${tx}"><b>Aa</b><span>${['mauve','pink','peach','yellow','green','sky','blue','lavender'].map(x=>`<em style="background:${CTP[k][x]}"></em>`).join('')}</span></i>${n}</button>`).join('')}</div>
@@ -130,7 +130,12 @@ function renderSet(){if(!so)return;const s=cfg||{},th=s.theme||'black',ac=s.acce
   <div class="so-sw">${Object.entries(ACC).map(([k,c])=>`<button class="${ac===k?'on':''}" data-ac="${k}" title="${k}" style="background:${c}"></button>`).join('')}</div>
   <div class="so-lab">${T('Catppuccin-Farben','Catppuccin colours')}</div>
   <div class="so-sw">${Object.entries(CTP[fl]).map(([k,c])=>`<button class="${ac==='ctp-'+k?'on':''}" data-ac="ctp-${k}" title="${k}" style="background:${c}"></button>`).join('')}</div>
-  <div class="so-line"><div>${T('Kompakte Darstellung','Compact layout')}<small>${T('Weniger Abstand, mehr auf einmal sichtbar.','Less spacing, more on screen.')}</small></div><button class="so-tg ${s.density==='compact'?'on':''}" data-s="compact" role="switch"></button></div></div>
+  <div class="so-line"><div>${T('Kompakte Darstellung','Compact layout')}<small>${T('Weniger Abstand, mehr auf einmal sichtbar.','Less spacing, more on screen.')}</small></div><button class="so-tg ${s.density==='compact'?'on':''}" data-s="compact" role="switch"></button></div>
+  <div class="so-lab">${T('Eigene Farben','Custom colours')}</div>
+  <div class="so-sw">${(s.customAccents||[]).map(c=>`<button class="${ac===c?'on':''}" data-ac="${c}" data-cust="${c}" title="${c} (${T('Rechtsklick: entfernen','right-click: remove')})" style="background:${c}"></button>`).join('')}<label title="${T('Eigene Farbe hinzufügen','Add custom colour')}" style="width:26px;height:26px;border-radius:50%;border:2px dashed var(--line);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:var(--muted)">+<input type="color" id="soAdd" value="${/^#/.test(ac)?ac:(ACC[ac]||'#ff6b4a')}" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label></div>
+  <div class="so-line"><div>${T('Menü in Projekten','Menu in projects')}<small>${T('Seitenleiste links oder Reiter oben.','Sidebar on the left or tabs on top.')}</small></div><div class="so-seg"><button class="so-btn ${s.nav!=='top'?'on':''}" data-nav="side">${T('Seitenleiste','Sidebar')}</button><button class="so-btn ${s.nav==='top'?'on':''}" data-nav="top">${T('Reiter oben','Tabs on top')}</button></div></div></div>
+ <div class="so-sec"><h3>${T('Allgemein','General')}</h3>
+  <div class="so-line"><div>${T('Grafikbeschleunigung','Hardware acceleration')}<small>${T('Ausschalten, wenn die App flackert oder schwarz bleibt. Gilt nach einem Neustart.','Turn off if the app flickers or stays black. Applies after a restart.')}</small></div><button class="so-tg ${s.gpu!==false?'on':''}" data-s="gpu" role="switch"></button></div></div>
  <div class="so-sec"><div class="so-line"><div>${T('Lizenzen und Hinweise','Licenses and notices')}<small>${T('Freie Software und KI-Modelle, die diese App nutzt.','Free software and AI models used by this app.')}</small></div><button class="so-btn" data-s="lic">${T('Anzeigen','Show')}</button></div></div>`}
 async function openSet(){if(so)return;try{cfg=await api('/kit/solo/settings')}catch(e){cfg={}}
  so=el(`<div class="so-ov" translate="no" role="dialog" aria-modal="true" aria-label="${T('Einstellungen','Settings')}"><div class="so-box so-set" style="--so:var(--accent)"><div class="so-hero"><img src="${LOGO}" alt=""><div><h2>${T('Einstellungen','Settings')}</h2><p>${esc(title())} · ${T('Version','version')} ${esc(S.version)}</p></div><button class="so-x" data-s="close" title="${T('Schließen','Close')}">×</button></div><div class="so-set-body"></div></div></div>`);
@@ -149,8 +154,12 @@ async function onSet(e){const b=e.target.closest('button');if(!b)return;const d=
  if(d.s==='compact')return save({density:(cfg&&cfg.density==='compact')?'normal':'compact'});
  if(d.lang){if(d.lang===(cfg.lang||'en'))return;await save({lang:d.lang});if(confirmReload())location.reload();return}
  if(d.th)return save({theme:d.th});
+ if(d.nav)return save({nav:d.nav});
+ if(d.s==='gpu')return save({gpu:!(cfg&&cfg.gpu!==false)});
  if(d.ac)return save({accent:d.ac})}
 function confirmReload(){return true}
+document.addEventListener('change',e=>{if(e.target.id!=='soAdd')return;const c=e.target.value.toLowerCase();const l=(cfg.customAccents||[]).filter(x=>x!==c);l.push(c);save({customAccents:l.slice(-12),accent:c})});
+document.addEventListener('contextmenu',e=>{const b=e.target.closest&&e.target.closest('[data-cust]');if(!b||!so||!so.contains(b))return;e.preventDefault();const c=b.dataset.cust;const p={customAccents:(cfg.customAccents||[]).filter(x=>x!==c)};if(cfg.accent===c)p.accent='koralle';save(p)});
 
 // ---------- Abfrage ----------
 let tmr=null;

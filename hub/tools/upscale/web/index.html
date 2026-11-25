@@ -23,6 +23,7 @@
 .cmp .tag.l{left:10px}.cmp .tag.r{right:10px}
 .cmp .wait{position:absolute;inset:0;display:none;place-items:center;background:#0005;color:#fff;font-weight:600}
 .cmp.loading .wait{display:grid}.cmp.loading .knob,.cmp.loading .line2{display:none}
+.vseg{margin-bottom:10px}.cmp.whole .layer img{width:100%;height:100%;object-fit:contain;max-width:100%}.cmp.whole .layer img[src='']{visibility:hidden}.mini[hidden]{display:none}
 .mini{display:flex;gap:12px;align-items:center;margin-top:10px}
 .mini .pic{position:relative;line-height:0;cursor:pointer;flex:none;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .mini .pic img{max-width:150px;max-height:84px;display:block}
@@ -44,7 +45,7 @@
 <script src="/kit/kit.js"></script>
 <script>
 const {$,esc,api,size,num}=Kit;
-let page='start',projects=[],cur=null,pos={x:.5,y:.5},cut=50,timer=null,sampleT=null,AI={ready:false},factor=4,outDir='';
+let view='whole',page='start',projects=[],cur=null,pos={x:.5,y:.5},cut=50,timer=null,sampleT=null,AI={ready:false},factor=4,outDir='';
 const ICON_SWAP='<svg viewBox="0 0 24 24"><path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg>';
 
 async function refresh(){projects=await api('api/projects')}
@@ -75,8 +76,9 @@ function render(){const p=cur;const W=Math.round(p.w*factor),H=Math.round(p.h*fa
   :`<div class="line"><div>KI konnte nicht eingerichtet werden<small class="err">${esc(AI.error||'Unbekannter Fehler')}</small></div><button class="btn primary" id="aiinstall">Nochmal versuchen</button></div>`;
  $('#main').innerHTML=`<div class="head"><h2>${esc(p.name)}</h2><span>${num(p.w)} × ${num(p.h)} Pixel</span></div>
  <div class="work"><div>
-  <div class="cmp" id="cmp" style="--cut:${cut}%"><div class="layer"><img id="raw" alt=""></div><div class="layer after"><img id="res" alt=""></div><div class="line2"></div><div class="knob">${ICON_SWAP}</div><span class="tag l">Vorher</span><span class="tag r">Nachher</span><div class="wait"><span>${AI.ready?'KI rechnet die Vorschau …':AI.loading?'KI wird eingerichtet …':'Die KI fehlt noch'}</span></div></div>
-  <div class="mini"><div class="pic" id="pic"><img id="pimg" src="api/img?id=${p.id}" alt=""><div class="sel" id="sel"></div></div><small>Der große Ausschnitt zeigt das Bild in echter Größe. Klicke oder ziehe im kleinen Bild, um eine andere Stelle anzusehen (oder mit dem Mausrad), und ziehe im großen Bild den Regler zur Seite.</small></div>
+  <div class="seg vseg" id="vseg"><button class="btn ${view==='whole'?'on':''}" data-v="whole">Ganzes Bild</button><button class="btn ${view==='detail'?'on':''}" data-v="detail">Details in 100 %</button></div>
+  <div class="cmp ${view==='whole'?'whole':''}" id="cmp" style="--cut:${cut}%"><div class="layer"><img id="raw" alt=""></div><div class="layer after"><img id="res" alt=""></div><div class="line2"></div><div class="knob">${ICON_SWAP}</div><span class="tag l">Vorher</span><span class="tag r">Nachher</span><div class="wait"><span>${AI.ready?'KI rechnet die Vorschau …':AI.loading?'KI wird eingerichtet …':'Die KI fehlt noch'}</span></div></div>
+  <div class="mini" ${view==='whole'?'hidden':''}><div class="pic" id="pic"><img id="pimg" src="api/img?id=${p.id}" alt=""><div class="sel" id="sel"></div></div><small>Hier siehst du einen Ausschnitt in echter Größe. Das fertige Bild wird immer komplett vergrößert. Klicke oder ziehe im kleinen Bild, um eine andere Stelle anzusehen (oder mit dem Mausrad), und ziehe im großen Bild den Regler zur Seite.</small></div>
  </div>
  <div>
   <div class="sec"><h3>Einstellungen</h3>
@@ -94,6 +96,7 @@ function render(){const p=cur;const W=Math.round(p.w*factor),H=Math.round(p.h*fa
  cmp.addEventListener('pointerdown',e=>{drag=true;cmp.setPointerCapture(e.pointerId);setCut(e)});
  cmp.addEventListener('pointermove',e=>{if(drag)setCut(e)});cmp.addEventListener('pointerup',()=>drag=false);
  $('#pimg').addEventListener('load',placeSel);
+ $('#vseg').onclick=e=>{const b=e.target.closest('[data-v]');if(!b||b.dataset.v===view)return;view=b.dataset.v;render()};
  if(p.result&&!timer)showDone(p);
  sample()}
 
@@ -102,11 +105,12 @@ function placeSel(){const img=$('#pimg');if(!img||!img.naturalWidth)return;const
  s.style.left=W*Math.min(Math.max(pos.x-cw/2,0),1-cw)+'px';s.style.top=H*Math.min(Math.max(pos.y-ch/2,0),1-ch)+'px'}
 let sampleTok=0;
 function sample(){clearTimeout(sampleT);sampleT=setTimeout(()=>{const box=$('#cmp');if(!cur||!box)return;if(!AI.ready){box.classList.add('loading');return}
- const q=`id=${cur.id}&x=${pos.x.toFixed(4)}&y=${pos.y.toFixed(4)}&f=${factor}&bw=${Math.round(box.clientWidth)}&bh=${Math.round(box.clientHeight)}`;
+ const q=`id=${cur.id}&x=${pos.x.toFixed(4)}&y=${pos.y.toFixed(4)}&f=${factor}&bw=${Math.round(box.clientWidth)}&bh=${Math.round(box.clientHeight)}${view==='whole'?'&whole=1':''}`;
  const tok=++sampleTok,z=Date.now();box.classList.add('loading');placeSel();
  // beide Bilder erst laden und dann gleichzeitig tauschen: kein Versatz, kein Flackern
  const ld=src=>new Promise(ok=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ok(null);im.src=src});
  Promise.all([ld(`api/sample?${q}&raw=1&_=${z}`),ld(`api/sample?${q}&ai=1&_=${z}`)]).then(([a,b])=>{if(tok!==sampleTok||!$('#raw'))return;const raw=$('#raw'),res=$('#res');
+  if(view==='whole'){if(a)raw.src=a.src;res.src=(b||a||{}).src||'';raw.style.width=raw.style.height=res.style.width=res.style.height='';box.classList.remove('loading');box.classList.add('has');return}
   if(a){raw.src=a.src;raw.style.width=Math.round(a.naturalWidth*factor)+'px';raw.style.height=Math.round(a.naturalHeight*factor)+'px'}
   if(b){res.src=b.src;res.style.width=b.naturalWidth+'px';res.style.height=b.naturalHeight+'px'}else if(a){res.src=a.src;res.style.width=raw.style.width;res.style.height=raw.style.height}
   box.classList.remove('loading');box.classList.add('has')})},120)}

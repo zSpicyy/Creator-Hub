@@ -171,7 +171,15 @@ func Enable(a *kit.App, c Config) {
 		if r.Method == http.MethodPost {
 			var in map[string]any
 			json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&in)
-			for _, k := range []string{"lang", "theme", "accent", "density", "customAccents"} {
+			if v, ok := in["gpu"].(bool); ok {
+				if v {
+					os.Remove(kit.GPUFlag())
+				} else {
+					os.MkdirAll(filepath.Dir(kit.GPUFlag()), 0o755)
+					os.WriteFile(kit.GPUFlag(), []byte("nutzer"), 0o644)
+				}
+			}
+			for _, k := range []string{"lang", "theme", "accent", "density", "customAccents", "nav"} {
 				if v, ok := in[k]; ok {
 					all[k] = v
 				}
@@ -180,6 +188,8 @@ func Enable(a *kit.App, c Config) {
 			b, _ := json.MarshalIndent(all, "", " ")
 			os.WriteFile(f, b, 0o644)
 		}
+		_, err := os.Stat(kit.GPUFlag())
+		all["gpu"] = err != nil
 		kit.JSON(w, all)
 	})
 }

@@ -25,10 +25,12 @@ const Kit=(()=>{
  function ink(hex){const n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(r*.299+g*.587+b*.114)>150?'#10131a':'#ffffff'}
  K.applyTheme=async()=>{try{const t=await (await fetch('/kit/theme',{cache:'no-store'})).json();const key=JSON.stringify(t);if(key===last)return;last=key;
   let th=t.theme;if(th==='system')th=matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
-  const r=document.documentElement;r.dataset.theme=th;r.dataset.density=t.density;r.style.setProperty('--accent',t.accent);r.style.setProperty('--accent-ink',ink(t.accent));r.style.setProperty('--accent-soft',t.accent+'26');
+  const r=document.documentElement;r.dataset.theme=th;r.dataset.density=t.density;r.dataset.nav=t.nav==='top'?'top':'side';K.navMode();r.style.setProperty('--accent',t.accent);r.style.setProperty('--accent-ink',ink(t.accent));r.style.setProperty('--accent-soft',t.accent+'26');
   document.dispatchEvent(new CustomEvent('kit-theme',{detail:t}));
   // Sprache im Hub geändert: neu laden, damit alles in der neuen Sprache erscheint (offene Projekte nur auf Wunsch)
   const nl=t.lang==='de'?'de':'en';if(nl!==K.lang)K.langChanged(nl)}catch(e){}};
+ // Menü in Projekten: Seitenleiste links oder Reiter oben (Einstellung im Hub)
+ K.navMode=()=>{const top=document.documentElement.dataset.nav==='top';document.querySelectorAll('.ch-nav,body>nav').forEach(n=>n.classList.toggle('navtop',top))};
  K.langChanged=nl=>{
   const ed=document.getElementById('editor');const busy=(ed&&!ed.hidden)||(typeof App!=='undefined'&&App&&(App.P||App.dirty))||(typeof E!=='undefined'&&E&&E.proj)||(typeof P!=='undefined'&&P&&P.id)||(typeof K.busy==='function'&&K.busy());
   if(!busy){location.reload();return}

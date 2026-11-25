@@ -526,10 +526,22 @@ func (a *App) sample(w http.ResponseWriter, r *http.Request) {
 	if factor > 64 {
 		factor = 64
 	}
+	// Ganzes Bild: die Vorschau zeigt alles (große Bilder dafür verkleinert, das fertige Bild rechnet in voller Größe)
+	if q.Get("whole") == "1" {
+		sw, sh := src.Bounds().Dx(), src.Bounds().Dy()
+		if m := max(sw, sh); m > 900 {
+			src = toImage(NewScalerFrom(nrgbaSource{src}, 900/float64(m), 0, false))
+		}
+		fx, fy = 0.5, 0.5
+		q.Set("bw", fmt.Sprint(float64(src.Bounds().Dx())*factor+factor))
+		q.Set("bh", fmt.Sprint(float64(src.Bounds().Dy())*factor+factor))
+	}
 	bw, bh := 360.0, 280.0
 	fmt.Sscanf(q.Get("bw"), "%g", &bw)
 	fmt.Sscanf(q.Get("bh"), "%g", &bh)
-	bw, bh = math.Min(math.Max(bw, 100), 2000), math.Min(math.Max(bh, 100), 1400)
+	if q.Get("whole") != "1" {
+		bw, bh = math.Min(math.Max(bw, 100), 2000), math.Min(math.Max(bh, 100), 1400)
+	}
 	cw, ch := max(8, int(bw/factor)+1), max(8, int(bh/factor)+1)
 	cw, ch = min(cw, src.Bounds().Dx()), min(ch, src.Bounds().Dy())
 	x0 := clampi(int(fx*float64(src.Bounds().Dx()))-cw/2, 0, src.Bounds().Dx()-cw)
